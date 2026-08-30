@@ -74,6 +74,7 @@ export const BranchDetailView: React.FC<Props> = ({
 
   // Cash audit counted cash
   const [countedCash, setCountedCash] = useState<number | undefined>(undefined);
+  const [isAdminOverride, setIsAdminOverride] = useState(false);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(branch.import_code || branch.code);
@@ -83,6 +84,13 @@ export const BranchDetailView: React.FC<Props> = ({
 
   // Filter batches for this specific branch
   const branchBatches = batches.filter((b) => Number(b.branch_id) === Number(branch.id));
+
+  // Derive cashier-entered count from the latest batch's shift_summary
+  const latestBatch = branchBatches[0];
+  const cashierCountedCash: number | undefined =
+    latestBatch?.shift_summary?.counted_cash !== undefined
+      ? Number(latestBatch.shift_summary.counted_cash)
+      : undefined;
 
   // Compute Branch Specific KPIs
   let branchGrossSales = 0;
@@ -288,8 +296,11 @@ export const BranchDetailView: React.FC<Props> = ({
             branchName={branch.name}
             cashSales={cashSales}
             openingFloat={1000.0}
+            cashierEnteredCash={cashierCountedCash}
             initialCountedCash={countedCash}
+            isAdminOverride={isAdminOverride}
             onSaveCountedCash={(val) => setCountedCash(val)}
+            onEnableOverride={() => setIsAdminOverride(true)}
           />
 
           {/* Payment Method Breakdown for this branch */}
@@ -502,6 +513,7 @@ export const BranchDetailView: React.FC<Props> = ({
           branchName={branch.name}
           staffList={staffList}
           onRefreshStaff={onRefreshStaff}
+          triggerNotice={(msg) => alert(msg)}
         />
       )}
 

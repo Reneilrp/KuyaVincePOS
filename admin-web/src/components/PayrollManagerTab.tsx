@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Branch, PayrollItem, StaffRecord } from "../types";
 import { supabase } from "../services/supabaseClient";
+import { hashPin, generatePinSalt } from "../utils/pinHash";
 
 interface Props {
   branches: Branch[];
@@ -27,6 +28,7 @@ interface Props {
   onRefreshStaff: () => Promise<void>;
   onCalculate: (branchId: string, startDate: string, endDate: string) => Promise<void>;
   onApprove: (records: PayrollItem[]) => Promise<void>;
+  currentUser?: { email: string; role: string } | null;
 }
 
 export const PayrollManagerTab: React.FC<Props> = ({
@@ -35,8 +37,10 @@ export const PayrollManagerTab: React.FC<Props> = ({
   staffList,
   onRefreshStaff,
   onCalculate,
-  onApprove
+  onApprove,
+  currentUser
 }) => {
+  const isSuperAdmin = currentUser?.role === 'Super Admin';
   const [activeSubTab, setActiveSubTab] = useState<"directory" | "payroll">("directory");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterBranch, setFilterBranch] = useState("all");
@@ -136,9 +140,11 @@ export const PayrollManagerTab: React.FC<Props> = ({
 
     setIsSubmitting(true);
     try {
+      const salt = generatePinSalt();
+      const hash = await hashPin(newPin, salt);
       const { error } = await supabase
         .from("staff_records")
-        .update({ pin_code: newPin })
+        .update({ pin_code: newPin, pin_salt: salt, pin_hash: hash })
         .eq("id", resetPinStaff.id);
 
       if (error) throw error;
@@ -181,7 +187,8 @@ export const PayrollManagerTab: React.FC<Props> = ({
   };
 
   // Filter staff list
-  const filteredStaff = staffList.filter((s) => {
+  const activeStaff = staffList.filter(s => !s.is_deleted);
+  const filteredStaff = activeStaff.filter((s) => {
     const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase()) || s.role.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesBranch = filterBranch === "all" || String(s.branch_id) === filterBranch;
     return matchesSearch && matchesBranch;
@@ -397,8 +404,9 @@ export const PayrollManagerTab: React.FC<Props> = ({
                             </button>
                             <button
                               onClick={() => handleDeleteStaff(staff)}
-                              className="p-1.5 bg-slate-800 hover:bg-rose-900 text-rose-400 rounded-lg transition"
-                              title="Delete Permanently"
+                              disabled={!isSuperAdmin}
+                              title={!isSuperAdmin ? 'Super Admin access required' : 'Delete Permanently'}
+                              className="p-1.5 bg-slate-800 hover:bg-rose-900 text-rose-400 rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -552,8 +560,9 @@ export const PayrollManagerTab: React.FC<Props> = ({
               <p className="text-xs text-slate-400">Cycle: {startDate} to {endDate}</p>
               <button
                 onClick={handleApprovePayroll}
-                disabled={isApproving || payrollData.length === 0}
-                className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition disabled:opacity-50"
+                disabled={isApproving || payrollData.length === 0 || !isSuperAdmin}
+                title={!isSuperAdmin ? 'Super Admin access required' : undefined}
+                className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <CheckCircle className="w-4 h-4" />
                 {isApproving ? "Saving..." : "Approve & Finalize Payroll"}

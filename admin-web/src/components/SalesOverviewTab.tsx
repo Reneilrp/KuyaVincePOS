@@ -5,10 +5,22 @@ import { AnalyticsData, Branch } from '../types';
 interface Props {
   data: AnalyticsData;
   branches: Branch[];
+  lastSyncAt?: string | null;
 }
 
-export const SalesOverviewTab: React.FC<Props> = ({ data, branches }) => {
+export const SalesOverviewTab: React.FC<Props> = ({ data, branches, lastSyncAt }) => {
   const kpis = data.kpis;
+
+  const formatSyncAge = (isoStr?: string | null): string => {
+    if (!isoStr) return 'No syncs yet';
+    const diffMs = Date.now() - new Date(isoStr).getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return 'Just now';
+    if (diffMin < 60) return `${diffMin}m ago`;
+    const diffHr = Math.floor(diffMin / 60);
+    if (diffHr < 24) return `${diffHr}h ago`;
+    return `${Math.floor(diffHr / 24)}d ago`;
+  };
   const maxBranchSales = Math.max(...data.branch_comparison.map((b) => b.total_sales), 1);
 
   return (
@@ -24,8 +36,8 @@ export const SalesOverviewTab: React.FC<Props> = ({ data, branches }) => {
             </div>
           </div>
           <p className="text-2xl font-bold text-white mt-3">₱{kpis.total_gross_revenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-          <p className="text-xs text-emerald-400 mt-1 flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5" /> Real-time active register feed
+          <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+            <TrendingUp className="w-3.5 h-3.5" /> Updated on each cashier EOD sync
           </p>
         </div>
 
@@ -72,9 +84,9 @@ export const SalesOverviewTab: React.FC<Props> = ({ data, branches }) => {
           <h2 className="text-base font-bold text-white flex items-center gap-2">
             🏢 Side-by-Side Branch Comparison
           </h2>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-400 text-[10px] font-bold uppercase tracking-wide">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            Live Data
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-semibold">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Synced {formatSyncAge(lastSyncAt)}
           </span>
         </div>
 

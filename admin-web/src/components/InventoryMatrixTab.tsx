@@ -151,12 +151,12 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches, items, onRestock
                       <td className="p-4 font-bold text-emerald-400">₱{item.base_price.toFixed(2)}</td>
                       <td className="p-4 text-slate-400">₱{item.cost_price.toFixed(2)}</td>
                       {branches.map((b) => {
-                        const hasStock = item.branch_stocks[b.id] !== undefined;
+                        const isExcluded = item.excluded_branch_ids?.includes(b.id) ?? false;
                         const stock = item.branch_stocks[b.id] ?? 0;
                         const isBranchLow = stock <= 10;
                         return (
                           <td key={b.id} className="p-4 text-center">
-                            {hasStock ? (
+                            {!isExcluded ? (
                               <span
                                 className={`inline-block px-2.5 py-1 rounded-md font-mono font-bold ${
                                   isBranchLow

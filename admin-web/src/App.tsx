@@ -10,11 +10,24 @@ import { AdminLoginScreen } from "./components/AdminLoginScreen";
 import { supabase } from "./services/supabaseClient";
 import { AnalyticsData, Branch, InventoryItem, PayrollItem, Product, StaffRecord } from "./types";
 
+const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8 hours
+const IDLE_TIMEOUT_MS = 30 * 60 * 1000;    // 30 minutes
+
 export default function App() {
   // Authentication State
-  const [currentUser, setCurrentUser] = useState<{ email: string; role: string } | null>(() => {
-    const saved = localStorage.getItem("kv_pos_admin_user");
-    return saved ? JSON.parse(saved) : null;
+  const [currentUser, setCurrentUser] = useState<{ email: string; role: string; loginAt?: number } | null>(() => {
+    try {
+      const saved = localStorage.getItem('kv_pos_admin_user');
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      if (!parsed.loginAt || Date.now() - parsed.loginAt > SESSION_TTL_MS) {
+        localStorage.removeItem('kv_pos_admin_user');
+        return null;
+      }
+      return parsed;
+    } catch {
+      return null;
+    }
   });
 
   // Navigation & Filter State
@@ -48,8 +61,9 @@ export default function App() {
   });
 
   const handleLoginSuccess = (user: { email: string; role: string }) => {
-    setCurrentUser(user);
-    localStorage.setItem("kv_pos_admin_user", JSON.stringify(user));
+    const userWithSession = { ...user, loginAt: Date.now() };
+    setCurrentUser(userWithSession);
+    localStorage.setItem('kv_pos_admin_user', JSON.stringify(userWithSession));
   };
 
   const handleLogout = () => {
@@ -62,6 +76,29 @@ export default function App() {
       fetchLiveSupabaseData();
     }
   }, [currentUser, selectedBranchId, selectedRange]);
+
+  // Idle session timeout — clear session after 30 min of no user interaction
+  useEffect(() => {
+    if (!currentUser) return;
+    let idleTimer: ReturnType<typeof setTimeout>;
+
+    const resetTimer = () => {
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        localStorage.removeItem('kv_pos_admin_user');
+        setCurrentUser(null);
+      }, IDLE_TIMEOUT_MS);
+    };
+
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    events.forEach((e) => window.addEventListener(e, resetTimer));
+    resetTimer();
+
+    return () => {
+      clearTimeout(idleTimer);
+      events.forEach((e) => window.removeEventListener(e, resetTimer));
+    };
+  }, [currentUser]);
 
   const fetchLiveSupabaseData = async () => {
     setIsLoading(true);
@@ -88,13 +125,18 @@ export default function App() {
       if (prodData) {
         const matrix: InventoryItem[] = prodData.map((p) => {
           const bStocks: Record<number, number> = {};
+          const excludedBranchIds: number[] = [];
           let total = 0;
           if (invData) {
             for (const inv of invData) {
               if (inv.product_id === p.id) {
                 const qty = Number(inv.stock_quantity || 0);
                 bStocks[inv.branch_id] = qty;
-                total += qty;
+                if (inv.is_active === false) {
+                  excludedBranchIds.push(inv.branch_id);
+                } else {
+                  total += qty;
+                }
               }
             }
           }
@@ -106,6 +148,7 @@ export default function App() {
             base_price: Number(p.base_price),
             cost_price: Number(p.cost_price),
             branch_stocks: bStocks,
+            excluded_branch_ids: excludedBranchIds,
             total_stock: total
           };
         });
@@ -251,18 +294,24 @@ export default function App() {
       // Upsert or delete stock per branch
       for (const [branchId, stockQty] of Object.entries(data.branchStocks)) {
         if (stockQty === null || stockQty === undefined) {
-          // Excluded from branch — delete if existing
-          await supabase
-            .from("branch_inventory")
-            .delete()
-            .match({ branch_id: Number(branchId), product_id: savedProd.id });
+          // Excluded — mark row as inactive (preserves last known stock count)
+          await supabase.from("branch_inventory").upsert(
+            {
+              branch_id: Number(branchId),
+              product_id: savedProd.id,
+              is_active: false,
+              updated_at: new Date().toISOString()
+            },
+            { onConflict: "branch_id,product_id" }
+          );
         } else {
-          // Included in branch — upsert stock quantity
+          // Included — upsert stock quantity and mark active
           await supabase.from("branch_inventory").upsert(
             {
               branch_id: Number(branchId),
               product_id: savedProd.id,
               stock_quantity: Number(stockQty || 0),
+              is_active: true,
               updated_at: new Date().toISOString()
             },
             { onConflict: "branch_id,product_id" }
@@ -413,7 +462,7 @@ export default function App() {
             />
           )}
           {activeTab === "sales" && (
-            <SalesOverviewTab data={analytics} branches={branches} />
+            <SalesOverviewTab data={analytics} branches={branches} lastSyncAt={rawBatches[0]?.received_at ?? null} />
           )}
           {activeTab === "payroll" && (
             <PayrollManagerTab
@@ -423,6 +472,7 @@ export default function App() {
               onRefreshStaff={fetchLiveSupabaseData}
               onCalculate={async () => {}}
               onApprove={async () => {}}
+              currentUser={currentUser}
             />
           )}
           {activeTab === "reports" && (

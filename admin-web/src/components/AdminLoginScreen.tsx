@@ -7,7 +7,7 @@ interface Props {
 }
 
 export const AdminLoginScreen: React.FC<Props> = ({ onLoginSuccess }) => {
-  const [email, setEmail] = useState('admin@kuyavincepos.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -15,7 +15,7 @@ export const AdminLoginScreen: React.FC<Props> = ({ onLoginSuccess }) => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password) {
-      setError('Please enter your admin password.');
+      setError('Please enter your password.');
       return;
     }
 
@@ -23,33 +23,19 @@ export const AdminLoginScreen: React.FC<Props> = ({ onLoginSuccess }) => {
     setError(null);
 
     try {
-      // 1. Try Supabase Auth
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
       if (data?.user) {
-        onLoginSuccess({ email: data.user.email || email, role: 'Super Admin' });
+        onLoginSuccess({ email: data.user.email || email, role: data.user.user_metadata?.role || 'Store Owner' });
         return;
       }
 
-      // 2. Admin Master Key Fallback for direct store management
-      if (password === 'admin123' || password === 'kuyavince2026' || password.length >= 6) {
-        onLoginSuccess({ email, role: 'Store Owner' });
-        return;
-      }
-
-      if (authError) {
-        throw authError;
-      }
+      setError(authError?.message || 'Invalid credentials. Check your email and password.');
     } catch (err: any) {
-      // If Supabase user not registered yet, allow master setup login
-      if (password === 'admin123' || password === 'kuyavince') {
-        onLoginSuccess({ email, role: 'Super Admin' });
-      } else {
-        setError(err.message || 'Invalid admin credentials. Use default password "admin123" for initial setup.');
-      }
+      setError(err.message || 'Authentication error. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -104,7 +90,7 @@ export const AdminLoginScreen: React.FC<Props> = ({ onLoginSuccess }) => {
 
           <div>
             <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-              Password / Master PIN
+              Password
             </label>
             <div className="relative">
               <Key className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
@@ -113,11 +99,15 @@ export const AdminLoginScreen: React.FC<Props> = ({ onLoginSuccess }) => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password (e.g. admin123)"
+                placeholder="Enter your password"
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 pl-10 pr-3 text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition"
               />
             </div>
-            <p className="text-[11px] text-slate-500 mt-1">Default initial setup password: <code className="text-blue-400 font-mono">admin123</code></p>
+            <p className="text-[11px] text-slate-500 mt-1">
+              New admin? Create your account in the{' '}
+              <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">Supabase Dashboard</a>{' '}
+              under Authentication → Users.
+            </p>
           </div>
 
           <button

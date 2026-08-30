@@ -5,16 +5,24 @@ interface Props {
   branchName: string;
   cashSales: number;
   openingFloat?: number;
+  // Cashier-entered count from the Sunmi EOD batch (authoritative, read-only unless overridden)
+  cashierEnteredCash?: number;
+  // Admin-entered override value
   initialCountedCash?: number;
+  isAdminOverride?: boolean;
   onSaveCountedCash?: (counted: number) => void;
+  onEnableOverride?: () => void;
 }
 
 export const BranchCashAuditCard: React.FC<Props> = ({
   branchName,
   cashSales,
   openingFloat = 1000.0,
+  cashierEnteredCash,
   initialCountedCash,
-  onSaveCountedCash
+  isAdminOverride = false,
+  onSaveCountedCash,
+  onEnableOverride
 }) => {
   const expectedCash = openingFloat + cashSales;
   const [actualCounted, setActualCounted] = useState<string>(
@@ -22,7 +30,12 @@ export const BranchCashAuditCard: React.FC<Props> = ({
   );
   const [isEditing, setIsEditing] = useState(false);
 
-  const parsedCounted = parseFloat(actualCounted) || 0;
+  // One value for variance — cashier's if present and not overridden, otherwise admin input
+  const showCashierReadOnly = cashierEnteredCash !== undefined && !isAdminOverride;
+  const parsedCounted = showCashierReadOnly
+    ? cashierEnteredCash
+    : (parseFloat(actualCounted) || 0);
+
   const variance = parsedCounted - expectedCash;
   const isBalanced = Math.abs(variance) < 0.01;
   const isOver = variance > 0.01;
@@ -30,7 +43,7 @@ export const BranchCashAuditCard: React.FC<Props> = ({
 
   const handleSave = () => {
     if (onSaveCountedCash) {
-      onSaveCountedCash(parsedCounted);
+      onSaveCountedCash(parseFloat(actualCounted) || 0);
     }
     setIsEditing(false);
   };
@@ -102,35 +115,58 @@ export const BranchCashAuditCard: React.FC<Props> = ({
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
               4. Counted Cash
             </span>
-            <button
-              onClick={() => setIsEditing(!isEditing)}
-              className="text-[10px] text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1"
-            >
-              <Edit3 className="w-3 h-3" /> {isEditing ? 'Done' : 'Edit Count'}
-            </button>
+            {showCashierReadOnly ? (
+              <button
+                onClick={onEnableOverride}
+                className="text-[10px] text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 border border-amber-700 rounded px-1.5 py-0.5"
+              >
+                <AlertCircle className="w-3 h-3" /> Admin Override
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                className="text-[10px] text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1"
+              >
+                <Edit3 className="w-3 h-3" /> {isEditing ? 'Done' : 'Edit Count'}
+              </button>
+            )}
           </div>
 
-          {isEditing ? (
-            <div className="mt-1 flex items-center gap-2">
-              <input
-                type="number"
-                step="0.01"
-                value={actualCounted}
-                onChange={(e) => setActualCounted(e.target.value)}
-                className="w-full bg-slate-900 border border-blue-500 rounded-lg px-2 py-1 text-sm font-bold text-white focus:outline-none"
-              />
-              <button
-                onClick={handleSave}
-                className="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-bold"
-              >
-                Set
-              </button>
-            </div>
+          {showCashierReadOnly ? (
+            <>
+              {/* Cashier read-only display */}
+              <p className="text-lg font-black text-white mt-1">₱{cashierEnteredCash!.toFixed(2)}</p>
+              <span className="text-[10px] text-slate-400">Entered by cashier · read-only</span>
+            </>
           ) : (
-            <p className="text-lg font-black text-white mt-1">₱{parsedCounted.toFixed(2)}</p>
+            <>
+              {isAdminOverride && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-400 bg-amber-950/50 border border-amber-800/60 px-2 py-0.5 rounded-full mb-1 mt-1">
+                  <AlertCircle className="w-3 h-3" /> Admin Override Active
+                </span>
+              )}
+              {isEditing ? (
+                <div className="mt-1 flex items-center gap-2">
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={actualCounted}
+                    onChange={(e) => setActualCounted(e.target.value)}
+                    className="w-full bg-slate-900 border border-blue-500 rounded-lg px-2 py-1 text-sm font-bold text-white focus:outline-none"
+                  />
+                  <button
+                    onClick={handleSave}
+                    className="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-bold"
+                  >
+                    Set
+                  </button>
+                </div>
+              ) : (
+                <p className="text-lg font-black text-white mt-1">₱{parsedCounted.toFixed(2)}</p>
+              )}
+              <span className="text-[10px] text-slate-500">Actual counted in drawer</span>
+            </>
           )}
-
-          <span className="text-[10px] text-slate-500">Actual counted in drawer</span>
         </div>
       </div>
     </div>

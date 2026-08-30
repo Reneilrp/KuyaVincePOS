@@ -41,8 +41,9 @@ export interface InventoryItem {
   image_url?: string;
   base_price: number;
   cost_price: number;
-  branch_stocks: Record<number, number>;
-  total_stock: number;
+  branch_stocks: Record<number, number>;     // ALL branches (active + inactive), last known qty
+  excluded_branch_ids: number[];              // Branches where is_active = false
+  total_stock: number;                        // Sum of ACTIVE branch stocks only
 }
 
 export interface StaffRecord {
@@ -50,9 +51,12 @@ export interface StaffRecord {
   branch_id: number | null;
   name: string;
   role: string;
-  pin_code: string;
+  pin_code: string;          // Legacy plaintext (kept for migration period)
+  pin_salt: string;          // Per-staff random hex salt
+  pin_hash: string;          // SHA-256(salt + normalizedPin)
   hourly_rate: number;
   is_active: boolean;
+  is_deleted?: boolean;      // Soft-delete flag (Issue 5)
 }
 
 export interface PayrollItem {

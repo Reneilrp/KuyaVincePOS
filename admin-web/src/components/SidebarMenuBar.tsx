@@ -158,7 +158,7 @@ export const SidebarMenuBar: React.FC<Props> = ({
               <div className="truncate">
                 <p className="text-xs font-bold text-white truncate">{currentUser.email}</p>
                 <p className="text-[9px] text-slate-400 flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3 text-emerald-400" /> {currentUser.role}
+                  <ShieldCheck className="w-3 h-3 text-emerald-400" /> Role: {currentUser.role} · {currentUser.role === 'Super Admin' ? 'Full access' : 'Read + Edit access'}
                 </p>
               </div>
             </div>
