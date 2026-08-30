@@ -12,7 +12,13 @@ import {
   Layers,
   AlertTriangle,
   CheckCircle2,
-  Edit2
+  Calendar,
+  Users,
+  Smartphone,
+  CreditCard,
+  Wallet,
+  Clock,
+  Printer
 } from 'lucide-react';
 import { Branch, InventoryItem, Product } from '../types';
 
@@ -23,8 +29,7 @@ interface Props {
   branchInventory: InventoryItem[];
   onAssignProduct: (branchId: number, productId: number, stockQty: number) => Promise<void>;
   onRestock: (branchId: number, productId: number, qty: number, notes: string) => Promise<void>;
-  totalBranchSales: number;
-  totalBranchOrders: number;
+  batches: any[];
 }
 
 export const BranchDetailView: React.FC<Props> = ({
@@ -34,19 +39,24 @@ export const BranchDetailView: React.FC<Props> = ({
   branchInventory,
   onAssignProduct,
   onRestock,
-  totalBranchSales,
-  totalBranchOrders
+  batches
 }) => {
+  const [innerTab, setInnerTab] = useState<'sales' | 'inventory' | 'staff' | 'devices'>('sales');
+  const [dateRange, setDateRange] = useState<'today' | 'week' | 'month' | 'custom'>('today');
+  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [copied, setCopied] = useState(false);
+
+  // Assign product modal
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState<number>(masterProducts[0]?.id || 1);
   const [assignStockQty, setAssignStockQty] = useState('50');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Restock state
+  // Restock modal
   const [restockProduct, setRestockProduct] = useState<InventoryItem | null>(null);
   const [restockQty, setRestockQty] = useState('20');
-  const [restockNotes, setRestockNotes] = useState('Store delivery');
+  const [restockNotes, setRestockNotes] = useState('Weekly replenishment');
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(branch.import_code || branch.code);
@@ -54,8 +64,45 @@ export const BranchDetailView: React.FC<Props> = ({
     setTimeout(() => setCopied(false), 3000);
   };
 
-  // Products assigned to this branch
+  // Filter batches for this specific branch
+  const branchBatches = batches.filter((b) => Number(b.branch_id) === Number(branch.id));
+
+  // Compute Branch Specific KPIs
+  let branchGrossSales = 0;
+  let branchOrdersCount = 0;
+  let cashSales = 0;
+  let ewalletSales = 0;
+  let cardSales = 0;
+  const itemSalesMap: Record<string, { qty: number; revenue: number }> = {};
+
+  for (const b of branchBatches) {
+    branchGrossSales += Number(b.gross_sales || 0);
+    branchOrdersCount += Number(b.orders_count || 0);
+    cashSales += Number(b.cash_sales || 0);
+    ewalletSales += Number(b.ewallet_sales || 0);
+    cardSales += Number(b.card_sales || 0);
+
+    if (Array.isArray(b.orders_payload)) {
+      for (const ord of b.orders_payload) {
+        if (Array.isArray(ord.items)) {
+          for (const it of ord.items) {
+            const pName = it.name || 'Custom Product';
+            if (!itemSalesMap[pName]) itemSalesMap[pName] = { qty: 0, revenue: 0 };
+            itemSalesMap[pName].qty += Number(it.qty || 1);
+            itemSalesMap[pName].revenue += Number(it.total_price || (it.qty * it.unit_price) || 0);
+          }
+        }
+      }
+    }
+  }
+
+  const topBranchProducts = Object.entries(itemSalesMap)
+    .map(([name, stat]) => ({ name, qty: stat.qty, revenue: stat.revenue }))
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5);
+
   const assignedItems = branchInventory.filter((item) => (item.branch_stocks[branch.id] ?? 0) >= 0);
+  const totalStockOnFloor = assignedItems.reduce((sum, i) => sum + (i.branch_stocks[branch.id] || 0), 0);
 
   const handleAssignSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,11 +130,9 @@ export const BranchDetailView: React.FC<Props> = ({
     }
   };
 
-  const totalStockCount = assignedItems.reduce((sum, i) => sum + (i.branch_stocks[branch.id] || 0), 0);
-
   return (
     <div className="space-y-6">
-      {/* 1. Top Navigation & Breadcrumb */}
+      {/* 1. Top Breadcrumb Header */}
       <div className="flex items-center justify-between">
         <button
           onClick={onBack}
@@ -96,12 +141,14 @@ export const BranchDetailView: React.FC<Props> = ({
           <ArrowLeft className="w-4 h-4" /> Back to All Branches
         </button>
 
-        <span className="text-xs text-slate-400 font-medium">
-          Branch ID #{branch.id} • Registered in Zamboanga City
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-400 font-medium">
+            Branch #{branch.id} • Zamboanga City Network
+          </span>
+        </div>
       </div>
 
-      {/* 2. Branch Header Hero Card (Dorm-style drilldown header) */}
+      {/* 2. Branch Hero Banner with Sunmi Code */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-6">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex items-start sm:items-center gap-4">
@@ -109,23 +156,23 @@ export const BranchDetailView: React.FC<Props> = ({
               🏢
             </div>
             <div>
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2.5 flex-wrap">
                 <h1 className="text-xl font-black text-white tracking-tight">{branch.name}</h1>
                 <span className="px-2.5 py-0.5 rounded-full bg-blue-950 text-blue-400 border border-blue-800 font-mono text-xs font-bold">
                   {branch.code}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                📍 {branch.address || 'Zamboanga City'} • 📞 {branch.phone || 'No phone set'}
+              <p className="text-xs text-slate-400 mt-1">
+                📍 {branch.address || 'Zamboanga City'} • 📞 {branch.phone || 'No phone'}
               </p>
             </div>
           </div>
 
-          {/* Sunmi Mobile Import Code Badge */}
+          {/* Sunmi Mobile Pairing Code Box */}
           <div className="bg-slate-950 border-2 border-dashed border-blue-500/50 rounded-xl px-5 py-3 flex items-center justify-between gap-4">
             <div>
               <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                📱 Sunmi Mobile Import Code
+                📱 Sunmi Device Import Code
               </span>
               <span className="text-lg font-mono font-black text-blue-400 tracking-widest">
                 {branch.import_code || branch.code}
@@ -142,140 +189,387 @@ export const BranchDetailView: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* 3. Branch Quick KPIs */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-800/80">
-          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <DollarSign className="w-3.5 h-3.5 text-emerald-400" /> Total Branch Revenue
-            </span>
-            <p className="text-xl font-bold text-emerald-400 mt-1">₱{totalBranchSales.toFixed(2)}</p>
-          </div>
-
-          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <ShoppingCart className="w-3.5 h-3.5 text-blue-400" /> Total Orders Completed
-            </span>
-            <p className="text-xl font-bold text-white mt-1">{totalBranchOrders} Orders</p>
-          </div>
-
-          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Package className="w-3.5 h-3.5 text-amber-400" /> Available Stock on Floor
-            </span>
-            <p className="text-xl font-bold text-white mt-1">{totalStockCount} Units</p>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. Branch Products & Stock List */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-          <div>
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              📦 Products & Stock at {branch.name}
-            </h2>
-            <p className="text-xs text-slate-400">
-              Select products from your centralized Master Catalog to stock this branch
-            </p>
-          </div>
+        {/* 3. Branch Inner Tabs */}
+        <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-800/80">
+          <button
+            onClick={() => setInnerTab('sales')}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition ${
+              innerTab === 'sales'
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+            }`}
+          >
+            <TrendingUp className="w-4 h-4" /> Branch Sales & Overview
+          </button>
 
           <button
-            onClick={() => setIsAssignModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition shadow-sm"
+            onClick={() => setInnerTab('inventory')}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition ${
+              innerTab === 'inventory'
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+            }`}
           >
-            <Plus className="w-4 h-4" /> Assign Product from Catalog
+            <Package className="w-4 h-4" /> Stock at this Branch ({assignedItems.length})
+          </button>
+
+          <button
+            onClick={() => setInnerTab('devices')}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition ${
+              innerTab === 'devices'
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+            }`}
+          >
+            <Smartphone className="w-4 h-4" /> Sunmi Terminal & Pairing
           </button>
         </div>
-
-        {/* Products Table for this Branch */}
-        {assignedItems.length === 0 ? (
-          <div className="p-10 text-center space-y-3 bg-slate-950/50 rounded-xl border border-slate-800">
-            <div className="w-10 h-10 rounded-full bg-slate-800 mx-auto flex items-center justify-center text-slate-400">
-              <Layers className="w-5 h-5" />
-            </div>
-            <h3 className="text-sm font-bold text-slate-200">No Products Assigned to this Branch</h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              Select an item from the centralized Master Catalog to allocate inventory to this location.
-            </p>
-            <button
-              onClick={() => setIsAssignModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition"
-            >
-              <Plus className="w-4 h-4" /> Select First Item
-            </button>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-950/80 text-[11px] uppercase font-bold text-slate-400 tracking-wider border-b border-slate-800">
-                <tr>
-                  <th className="p-3.5">Item Name</th>
-                  <th className="p-3.5">Category</th>
-                  <th className="p-3.5">Selling Price</th>
-                  <th className="p-3.5 text-center">Stock at this Branch</th>
-                  <th className="p-3.5 text-center">Status</th>
-                  <th className="p-3.5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {assignedItems.map((item) => {
-                  const stock = item.branch_stocks[branch.id] || 0;
-                  const isLow = stock <= 10;
-
-                  return (
-                    <tr key={item.product_id} className="hover:bg-slate-800/40 transition">
-                      <td className="p-3.5">
-                        <div className="flex items-center gap-3">
-                          {item.image_url ? (
-                            <img src={item.image_url} alt="" className="w-7 h-7 rounded-lg object-cover bg-slate-800" />
-                          ) : (
-                            <div className="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-xs">
-                              ☕
-                            </div>
-                          )}
-                          <span className="font-bold text-white text-sm">{item.name}</span>
-                        </div>
-                      </td>
-                      <td className="p-3.5 text-slate-400">{item.category}</td>
-                      <td className="p-3.5 font-bold text-emerald-400">₱{item.base_price.toFixed(2)}</td>
-                      <td className="p-3.5 text-center">
-                        <span className="font-mono font-bold text-sm text-white px-3 py-1 bg-slate-950 rounded-lg border border-slate-800">
-                          {stock}
-                        </span>
-                      </td>
-                      <td className="p-3.5 text-center">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
-                            isLow
-                              ? 'bg-rose-950/80 text-rose-400 border border-rose-800'
-                              : 'bg-emerald-950/80 text-emerald-400 border border-emerald-800'
-                          }`}
-                        >
-                          {isLow ? <AlertTriangle className="w-3 h-3" /> : <CheckCircle2 className="w-3 h-3" />}
-                          {isLow ? 'Low Stock' : 'In Stock'}
-                        </span>
-                      </td>
-                      <td className="p-3.5 text-right">
-                        <button
-                          onClick={() => {
-                            setRestockProduct(item);
-                            setRestockQty('20');
-                          }}
-                          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition text-xs"
-                        >
-                          + Restock
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
 
-      {/* 5. Assign Product from Master Catalog Modal (No re-typing names!) */}
+      {/* 4. Branch Tab 1: Sales & Financial Overview */}
+      {innerTab === 'sales' && (
+        <div className="space-y-6">
+          {/* Time & Specific Date Filter Bar */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-blue-400" />
+              <span className="text-xs font-bold text-white uppercase tracking-wider">Branch Performance Period:</span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {(['today', 'week', 'month', 'custom'] as const).map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setDateRange(r)}
+                  className={`px-3 py-1 text-xs font-semibold rounded-lg capitalize transition ${
+                    dateRange === r
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {r === 'today' ? 'Today' : r === 'week' ? 'This Week' : r === 'month' ? 'This Month' : 'Specific Date Range'}
+                </button>
+              ))}
+
+              {dateRange === 'custom' && (
+                <div className="flex items-center gap-2 pl-2">
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-lg p-1"
+                  />
+                  <span className="text-slate-500 text-xs">to</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-lg p-1"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Quick KPI Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                Total Gross Revenue
+              </span>
+              <p className="text-2xl font-black text-emerald-400 mt-1">₱{branchGrossSales.toFixed(2)}</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">{branch.name} only</p>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                Total Orders Completed
+              </span>
+              <p className="text-2xl font-black text-white mt-1">{branchOrdersCount} Orders</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">Checked out on Sunmi</p>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                Average Ticket Size
+              </span>
+              <p className="text-2xl font-black text-white mt-1">
+                ₱{branchOrdersCount > 0 ? (branchGrossSales / branchOrdersCount).toFixed(2) : '0.00'}
+              </p>
+              <p className="text-[10px] text-slate-500 mt-0.5">Per customer order</p>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                Floor Inventory Stock
+              </span>
+              <p className="text-2xl font-black text-blue-400 mt-1">{totalStockOnFloor} Units</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">{assignedItems.length} menu items active</p>
+            </div>
+          </div>
+
+          {/* Payment Method Breakdown for this branch */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              💳 Payment Collection at {branch.name}
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-950 border border-emerald-900 flex items-center justify-center text-emerald-400">
+                    <DollarSign className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white">Cash in Drawer</p>
+                    <p className="text-[10px] text-slate-400">Cashier register physical cash</p>
+                  </div>
+                </div>
+                <p className="text-base font-bold text-emerald-400">₱{cashSales.toFixed(2)}</p>
+              </div>
+
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-950 border border-blue-900 flex items-center justify-center text-blue-400">
+                    <Wallet className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white">E-Wallets (GCash / Maya)</p>
+                    <p className="text-[10px] text-slate-400">QR digital payments</p>
+                  </div>
+                </div>
+                <p className="text-base font-bold text-blue-400">₱{ewalletSales.toFixed(2)}</p>
+              </div>
+
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-purple-950 border border-purple-900 flex items-center justify-center text-purple-400">
+                    <CreditCard className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white">Credit / Debit Cards</p>
+                    <p className="text-[10px] text-slate-400">Card terminal sales</p>
+                  </div>
+                </div>
+                <p className="text-base font-bold text-purple-400">₱{cardSales.toFixed(2)}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Daily Batch Sync History for this Branch */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              📜 Daily Batch Upload History (Sunmi 1-Tap Logs)
+            </h3>
+
+            {branchBatches.length === 0 ? (
+              <div className="p-8 text-center bg-slate-950/60 rounded-xl border border-slate-800 text-xs text-slate-400">
+                No batches synchronized from this branch yet. When the cashier taps "📤 Send Today's Sales" on the Sunmi terminal, the audit record will appear here.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs text-slate-300">
+                  <thead className="bg-slate-950 text-[11px] uppercase font-bold text-slate-400 border-b border-slate-800">
+                    <tr>
+                      <th className="p-3">Sync Date</th>
+                      <th className="p-3">Batch ID</th>
+                      <th className="p-3">Device Serial</th>
+                      <th className="p-3 text-center">Orders</th>
+                      <th className="p-3 text-right">Gross Sales</th>
+                      <th className="p-3 text-right">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800">
+                    {branchBatches.map((batch) => (
+                      <tr key={batch.id} className="hover:bg-slate-800/40">
+                        <td className="p-3 font-semibold text-white">{batch.sync_date}</td>
+                        <td className="p-3 font-mono text-blue-400">{batch.batch_id}</td>
+                        <td className="p-3 text-slate-400">{batch.device_serial || 'SUNMI-V2S'}</td>
+                        <td className="p-3 text-center font-bold">{batch.orders_count}</td>
+                        <td className="p-3 text-right font-bold text-emerald-400">₱{Number(batch.gross_sales).toFixed(2)}</td>
+                        <td className="p-3 text-right">
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-bold">
+                            Ingested
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 5. Branch Tab 2: Stock & Commissary at this Branch */}
+      {innerTab === 'inventory' && (
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                📦 Products & Stock at {branch.name}
+              </h2>
+              <p className="text-xs text-slate-400">
+                Select items from your centralized Master Catalog to stock this branch
+              </p>
+            </div>
+
+            <button
+              onClick={() => setIsAssignModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition shadow-sm"
+            >
+              <Plus className="w-4 h-4" /> Assign Product from Master Catalog
+            </button>
+          </div>
+
+          {assignedItems.length === 0 ? (
+            <div className="p-10 text-center space-y-3 bg-slate-950/50 rounded-xl border border-slate-800">
+              <div className="w-10 h-10 rounded-full bg-slate-800 mx-auto flex items-center justify-center text-slate-400">
+                <Layers className="w-5 h-5" />
+              </div>
+              <h3 className="text-sm font-bold text-slate-200">No Products Assigned to this Branch</h3>
+              <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                Select an item from the centralized Master Catalog to allocate inventory to this location.
+              </p>
+              <button
+                onClick={() => setIsAssignModalOpen(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition"
+              >
+                <Plus className="w-4 h-4" /> Select First Item
+              </button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-300">
+                <thead className="bg-slate-950/80 text-[11px] uppercase font-bold text-slate-400 tracking-wider border-b border-slate-800">
+                  <tr>
+                    <th className="p-3.5">Item Name</th>
+                    <th className="p-3.5">Category</th>
+                    <th className="p-3.5">Selling Price</th>
+                    <th className="p-3.5 text-center">Stock at this Branch</th>
+                    <th className="p-3.5 text-center">Status</th>
+                    <th className="p-3.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {assignedItems.map((item) => {
+                    const stock = item.branch_stocks[branch.id] || 0;
+                    const isLow = stock <= 10;
+
+                    return (
+                      <tr key={item.product_id} className="hover:bg-slate-800/40 transition">
+                        <td className="p-3.5">
+                          <div className="flex items-center gap-3">
+                            {item.image_url ? (
+                              <img src={item.image_url} alt="" className="w-7 h-7 rounded-lg object-cover bg-slate-800" />
+                            ) : (
+                              <div className="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-xs">
+                                ☕
+                              </div>
+                            )}
+                            <span className="font-bold text-white text-sm">{item.name}</span>
+                          </div>
+                        </td>
+                        <td className="p-3.5 text-slate-400">{item.category}</td>
+                        <td className="p-3.5 font-bold text-emerald-400">₱{item.base_price.toFixed(2)}</td>
+                        <td className="p-3.5 text-center">
+                          <span className="font-mono font-bold text-sm text-white px-3 py-1 bg-slate-950 rounded-lg border border-slate-800">
+                            {stock}
+                          </span>
+                        </td>
+                        <td className="p-3.5 text-center">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
+                              isLow
+                                ? 'bg-rose-950/80 text-rose-400 border border-rose-800'
+                                : 'bg-emerald-950/80 text-emerald-400 border border-emerald-800'
+                            }`}
+                          >
+                            {isLow ? <AlertTriangle className="w-3 h-3" /> : <CheckCircle2 className="w-3 h-3" />}
+                            {isLow ? 'Low Stock' : 'In Stock'}
+                          </span>
+                        </td>
+                        <td className="p-3.5 text-right">
+                          <button
+                            onClick={() => {
+                              setRestockProduct(item);
+                              setRestockQty('20');
+                            }}
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition text-xs"
+                          >
+                            + Restock
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 6. Branch Tab 3: Sunmi Terminal & Pairing */}
+      {innerTab === 'devices' && (
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-6">
+          <div>
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              📱 Sunmi Terminal Pairing Instructions
+            </h2>
+            <p className="text-xs text-slate-400">
+              How to connect a new or existing handheld POS terminal to {branch.name}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
+              <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">
+                Step-by-Step Setup
+              </span>
+              <ol className="space-y-3 text-xs text-slate-300 list-decimal list-inside">
+                <li>Turn on the Sunmi Handheld device.</li>
+                <li>Open the <strong>KuyaVince POS</strong> application.</li>
+                <li>When prompted for the Branch Import Code, enter:</li>
+              </ol>
+
+              <div className="p-4 bg-slate-900 border-2 border-dashed border-blue-500 rounded-xl text-center">
+                <span className="block text-[10px] text-slate-400 font-bold uppercase">Import Code</span>
+                <span className="text-2xl font-mono font-black text-blue-400 tracking-widest">
+                  {branch.import_code || branch.code}
+                </span>
+              </div>
+
+              <p className="text-[11px] text-slate-400">
+                The Sunmi device will instantly download this branch's assigned menu items and prices in ~1 second.
+              </p>
+            </div>
+
+            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-3">
+              <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
+                Terminal Capabilities on Store Floor
+              </span>
+              <ul className="space-y-2 text-xs text-slate-300">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" /> 100% Offline Daytime Tap-to-Order
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Automatic 58mm Thermal Receipt Printing
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" /> 1-Tap Closing Cloud Sync
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Physical 58mm Z-Reading Audit Slip
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 7. Assign Product Modal */}
       {isAssignModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
@@ -336,7 +630,7 @@ export const BranchDetailView: React.FC<Props> = ({
         </div>
       )}
 
-      {/* 6. Restock Modal */}
+      {/* 8. Restock Modal */}
       {restockProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">

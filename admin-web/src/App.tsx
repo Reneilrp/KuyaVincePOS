@@ -27,6 +27,8 @@ export default function App() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [inventoryMatrix, setInventoryMatrix] = useState<InventoryItem[]>([]);
   const [payrollData, setPayrollData] = useState<PayrollItem[]>([]);
+  const [rawBatches, setRawBatches] = useState<any[]>([]);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [analytics, setAnalytics] = useState<AnalyticsData>({
     filters: { branch_id: 'all', range: 'today', start_date: '', end_date: '' },
     kpis: {
@@ -104,6 +106,7 @@ export default function App() {
         batchQuery = batchQuery.eq('branch_id', Number(selectedBranchId));
       }
       const { data: batches } = await batchQuery;
+      setRawBatches(batches || []);
 
       if (batches && batches.length > 0) {
         let totalGross = 0;
@@ -332,6 +335,8 @@ export default function App() {
         onSelectTab={setActiveTab}
         currentUser={currentUser}
         onLogout={handleLogout}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
       />
 
       {/* 2. Main Content Container */}
@@ -360,6 +365,7 @@ export default function App() {
               analytics={analytics}
               onAssignProduct={handleAssignProductToBranch}
               onRestock={handleRestock}
+              batches={rawBatches}
             />
           )}
           {activeTab === 'inventory' && (

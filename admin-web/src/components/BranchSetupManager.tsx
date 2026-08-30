@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building2, Copy, Check, Plus, Edit2, ChevronRight, TrendingUp, ShoppingBag, Layers } from 'lucide-react';
+import { Building2, Copy, Check, Plus, Edit2, ChevronRight } from 'lucide-react';
 import { BranchDetailView } from './BranchDetailView';
 import { AnalyticsData, Branch, InventoryItem, Product } from '../types';
 
@@ -11,6 +11,7 @@ interface Props {
   analytics: AnalyticsData;
   onAssignProduct: (branchId: number, productId: number, stockQty: number) => Promise<void>;
   onRestock: (branchId: number, productId: number, qty: number, notes: string) => Promise<void>;
+  batches: any[];
 }
 
 export const BranchSetupManager: React.FC<Props> = ({
@@ -20,7 +21,8 @@ export const BranchSetupManager: React.FC<Props> = ({
   branchInventory,
   analytics,
   onAssignProduct,
-  onRestock
+  onRestock,
+  batches
 }) => {
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -69,10 +71,6 @@ export const BranchSetupManager: React.FC<Props> = ({
 
   // If a branch is clicked, drill down to its dedicated Branch Detail View (AccommoTrack-M style)
   if (selectedBranch) {
-    const branchComparison = analytics.branch_comparison.find((b) => b.branch_id === selectedBranch.id);
-    const branchSales = branchComparison?.total_sales || 0;
-    const branchOrders = branchComparison?.order_count || 0;
-
     return (
       <BranchDetailView
         branch={selectedBranch}
@@ -81,8 +79,7 @@ export const BranchSetupManager: React.FC<Props> = ({
         branchInventory={branchInventory}
         onAssignProduct={onAssignProduct}
         onRestock={onRestock}
-        totalBranchSales={branchSales}
-        totalBranchOrders={branchOrders}
+        batches={batches}
       />
     );
   }
@@ -96,7 +93,7 @@ export const BranchSetupManager: React.FC<Props> = ({
             🏢 Store Branches Hub
           </h2>
           <p className="text-xs text-slate-400">
-            Click on any branch card to view its sales, live stock, and assign products from the Master Catalog
+            Click on any branch card to view its specific sales, overview of the day/week/month, live stock, and assign products
           </p>
         </div>
 
