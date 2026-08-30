@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
 import { ThermalReceiptData } from '../types';
 import { ApiService } from '../services/ApiService';
+import { BatchSyncService } from '../services/BatchSyncService';
 import { SunmiPrinterDriver } from '../services/SunmiPrinterDriver';
 import { usePosStore } from '../stores/usePosStore';
 import { useLanguage } from '../context/LanguageContext';
@@ -99,6 +100,26 @@ export const PaymentScreen: React.FC<Props> = ({ onBack, onSuccess }) => {
         };
       }
       
+      // 1. Save locally to offline-first batch queue for End-of-Day Sync
+      await BatchSyncService.saveOrderLocally({
+        order_number: receipt.order_info.order_number,
+        client_tx_id: 'TX-' + Date.now(),
+        subtotal: total,
+        total_amount: total,
+        payment_method: 'cash',
+        amount_tendered: tenderedAmount,
+        change_amount: changeAmount,
+        created_at: new Date().toISOString(),
+        items: cart.map(i => ({
+          product_id: i.product.id,
+          name: i.product.name,
+          qty: i.quantity,
+          unit_price: i.unit_price,
+          total_price: i.total_price
+        }))
+      });
+
+      // 2. Print Thermal Slip
       try {
         await SunmiPrinterDriver.printReceipt(receipt);
       } catch (e) {

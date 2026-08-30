@@ -1,5 +1,16 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const SUPABASE_URL = 'https://diddsyaqdqxvadgttguq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpZGRzeWFxZHF4dmFkZ3R0Z3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwNTI1NzQsImV4cCI6MjEwMzYyODU3NH0.0JKA5syorKUuwP5KtFTjQXpQFwb_uYuDyM8yL4ZdRh4';
+
+export interface LocalOrderItem {
+  product_id: number | null;
+  name: string;
+  qty: number;
+  unit_price: number;
+  total_price: number;
+}
+
 export interface LocalOrderRecord {
   order_number: string;
   client_tx_id: string;
@@ -9,22 +20,15 @@ export interface LocalOrderRecord {
   amount_tendered: number;
   change_amount: number;
   created_at: string;
-  items: Array<{
-    product_id: number | null;
-    name: string;
-    qty: number;
-    unit_price: number;
-    total_price: number;
-  }>;
+  items: LocalOrderItem[];
   synced: boolean;
 }
 
 export class BatchSyncService {
   private static STORAGE_KEY = 'pos_local_orders_queue';
-  private static API_URL = 'http://localhost:8000/api/v1/sync/batch-push';
 
   /**
-   * Save an order locally during daytime (100% offline).
+   * Save an order locally during daytime (100% offline-first).
    */
   public static async saveOrderLocally(order: Omit<LocalOrderRecord, 'synced'>): Promise<void> {
     try {
@@ -37,7 +41,7 @@ export class BatchSyncService {
   }
 
   /**
-   * Get all local orders for the active day.
+   * Get all local orders stored on device.
    */
   public static async getLocalOrders(): Promise<LocalOrderRecord[]> {
     try {
@@ -49,9 +53,14 @@ export class BatchSyncService {
   }
 
   /**
-   * 1-Tap End-of-Day Sync: Sends all un-synced orders in 1 single HTTP request.
+   * 1-Tap End-of-Day Sync: Sends all un-synced orders directly to Supabase daily_batches table.
    */
-  public static async pushDailyBatchToServer(branchId: number, deviceSerial: string, shiftSummary?: any, stockAdjustments?: any[]): Promise<{
+  public static async pushDailyBatchToServer(
+    branchId: number,
+    deviceSerial: string,
+    shiftSummary?: any,
+    stockAdjustments?: any[]
+  ): Promise<{
     success: boolean;
     message: string;
     syncedCount: number;
@@ -60,10 +69,10 @@ export class BatchSyncService {
     const allOrders = await this.getLocalOrders();
     const pendingOrders = allOrders.filter((o) => !o.synced);
 
-    if (pendingOrders.length === 0) {
+    if (pendingOrders.length === 0 && (!stockAdjustments || stockAdjustments.length === 0)) {
       return {
         success: true,
-        message: 'All daily sales are already synchronized with the cloud.',
+        message: 'All daily sales and inventory adjustments are already backed up to the cloud.',
         syncedCount: 0,
         grossSales: 0
       };
@@ -71,52 +80,89 @@ export class BatchSyncService {
 
     const batchId = `BATCH-${deviceSerial}-${new Date().toISOString().split('T')[0]}-${Date.now()}`;
     const syncDate = new Date().toISOString().split('T')[0];
+    const grossSales = pendingOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
 
     const payload = {
-      branch_id: branchId,
+      branch_id: Number(branchId) || 1,
       batch_id: batchId,
       device_serial: deviceSerial,
       sync_date: syncDate,
-      shift_summary: shiftSummary,
-      stock_adjustments: stockAdjustments || [],
-      orders: pendingOrders
+      orders_count: pendingOrders.length,
+      gross_sales: grossSales,
+      cash_sales: grossSales,
+      ewallet_sales: 0.0,
+      card_sales: 0.0,
+      orders_payload: pendingOrders,
+      timeclocks_payload: [],
+      shift_summary: shiftSummary || null
     };
 
     try {
-      const response = await fetch(this.API_URL, {
+      // 1. Insert Daily Batch Record to Supabase
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/daily_batches`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation'
+        },
         body: JSON.stringify(payload)
       });
 
-      const json = await response.json();
-
-      if (response.ok || json.status === 'duplicate_acknowledged') {
-        // Mark all local orders as synced
-        const updated = allOrders.map((o) => ({ ...o, synced: true }));
-        await AsyncStorage.setItem(this.STORAGE_KEY, JSON.stringify(updated));
-
-        return {
-          success: true,
-          message: json.message || 'Daily sales batch synchronized successfully!',
-          syncedCount: pendingOrders.length,
-          grossSales: pendingOrders.reduce((sum, o) => sum + o.total_amount, 0)
-        };
-      } else {
-        throw new Error(json.message || 'Server rejected batch upload');
+      if (!response.ok) {
+        const errBody = await response.text();
+        throw new Error(`Supabase upload failed (${response.status}): ${errBody}`);
       }
-    } catch (err: any) {
-      console.warn('Batch sync offline fallback simulation', err);
-      // For standalone demo simulation if server is offline
+
+      // 2. If stock adjustments exist, reconcile them in Supabase
+      if (stockAdjustments && stockAdjustments.length > 0) {
+        for (const adj of stockAdjustments) {
+          try {
+            // Get current stock
+            const curRes = await fetch(
+              `${SUPABASE_URL}/rest/v1/branch_inventory?branch_id=eq.${branchId}&product_id=eq.${adj.product_id}&select=*`,
+              {
+                headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+              }
+            );
+            const curRows = await curRes.json();
+            const curStock = curRows && curRows.length > 0 ? Number(curRows[0].stock_quantity || 0) : 0;
+
+            await fetch(`${SUPABASE_URL}/rest/v1/branch_inventory`, {
+              method: 'POST',
+              headers: {
+                apikey: SUPABASE_KEY,
+                Authorization: `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                Prefer: 'resolution=merge-duplicates'
+              },
+              body: JSON.stringify({
+                branch_id: Number(branchId),
+                product_id: Number(adj.product_id),
+                stock_quantity: curStock + Number(adj.qty_added),
+                updated_at: new Date().toISOString()
+              })
+            });
+          } catch (adjErr) {
+            console.warn('Could not sync stock adjustment for product', adj.product_id, adjErr);
+          }
+        }
+      }
+
+      // 3. Mark all local orders as synced in AsyncStorage
       const updated = allOrders.map((o) => ({ ...o, synced: true }));
       await AsyncStorage.setItem(this.STORAGE_KEY, JSON.stringify(updated));
 
       return {
         success: true,
-        message: `Synced ${pendingOrders.length} orders locally to archive (Simulated).`,
+        message: `Successfully uploaded batch ${batchId} (${pendingOrders.length} orders, ₱${grossSales.toFixed(2)}) directly to Supabase Cloud!`,
         syncedCount: pendingOrders.length,
-        grossSales: pendingOrders.reduce((sum, o) => sum + o.total_amount, 0)
+        grossSales: grossSales
       };
+    } catch (err: any) {
+      console.error('Batch sync cloud upload error:', err);
+      throw err;
     }
   }
 }
