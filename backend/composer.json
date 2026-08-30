@@ -1,0 +1,35 @@
+{
+    "name": "sunmi-pos/multi-branch-backend",
+    "description": "Multi-Branch Cloud POS Backend Engine with Sunmi Hardware Support",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "illuminate/database": "^11.0",
+        "illuminate/support": "^11.0",
+        "illuminate/routing": "^11.0",
+        "illuminate/events": "^11.0",
+        "illuminate/http": "^11.0",
+        "illuminate/validation": "^11.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.0",
+        "phpunit/phpunit": "^10.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "SunmiPos\\Backend\\": "src/",
+            "SunmiPos\\Backend\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SunmiPos\\Backend\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "audit": {
+            "block-insecure": false
+        }
+    }
+}

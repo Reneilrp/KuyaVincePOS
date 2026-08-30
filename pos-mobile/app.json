@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Sunmi POS",
+    "slug": "sunmi-multibranch-pos",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1E293B"
+    },
+    "android": {
+      "package": "com.sunmipos.multibranch",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1E293B"
+      },
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ]
+    },
+    "jsEngine": "hermes"
+  }
+}
