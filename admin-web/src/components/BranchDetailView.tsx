@@ -18,7 +18,10 @@ import {
   CreditCard,
   Wallet,
   Clock,
-  Printer
+  Printer,
+  MapPin,
+  Phone,
+  Tag
 } from "lucide-react";
 import { BranchCashAuditCard } from "./BranchCashAuditCard";
 import { BranchStaffManager } from "./BranchStaffManager";
@@ -57,7 +60,6 @@ export const BranchDetailView: React.FC<Props> = ({
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
   const [copied, setCopied] = useState(false);
-  const [localZReportOpen, setLocalZReportOpen] = useState(false);
 
   // Assign product modal
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -77,12 +79,6 @@ export const BranchDetailView: React.FC<Props> = ({
     navigator.clipboard.writeText(branch.import_code || branch.code);
     setCopied(true);
     setTimeout(() => setCopied(false), 3000);
-  };
-
-  const showZReport = isZReportModalOpen || localZReportOpen;
-  const closeZReport = () => {
-    if (onCloseZReportModal) onCloseZReportModal();
-    setLocalZReportOpen(false);
   };
 
   // Filter batches for this specific branch
@@ -148,66 +144,20 @@ export const BranchDetailView: React.FC<Props> = ({
 
   return (
     <div className="space-y-6">
-      {/* 1. Top Breadcrumb Header */}
-      <div className="flex items-center justify-between">
+      {/* 1. Clean Top Header: Back Button & Sub-Tabs Navigation */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-sm">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold transition shadow-sm"
+          className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold transition shadow-sm"
         >
           <ArrowLeft className="w-4 h-4" /> Back to All Branches
         </button>
 
-        <span className="text-xs text-slate-400 font-medium">
-          Branch #{branch.id} • Zamboanga City Network
-        </span>
-      </div>
-
-      {/* 2. Branch Hero Banner with Sunmi Code */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-6">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex items-start sm:items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-blue-500/20 flex-shrink-0">
-              🏢
-            </div>
-            <div>
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <h1 className="text-xl font-black text-white tracking-tight">{branch.name}</h1>
-                <span className="px-2.5 py-0.5 rounded-full bg-blue-950 text-blue-400 border border-blue-800 font-mono text-xs font-bold">
-                  {branch.code}
-                </span>
-              </div>
-              <p className="text-xs text-slate-400 mt-1">
-                📍 {branch.address || "Zamboanga City"} • 📞 {branch.phone || "No phone set"}
-              </p>
-            </div>
-          </div>
-
-          {/* Sunmi Mobile Pairing Code Box */}
-          <div className="bg-slate-950 border-2 border-dashed border-blue-500/50 rounded-xl px-5 py-3 flex items-center justify-between gap-4">
-            <div>
-              <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                📱 Sunmi Device Import Code
-              </span>
-              <span className="text-lg font-mono font-black text-blue-400 tracking-widest">
-                {branch.import_code || branch.code}
-              </span>
-            </div>
-            <button
-              onClick={handleCopyCode}
-              className="p-2 rounded-lg bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white transition flex items-center gap-1.5 text-xs font-bold"
-              title="Copy Code"
-            >
-              {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-              <span>{copied ? "Copied" : "Copy"}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* 3. Branch Inner Tabs */}
-        <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-800/80">
+        {/* Sub-Tabs Selector */}
+        <div className="flex flex-wrap gap-1.5">
           <button
             onClick={() => setInnerTab("sales")}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition ${
+            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition ${
               innerTab === "sales"
                 ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
@@ -218,7 +168,7 @@ export const BranchDetailView: React.FC<Props> = ({
 
           <button
             onClick={() => setInnerTab("inventory")}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition ${
+            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition ${
               innerTab === "inventory"
                 ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
@@ -229,7 +179,7 @@ export const BranchDetailView: React.FC<Props> = ({
 
           <button
             onClick={() => setInnerTab("staff")}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition ${
+            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition ${
               innerTab === "staff"
                 ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
@@ -240,7 +190,7 @@ export const BranchDetailView: React.FC<Props> = ({
 
           <button
             onClick={() => setInnerTab("devices")}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition ${
+            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition ${
               innerTab === "devices"
                 ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
@@ -251,7 +201,7 @@ export const BranchDetailView: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* 4. Branch Tab 1: Sales & Financial Overview + Cash Drawer Reconciliation */}
+      {/* 2. Branch Tab 1: Sales & Financial Overview + Cash Drawer Reconciliation */}
       {innerTab === "sales" && (
         <div className="space-y-6">
           {/* Time & Specific Date Filter Bar */}
@@ -272,7 +222,7 @@ export const BranchDetailView: React.FC<Props> = ({
                       : "bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  {r === "today" ? "Today" : r === "week" ? "This Week" : r === "month" ? "This Month" : "Specific Date Range"}
+                  {r === "today" ? "Today" : r === "week" ? "This Week" : "This Month"}
                 </button>
               ))}
 
@@ -436,7 +386,7 @@ export const BranchDetailView: React.FC<Props> = ({
         </div>
       )}
 
-      {/* 5. Branch Tab 2: Stock & Commissary at this Branch */}
+      {/* 3. Branch Tab 2: Stock & Commissary at this Branch */}
       {innerTab === "inventory" && (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -545,7 +495,7 @@ export const BranchDetailView: React.FC<Props> = ({
         </div>
       )}
 
-      {/* 6. Branch Tab 3: Staff Roster & PIN Access */}
+      {/* 4. Branch Tab 3: Staff Roster & PIN Access */}
       {innerTab === "staff" && (
         <BranchStaffManager
           branchId={branch.id}
@@ -555,30 +505,69 @@ export const BranchDetailView: React.FC<Props> = ({
         />
       )}
 
-      {/* 7. Branch Tab 4: Sunmi Terminal & Pairing */}
+      {/* 5. Branch Tab 4: Sunmi Terminal & Pairing + Integrated Branch Profile */}
       {innerTab === "devices" && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-6">
-          <div>
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              📱 Sunmi Terminal Pairing Instructions
-            </h2>
-            <p className="text-xs text-slate-400">
-              How to connect a new or existing handheld POS terminal to {branch.name}
-            </p>
+        <div className="space-y-6">
+          {/* Branch Profile Card Header */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-5">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-blue-500/20 flex-shrink-0">
+                  🏢
+                </div>
+                <div>
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h2 className="text-lg font-black text-white">{branch.name}</h2>
+                    <span className="px-2.5 py-0.5 rounded-full bg-blue-950 text-blue-400 border border-blue-800 font-mono text-xs font-bold">
+                      {branch.code}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-slate-400 mt-1 flex-wrap">
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-slate-500" /> {branch.address || "Zamboanga City"}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Phone className="w-3.5 h-3.5 text-slate-500" /> {branch.phone || "No phone set"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sunmi Mobile Import Code Highlight */}
+              <div className="bg-slate-950 border-2 border-dashed border-blue-500/50 rounded-xl px-4 py-2.5 flex items-center gap-3">
+                <div>
+                  <span className="block text-[9px] uppercase font-bold text-slate-400 tracking-wider">
+                    📱 Device Import Code
+                  </span>
+                  <span className="text-base font-mono font-black text-blue-400 tracking-wider">
+                    {branch.import_code || branch.code}
+                  </span>
+                </div>
+                <button
+                  onClick={handleCopyCode}
+                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white transition flex items-center gap-1 text-xs font-bold"
+                  title="Copy Import Code"
+                >
+                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copied ? "Copied" : "Copy"}</span>
+                </button>
+              </div>
+            </div>
           </div>
 
+          {/* Pairing Instructions & Terminal Capabilities Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
+            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
               <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">
-                Step-by-Step Setup
+                Step-by-Step Device Setup
               </span>
               <ol className="space-y-3 text-xs text-slate-300 list-decimal list-inside">
-                <li>Turn on the Sunmi Handheld device.</li>
+                <li>Turn on the Sunmi Handheld terminal.</li>
                 <li>Open the <strong>KuyaVince POS</strong> application.</li>
                 <li>When prompted for the Branch Import Code, enter:</li>
               </ol>
 
-              <div className="p-4 bg-slate-900 border-2 border-dashed border-blue-500 rounded-xl text-center">
+              <div className="p-4 bg-slate-950 border-2 border-dashed border-blue-500 rounded-xl text-center">
                 <span className="block text-[10px] text-slate-400 font-bold uppercase">Import Code</span>
                 <span className="text-2xl font-mono font-black text-blue-400 tracking-widest">
                   {branch.import_code || branch.code}
@@ -590,7 +579,7 @@ export const BranchDetailView: React.FC<Props> = ({
               </p>
             </div>
 
-            <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-3">
+            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
               <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
                 Terminal Capabilities on Store Floor
               </span>
@@ -613,10 +602,10 @@ export const BranchDetailView: React.FC<Props> = ({
         </div>
       )}
 
-      {/* 8. 58mm Thermal Z-Report Modal */}
+      {/* 6. 58mm Thermal Z-Report Modal */}
       <BranchZReportModal
-        visible={showZReport}
-        onClose={closeZReport}
+        visible={isZReportModalOpen}
+        onClose={onCloseZReportModal || (() => {})}
         branch={branch}
         grossSales={branchGrossSales}
         ordersCount={branchOrdersCount}
@@ -627,7 +616,7 @@ export const BranchDetailView: React.FC<Props> = ({
         countedCash={countedCash}
       />
 
-      {/* 9. Assign Product Modal */}
+      {/* 7. Assign Product Modal */}
       {isAssignModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
@@ -688,7 +677,7 @@ export const BranchDetailView: React.FC<Props> = ({
         </div>
       )}
 
-      {/* 10. Restock Modal */}
+      {/* 8. Restock Modal */}
       {restockProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">

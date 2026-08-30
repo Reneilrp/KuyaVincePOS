@@ -1,7 +1,7 @@
-import React from 'react';
-import { Building2, Calendar, RefreshCw, Printer, ArrowLeft } from 'lucide-react';
-import { Branch } from '../types';
-import { TabKey } from './SidebarMenuBar';
+import React from "react";
+import { Building2, Calendar, RefreshCw, Printer } from "lucide-react";
+import { Branch } from "../types";
+import { TabKey } from "./SidebarMenuBar";
 
 interface Props {
   branches: Branch[];
@@ -14,7 +14,6 @@ interface Props {
   pageTitle: string;
   activeTab: TabKey;
   activeBranchDetail?: Branch | null;
-  onBackFromBranch?: () => void;
   onOpenZReport?: () => void;
 }
 
@@ -29,42 +28,24 @@ export const BranchFilterHeader: React.FC<Props> = ({
   pageTitle,
   activeTab,
   activeBranchDetail,
-  onBackFromBranch,
   onOpenZReport
 }) => {
-  const showBranchFilter = !activeBranchDetail && ['sales', 'payroll', 'reports'].includes(activeTab);
-  const showDateFilter = !activeBranchDetail && ['sales', 'payroll', 'reports'].includes(activeTab);
+  const showBranchFilter = !activeBranchDetail && ["sales", "payroll", "reports"].includes(activeTab);
+  const showDateFilter = !activeBranchDetail && ["sales", "payroll", "reports"].includes(activeTab);
 
   return (
     <header className="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30 px-6 py-3.5 no-print">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        {/* Left: Dynamic Page Title & Back Button */}
-        <div className="flex items-center gap-3">
-          {activeBranchDetail && onBackFromBranch && (
-            <button
-              onClick={onBackFromBranch}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold transition shadow-sm"
-              title="Back to All Branches"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" /> Back
-            </button>
-          )}
-
-          <div>
-            <h1 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
-              {activeBranchDetail ? `🏢 ${activeBranchDetail.name}` : pageTitle}
-              {activeBranchDetail && (
-                <span className="px-2 py-0.5 rounded-full bg-blue-950 text-blue-400 border border-blue-800 text-[10px] font-mono font-bold">
-                  {activeBranchDetail.import_code || activeBranchDetail.code}
-                </span>
-              )}
-            </h1>
-            <p className="text-[11px] text-slate-400">
-              {activeBranchDetail
-                ? `📍 ${activeBranchDetail.address || 'Zamboanga City'} • Branch Dashboard`
-                : '100% Live Supabase PostgreSQL • Zero Mock Data'}
-            </p>
-          </div>
+        {/* Left: Dynamic Clean Page Title */}
+        <div>
+          <h1 className="text-base font-bold text-white tracking-tight">
+            {activeBranchDetail ? `🏢 ${activeBranchDetail.name}` : pageTitle}
+          </h1>
+          <p className="text-[11px] text-slate-400">
+            {activeBranchDetail
+              ? `📍 ${activeBranchDetail.address || "Zamboanga City"} • Branch Dashboard`
+              : "100% Live Supabase PostgreSQL • Zero Mock Data"}
+          </p>
         </div>
 
         {/* Right: Contextual Actions & Z-Report Button */}
@@ -103,17 +84,17 @@ export const BranchFilterHeader: React.FC<Props> = ({
           {showDateFilter && (
             <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-0.5 shadow-sm">
               <Calendar className="w-3.5 h-3.5 text-slate-500 ml-2 mr-1" />
-              {(['today', 'week', 'month'] as const).map((r) => (
+              {(["today", "week", "month"] as const).map((r) => (
                 <button
                   key={r}
                   onClick={() => onSelectRange(r)}
                   className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition ${
                     selectedRange === r
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200'
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  {r === 'today' ? 'Today' : r === 'week' ? 'Week' : 'Month'}
+                  {r === "today" ? "Today" : r === "week" ? "Week" : "Month"}
                 </button>
               ))}
             </div>
@@ -126,7 +107,7 @@ export const BranchFilterHeader: React.FC<Props> = ({
             className="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800 transition"
             title="Sync Latest Supabase Data"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-blue-400' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-blue-400" : ""}`} />
           </button>
         </div>
       </div>

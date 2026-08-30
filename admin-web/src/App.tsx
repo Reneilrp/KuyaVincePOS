@@ -371,8 +371,7 @@ export default function App() {
           isLoading={isLoading}
           pageTitle={tabTitles[activeTab]}
           activeTab={activeTab}
-          activeBranchDetail={activeTab === "branches" ? selectedBranchDetail : null}
-          onBackFromBranch={() => setSelectedBranchDetail(null)}
+          activeBranchDetail={activeTab === 'branches' ? selectedBranchDetail : null}
           onOpenZReport={() => setIsZReportOpen(true)}
         />
 
