@@ -262,10 +262,12 @@ export default function App() {
     }
   };
 
-  // Branch Save / Create
+  // Branch Save / Create with Safe ID allocation
   const handleSaveBranch = async (branchData: Partial<Branch>) => {
     try {
-      const { error } = await supabase.from("branches").upsert(branchData);
+      const branchId = branchData.id || (Math.max(...branches.map((b) => Number(b.id)), 0) + 1);
+      const payload = { ...branchData, id: branchId };
+      const { error } = await supabase.from("branches").upsert(payload);
       if (error) throw error;
       await fetchLiveSupabaseData();
     } catch (e: any) {
