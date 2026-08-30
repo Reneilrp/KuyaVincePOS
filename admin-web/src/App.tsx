@@ -27,6 +27,7 @@ export default function App() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [inventoryMatrix, setInventoryMatrix] = useState<InventoryItem[]>([]);
   const [payrollData, setPayrollData] = useState<PayrollItem[]>([]);
+  const [staffRecords, setStaffRecords] = useState<any[]>([]);
   const [rawBatches, setRawBatches] = useState<any[]>([]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [analytics, setAnalytics] = useState<AnalyticsData>({
@@ -100,7 +101,11 @@ export default function App() {
         setInventoryMatrix(matrix);
       }
 
-      // 3. Fetch Real Daily Batches
+      // 3. Fetch Staff Records
+      const { data: staffData } = await supabase.from('staff_records').select('*').order('id');
+      setStaffRecords(staffData || []);
+
+      // 4. Fetch Real Daily Batches
       let batchQuery = supabase.from('daily_batches').select('*').order('sync_date', { ascending: false });
       if (selectedBranchId !== 'all') {
         batchQuery = batchQuery.eq('branch_id', Number(selectedBranchId));
@@ -366,6 +371,8 @@ export default function App() {
               onAssignProduct={handleAssignProductToBranch}
               onRestock={handleRestock}
               batches={rawBatches}
+              staffList={staffRecords}
+              onRefreshStaff={fetchLiveSupabaseData}
             />
           )}
           {activeTab === 'inventory' && (

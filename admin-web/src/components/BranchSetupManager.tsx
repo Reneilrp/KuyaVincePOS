@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Building2, Copy, Check, Plus, Edit2, ChevronRight } from 'lucide-react';
 import { BranchDetailView } from './BranchDetailView';
-import { AnalyticsData, Branch, InventoryItem, Product } from '../types';
+import { AnalyticsData, Branch, InventoryItem, Product, StaffRecord } from '../types';
 
 interface Props {
   branches: Branch[];
@@ -12,6 +12,8 @@ interface Props {
   onAssignProduct: (branchId: number, productId: number, stockQty: number) => Promise<void>;
   onRestock: (branchId: number, productId: number, qty: number, notes: string) => Promise<void>;
   batches: any[];
+  staffList: StaffRecord[];
+  onRefreshStaff: () => Promise<void>;
 }
 
 export const BranchSetupManager: React.FC<Props> = ({
@@ -22,7 +24,9 @@ export const BranchSetupManager: React.FC<Props> = ({
   analytics,
   onAssignProduct,
   onRestock,
-  batches
+  batches,
+  staffList,
+  onRefreshStaff
 }) => {
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -80,6 +84,8 @@ export const BranchSetupManager: React.FC<Props> = ({
         onAssignProduct={onAssignProduct}
         onRestock={onRestock}
         batches={batches}
+        staffList={staffList}
+        onRefreshStaff={onRefreshStaff}
       />
     );
   }
@@ -93,7 +99,7 @@ export const BranchSetupManager: React.FC<Props> = ({
             🏢 Store Branches Hub
           </h2>
           <p className="text-xs text-slate-400">
-            Click on any branch card to view its specific sales, overview of the day/week/month, live stock, and assign products
+            Click on any branch card to view its sales, cash drawer variance, cashier roster, live stock, and print 58mm Z-Reports
           </p>
         </div>
 
@@ -105,7 +111,7 @@ export const BranchSetupManager: React.FC<Props> = ({
         </button>
       </div>
 
-      {/* 2. Interactive Clickable Branch Cards Grid (AccommoTrack-M Dorm Pattern) */}
+      {/* 2. Interactive Clickable Branch Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {branches.map((branch) => {
           const isCopied = copiedCode === branch.import_code;
@@ -184,7 +190,7 @@ export const BranchSetupManager: React.FC<Props> = ({
 
               {/* Drill-down action bar */}
               <div className="flex items-center justify-between text-xs font-bold text-blue-400 pt-1 group-hover:translate-x-0.5 transition">
-                <span>Open Branch Dashboard & Stock</span>
+                <span>Open Branch Dashboard & Audit</span>
                 <ChevronRight className="w-4 h-4" />
               </div>
             </div>

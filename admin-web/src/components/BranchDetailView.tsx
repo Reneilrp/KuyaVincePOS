@@ -20,7 +20,10 @@ import {
   Clock,
   Printer
 } from 'lucide-react';
-import { Branch, InventoryItem, Product } from '../types';
+import { BranchCashAuditCard } from './BranchCashAuditCard';
+import { BranchStaffManager } from './BranchStaffManager';
+import { BranchZReportModal } from './BranchZReportModal';
+import { Branch, InventoryItem, Product, StaffRecord } from '../types';
 
 interface Props {
   branch: Branch;
@@ -30,6 +33,8 @@ interface Props {
   onAssignProduct: (branchId: number, productId: number, stockQty: number) => Promise<void>;
   onRestock: (branchId: number, productId: number, qty: number, notes: string) => Promise<void>;
   batches: any[];
+  staffList: StaffRecord[];
+  onRefreshStaff: () => Promise<void>;
 }
 
 export const BranchDetailView: React.FC<Props> = ({
@@ -39,13 +44,16 @@ export const BranchDetailView: React.FC<Props> = ({
   branchInventory,
   onAssignProduct,
   onRestock,
-  batches
+  batches,
+  staffList,
+  onRefreshStaff
 }) => {
   const [innerTab, setInnerTab] = useState<'sales' | 'inventory' | 'staff' | 'devices'>('sales');
   const [dateRange, setDateRange] = useState<'today' | 'week' | 'month' | 'custom'>('today');
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [copied, setCopied] = useState(false);
+  const [isZReportOpen, setIsZReportOpen] = useState(false);
 
   // Assign product modal
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -56,7 +64,10 @@ export const BranchDetailView: React.FC<Props> = ({
   // Restock modal
   const [restockProduct, setRestockProduct] = useState<InventoryItem | null>(null);
   const [restockQty, setRestockQty] = useState('20');
-  const [restockNotes, setRestockNotes] = useState('Weekly replenishment');
+  const [restockNotes, setRestockNotes] = useState('Store delivery');
+
+  // Cash audit counted cash
+  const [countedCash, setCountedCash] = useState<number | undefined>(undefined);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(branch.import_code || branch.code);
@@ -96,11 +107,6 @@ export const BranchDetailView: React.FC<Props> = ({
     }
   }
 
-  const topBranchProducts = Object.entries(itemSalesMap)
-    .map(([name, stat]) => ({ name, qty: stat.qty, revenue: stat.revenue }))
-    .sort((a, b) => b.revenue - a.revenue)
-    .slice(0, 5);
-
   const assignedItems = branchInventory.filter((item) => (item.branch_stocks[branch.id] ?? 0) >= 0);
   const totalStockOnFloor = assignedItems.reduce((sum, i) => sum + (i.branch_stocks[branch.id] || 0), 0);
 
@@ -132,8 +138,8 @@ export const BranchDetailView: React.FC<Props> = ({
 
   return (
     <div className="space-y-6">
-      {/* 1. Top Breadcrumb Header */}
-      <div className="flex items-center justify-between">
+      {/* 1. Top Breadcrumb & Actions Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <button
           onClick={onBack}
           className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold transition shadow-sm"
@@ -141,10 +147,13 @@ export const BranchDetailView: React.FC<Props> = ({
           <ArrowLeft className="w-4 h-4" /> Back to All Branches
         </button>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-400 font-medium">
-            Branch #{branch.id} • Zamboanga City Network
-          </span>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => setIsZReportOpen(true)}
+            className="flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-emerald-600/20"
+          >
+            <Printer className="w-4 h-4" /> Print 58mm Daily Z-Report
+          </button>
         </div>
       </div>
 
@@ -163,7 +172,7 @@ export const BranchDetailView: React.FC<Props> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-1">
-                📍 {branch.address || 'Zamboanga City'} • 📞 {branch.phone || 'No phone'}
+                📍 {branch.address || 'Zamboanga City'} • 📞 {branch.phone || 'No phone set'}
               </p>
             </div>
           </div>
@@ -199,7 +208,7 @@ export const BranchDetailView: React.FC<Props> = ({
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
             }`}
           >
-            <TrendingUp className="w-4 h-4" /> Branch Sales & Overview
+            <TrendingUp className="w-4 h-4" /> Sales & Cash Audit
           </button>
 
           <button
@@ -211,6 +220,17 @@ export const BranchDetailView: React.FC<Props> = ({
             }`}
           >
             <Package className="w-4 h-4" /> Stock at this Branch ({assignedItems.length})
+          </button>
+
+          <button
+            onClick={() => setInnerTab('staff')}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition ${
+              innerTab === 'staff'
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+            }`}
+          >
+            <Users className="w-4 h-4" /> Cashier Roster & PINs
           </button>
 
           <button
@@ -226,7 +246,7 @@ export const BranchDetailView: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* 4. Branch Tab 1: Sales & Financial Overview */}
+      {/* 4. Branch Tab 1: Sales & Financial Overview + Cash Drawer Reconciliation */}
       {innerTab === 'sales' && (
         <div className="space-y-6">
           {/* Time & Specific Date Filter Bar */}
@@ -307,6 +327,15 @@ export const BranchDetailView: React.FC<Props> = ({
               <p className="text-[10px] text-slate-500 mt-0.5">{assignedItems.length} menu items active</p>
             </div>
           </div>
+
+          {/* FEATURE 2: Cash Drawer Variance Card */}
+          <BranchCashAuditCard
+            branchName={branch.name}
+            cashSales={cashSales}
+            openingFloat={1000.0}
+            initialCountedCash={countedCash}
+            onSaveCountedCash={(val) => setCountedCash(val)}
+          />
 
           {/* Payment Method Breakdown for this branch */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
@@ -511,7 +540,17 @@ export const BranchDetailView: React.FC<Props> = ({
         </div>
       )}
 
-      {/* 6. Branch Tab 3: Sunmi Terminal & Pairing */}
+      {/* 6. FEATURE 3: Branch Staff Roster & PIN Reset */}
+      {innerTab === 'staff' && (
+        <BranchStaffManager
+          branchId={branch.id}
+          branchName={branch.name}
+          staffList={staffList}
+          onRefreshStaff={onRefreshStaff}
+        />
+      )}
+
+      {/* 7. Branch Tab 4: Sunmi Terminal & Pairing */}
       {innerTab === 'devices' && (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-6">
           <div>
@@ -569,7 +608,21 @@ export const BranchDetailView: React.FC<Props> = ({
         </div>
       )}
 
-      {/* 7. Assign Product Modal */}
+      {/* 8. FEATURE 4: 58mm Thermal Z-Report Modal */}
+      <BranchZReportModal
+        visible={isZReportOpen}
+        onClose={() => setIsZReportOpen(false)}
+        branch={branch}
+        grossSales={branchGrossSales}
+        ordersCount={branchOrdersCount}
+        cashSales={cashSales}
+        ewalletSales={ewalletSales}
+        cardSales={cardSales}
+        openingFloat={1000.0}
+        countedCash={countedCash}
+      />
+
+      {/* 9. Assign Product Modal */}
       {isAssignModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
@@ -630,7 +683,7 @@ export const BranchDetailView: React.FC<Props> = ({
         </div>
       )}
 
-      {/* 8. Restock Modal */}
+      {/* 10. Restock Modal */}
       {restockProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
