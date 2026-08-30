@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Users, Key, Plus, ShieldCheck, UserCheck, UserX, Check, AlertCircle } from 'lucide-react';
-import { StaffRecord } from '../types';
-import { supabase } from '../services/supabaseClient';
+import React, { useState } from "react";
+import { Users, Key, Plus, ShieldCheck, UserCheck, UserX, Check, AlertCircle, UserPlus } from "lucide-react";
+import { StaffRecord } from "../types";
+import { supabase } from "../services/supabaseClient";
 
 interface Props {
   branchId: number;
@@ -17,35 +17,43 @@ export const BranchStaffManager: React.FC<Props> = ({
   onRefreshStaff
 }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSelectExistingModalOpen, setIsSelectExistingModalOpen] = useState(false);
+  const [selectedExistingStaffId, setSelectedExistingStaffId] = useState<number | null>(null);
+
   const [resetPinStaff, setResetPinStaff] = useState<StaffRecord | null>(null);
-  const [newPin, setNewPin] = useState('1234');
-  const [name, setName] = useState('');
-  const [role, setRole] = useState('cashier');
-  const [pinCode, setPinCode] = useState('1234');
-  const [hourlyRate, setHourlyRate] = useState('85.00');
+  const [newPin, setNewPin] = useState("1234");
+  const [name, setName] = useState("");
+  const [role, setRole] = useState("cashier");
+  const [pinCode, setPinCode] = useState("1234");
+  const [hourlyRate, setHourlyRate] = useState("85.00");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
+  // Staff currently assigned to this branch
   const branchStaff = staffList.filter((s) => Number(s.branch_id) === Number(branchId));
+
+  // Staff from other branches or unassigned that can be transferred/assigned here
+  const otherStaff = staffList.filter((s) => Number(s.branch_id) !== Number(branchId));
 
   const triggerNotice = (msg: string) => {
     setNotice(msg);
     setTimeout(() => setNotice(null), 3500);
   };
 
+  // 1. Direct Add New Cashier to this Branch
   const handleCreateStaff = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !pinCode) return;
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from('staff_records').insert([
+      const { error } = await supabase.from("staff_records").insert([
         {
           branch_id: branchId,
           name,
           role,
           pin_code: pinCode,
-          hourly_rate: parseFloat(hourlyRate || '85'),
+          hourly_rate: parseFloat(hourlyRate || "85"),
           is_active: true
         }
       ]);
@@ -53,51 +61,77 @@ export const BranchStaffManager: React.FC<Props> = ({
       if (error) throw error;
       await onRefreshStaff();
       setIsAddModalOpen(false);
-      setName('');
+      setName("");
       triggerNotice(`✅ Added cashier "${name}" to ${branchName}`);
     } catch (e: any) {
-      alert('Failed to add cashier: ' + e.message);
+      alert("Failed to add cashier: " + e.message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // 2. Select and Assign Existing Staff to this Branch
+  const handleAssignExistingStaff = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedExistingStaffId) return;
+
+    setIsSubmitting(true);
+    try {
+      const target = staffList.find((s) => s.id === selectedExistingStaffId);
+      const { error } = await supabase
+        .from("staff_records")
+        .update({ branch_id: branchId })
+        .eq("id", selectedExistingStaffId);
+
+      if (error) throw error;
+      await onRefreshStaff();
+      setIsSelectExistingModalOpen(false);
+      triggerNotice(`✅ Assigned "${target?.name}" to ${branchName}!`);
+    } catch (e: any) {
+      alert("Failed to assign staff: " + e.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // 3. Reset PIN
   const handleResetPinSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resetPinStaff || !newPin || newPin.length !== 4) {
-      alert('Please enter a valid 4-digit numeric PIN.');
+      alert("Please enter a valid 4-digit numeric PIN.");
       return;
     }
 
     setIsSubmitting(true);
     try {
       const { error } = await supabase
-        .from('staff_records')
+        .from("staff_records")
         .update({ pin_code: newPin })
-        .eq('id', resetPinStaff.id);
+        .eq("id", resetPinStaff.id);
 
       if (error) throw error;
       await onRefreshStaff();
       triggerNotice(`🔑 PIN for "${resetPinStaff.name}" successfully updated to ${newPin}!`);
       setResetPinStaff(null);
     } catch (e: any) {
-      alert('Failed to reset PIN: ' + e.message);
+      alert("Failed to reset PIN: " + e.message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // 4. Toggle Active Status
   const handleToggleStatus = async (staff: StaffRecord) => {
     try {
       const { error } = await supabase
-        .from('staff_records')
+        .from("staff_records")
         .update({ is_active: !staff.is_active })
-        .eq('id', staff.id);
+        .eq("id", staff.id);
 
       if (error) throw error;
       await onRefreshStaff();
     } catch (e: any) {
-      alert('Failed to update status: ' + e.message);
+      alert("Failed to update status: " + e.message);
     }
   };
 
@@ -113,12 +147,27 @@ export const BranchStaffManager: React.FC<Props> = ({
           </p>
         </div>
 
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition shadow-sm"
-        >
-          <Plus className="w-4 h-4" /> Add New Cashier
-        </button>
+        {/* Action Buttons: Select Existing or Add New */}
+        <div className="flex flex-wrap items-center gap-2">
+          {otherStaff.length > 0 && (
+            <button
+              onClick={() => {
+                setSelectedExistingStaffId(otherStaff[0]?.id || null);
+                setIsSelectExistingModalOpen(true);
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition shadow-sm"
+            >
+              <UserPlus className="w-4 h-4 text-blue-400" /> Select Existing Staff
+            </button>
+          )}
+
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition shadow-sm"
+          >
+            <Plus className="w-4 h-4" /> Add New Cashier
+          </button>
+        </div>
       </div>
 
       {notice && (
@@ -133,16 +182,29 @@ export const BranchStaffManager: React.FC<Props> = ({
           <div className="w-10 h-10 rounded-full bg-slate-800 mx-auto flex items-center justify-center text-slate-400">
             <Users className="w-5 h-5" />
           </div>
-          <h4 className="text-sm font-bold text-slate-200">No Cashiers Registered Yet</h4>
+          <h4 className="text-sm font-bold text-slate-200">No Cashiers Assigned to this Branch</h4>
           <p className="text-xs text-slate-400 max-w-sm mx-auto">
-            Add your first cashier with a 4-digit PIN so staff can sign into the Sunmi terminal.
+            Select an existing staff member from your company roster or register a new cashier with a 4-digit PIN.
           </p>
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition"
-          >
-            <Plus className="w-4 h-4" /> Add First Cashier
-          </button>
+          <div className="flex justify-center gap-3 pt-2">
+            {otherStaff.length > 0 && (
+              <button
+                onClick={() => {
+                  setSelectedExistingStaffId(otherStaff[0]?.id || null);
+                  setIsSelectExistingModalOpen(true);
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-lg transition"
+              >
+                <UserPlus className="w-4 h-4 text-blue-400" /> Select Existing Staff
+              </button>
+            )}
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition"
+            >
+              <Plus className="w-4 h-4" /> Add New Cashier
+            </button>
+          </div>
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -170,18 +232,18 @@ export const BranchStaffManager: React.FC<Props> = ({
                   <td className="p-3.5 font-bold text-slate-200">₱{Number(staff.hourly_rate || 85).toFixed(2)}/hr</td>
                   <td className="p-3.5 text-center">
                     <span className="font-mono font-bold text-xs px-2.5 py-1 rounded bg-slate-950 text-blue-400 border border-slate-800 tracking-widest">
-                      {staff.pin_code ? '••••' : '1234'}
+                      {staff.pin_code ? "••••" : "1234"}
                     </span>
                   </td>
                   <td className="p-3.5 text-center">
                     <span
                       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
                         staff.is_active
-                          ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
-                          : 'bg-rose-950 text-rose-400 border border-rose-800'
+                          ? "bg-emerald-950 text-emerald-400 border border-emerald-800"
+                          : "bg-rose-950 text-rose-400 border border-rose-800"
                       }`}
                     >
-                      {staff.is_active ? 'Active' : 'Disabled'}
+                      {staff.is_active ? "Active" : "Disabled"}
                     </span>
                   </td>
                   <td className="p-3.5 text-right">
@@ -189,7 +251,7 @@ export const BranchStaffManager: React.FC<Props> = ({
                       <button
                         onClick={() => {
                           setResetPinStaff(staff);
-                          setNewPin('1234');
+                          setNewPin("1234");
                         }}
                         className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-blue-400 font-bold rounded-lg transition text-xs flex items-center gap-1"
                         title="Change Cashier PIN"
@@ -200,10 +262,10 @@ export const BranchStaffManager: React.FC<Props> = ({
                         onClick={() => handleToggleStatus(staff)}
                         className={`p-1.5 rounded-lg transition ${
                           staff.is_active
-                            ? 'bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-400'
-                            : 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                            ? "bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-400"
+                            : "bg-emerald-950 text-emerald-400 border border-emerald-800"
                         }`}
-                        title={staff.is_active ? 'Disable Access' : 'Enable Access'}
+                        title={staff.is_active ? "Disable Access" : "Enable Access"}
                       >
                         {staff.is_active ? <UserX className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
                       </button>
@@ -216,7 +278,53 @@ export const BranchStaffManager: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Add Cashier Modal */}
+      {/* Modal 1: Select Existing Staff from Company Directory */}
+      {isSelectExistingModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-blue-400" /> Assign Existing Staff to {branchName}
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">Select an employee from the company-wide directory</p>
+
+            <form onSubmit={handleAssignExistingStaff} className="mt-4 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Select Employee</label>
+                <select
+                  value={selectedExistingStaffId || ""}
+                  onChange={(e) => setSelectedExistingStaffId(Number(e.target.value))}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                >
+                  {otherStaff.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} — {s.role.toUpperCase()} (₱{Number(s.hourly_rate || 85).toFixed(2)}/hr)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsSelectExistingModalOpen(false)}
+                  className="flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !selectedExistingStaffId}
+                  className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition disabled:opacity-50"
+                >
+                  {isSubmitting ? "Assigning..." : "Assign to Branch"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal 2: Add New Cashier Directly */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
@@ -271,7 +379,7 @@ export const BranchStaffManager: React.FC<Props> = ({
                   maxLength={4}
                   required
                   value={pinCode}
-                  onChange={(e) => setPinCode(e.target.value.replace(/[^0-9]/g, ''))}
+                  onChange={(e) => setPinCode(e.target.value.replace(/[^0-9]/g, ""))}
                   placeholder="1234"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-center text-lg font-mono font-bold text-blue-400 tracking-widest focus:outline-none focus:border-blue-500"
                 />
@@ -290,7 +398,7 @@ export const BranchStaffManager: React.FC<Props> = ({
                   disabled={isSubmitting}
                   className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Saving...' : 'Register Staff'}
+                  {isSubmitting ? "Saving..." : "Register Staff"}
                 </button>
               </div>
             </form>
@@ -298,7 +406,7 @@ export const BranchStaffManager: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Reset PIN Modal */}
+      {/* Modal 3: Reset PIN */}
       {resetPinStaff && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl">
@@ -316,7 +424,7 @@ export const BranchStaffManager: React.FC<Props> = ({
                   autoFocus
                   required
                   value={newPin}
-                  onChange={(e) => setNewPin(e.target.value.replace(/[^0-9]/g, ''))}
+                  onChange={(e) => setNewPin(e.target.value.replace(/[^0-9]/g, ""))}
                   placeholder="e.g. 5678"
                   className="w-full bg-slate-950 border-2 border-blue-500 rounded-xl p-3 text-center text-2xl font-mono font-bold text-blue-400 tracking-widest focus:outline-none"
                 />
@@ -335,7 +443,7 @@ export const BranchStaffManager: React.FC<Props> = ({
                   disabled={isSubmitting || newPin.length !== 4}
                   className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Updating...' : 'Update PIN'}
+                  {isSubmitting ? "Updating..." : "Update PIN"}
                 </button>
               </div>
             </form>

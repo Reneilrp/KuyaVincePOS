@@ -410,6 +410,8 @@ export default function App() {
             <PayrollManagerTab
               branches={branches}
               payrollData={payrollData}
+              staffList={staffRecords}
+              onRefreshStaff={fetchLiveSupabaseData}
               onCalculate={async () => {}}
               onApprove={async () => {}}
             />
