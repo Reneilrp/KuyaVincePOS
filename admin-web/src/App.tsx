@@ -1,71 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Package, Users, Printer, Smartphone } from 'lucide-react';
+import { BarChart3, Package, Users, Printer, Building2 } from 'lucide-react';
 import { BranchFilterHeader } from './components/BranchFilterHeader';
 import { SalesOverviewTab } from './components/SalesOverviewTab';
 import { InventoryMatrixTab } from './components/InventoryMatrixTab';
+import { BranchSetupManager } from './components/BranchSetupManager';
 import { PayrollManagerTab } from './components/PayrollManagerTab';
 import { ReportsPrintTab } from './components/ReportsPrintTab';
-import { DeviceProvisioningTab } from './components/DeviceProvisioningTab';
 import { supabase } from './services/supabaseClient';
-import { AnalyticsData, Branch, Device, InventoryItem, PayrollItem } from './types';
+import { AnalyticsData, Branch, InventoryItem, PayrollItem, Product } from './types';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'sales' | 'inventory' | 'payroll' | 'reports' | 'devices'>('sales');
+  const [activeTab, setActiveTab] = useState<'sales' | 'inventory' | 'branches' | 'payroll' | 'reports'>('branches');
   const [selectedBranchId, setSelectedBranchId] = useState<string>('all');
   const [selectedRange, setSelectedRange] = useState<string>('today');
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Core State
+  // Clean Production State (Zero Demo Junk)
   const [branches, setBranches] = useState<Branch[]>([
-    { id: 1, name: 'Downtown Flagship', code: 'BR-01', address: '101 Rizal Ave', devices_count: 1, orders_count: 142 },
-    { id: 2, name: 'Mall Galleria', code: 'BR-02', address: 'Level 2, West Wing', devices_count: 1, orders_count: 98 },
-    { id: 3, name: 'Express Kiosk', code: 'BR-03', address: 'Terminal 3 Station', devices_count: 1, orders_count: 55 }
-  ]);
-
-  const [devices, setDevices] = useState<Device[]>([
-    { id: 1, branch_id: 1, device_serial: 'SUNMI-V2S-BR01-01', terminal_name: 'Branch 1 - Counter 01', device_token: 'DVT_01', status: 'online' },
-    { id: 2, branch_id: 2, device_serial: 'SUNMI-V2S-BR02-01', terminal_name: 'Branch 2 - Counter 01', device_token: 'DVT_02', status: 'online' },
-    { id: 3, branch_id: 3, device_serial: 'SUNMI-V2S-BR03-01', terminal_name: 'Branch 3 - Mobile Kiosk', device_token: 'DVT_03', status: 'online' }
+    { id: 1, name: 'Branch 1 - Main Hub', code: 'BR-01', import_code: 'KV-BR01', address: 'Zamboanga City', phone: '+63 917 000 0001' },
+    { id: 2, name: 'Branch 2 - Mall Outlet', code: 'BR-02', import_code: 'KV-BR02', address: 'Zamboanga City', phone: '+63 917 000 0002' },
+    { id: 3, name: 'Branch 3 - Kiosk', code: 'BR-03', import_code: 'KV-BR03', address: 'Zamboanga City', phone: '+63 917 000 0003' }
   ]);
 
   const [analytics, setAnalytics] = useState<AnalyticsData>({
     filters: { branch_id: 'all', range: 'today', start_date: '', end_date: '' },
     kpis: {
-      total_gross_revenue: 106500.00,
-      total_sales_count: 295,
-      average_order_value: 361.01,
-      payment_breakdown: { cash: 62400.00, ewallet: 32100.00, card: 12000.00 }
+      total_gross_revenue: 0.00,
+      total_sales_count: 0,
+      average_order_value: 0.00,
+      payment_breakdown: { cash: 0.00, ewallet: 0.00, card: 0.00 }
     },
-    branch_comparison: [
-      { branch_id: 1, name: 'Downtown Flagship', code: 'BR-01', active_devices: 1, total_sales: 48500.00, order_count: 142 },
-      { branch_id: 2, name: 'Mall Galleria', code: 'BR-02', active_devices: 1, total_sales: 36200.00, order_count: 98 },
-      { branch_id: 3, name: 'Express Kiosk', code: 'BR-03', active_devices: 1, total_sales: 21800.00, order_count: 55 }
-    ],
-    top_products: [
-      { product_name: 'Iced Caramel Macchiato', total_qty: 84, total_revenue: 12180.00 },
-      { product_name: 'Spanish Latte (Cold)', total_qty: 72, total_revenue: 9720.00 },
-      { product_name: 'Beef Tapa Rice Bowl', total_qty: 54, total_revenue: 9720.00 },
-      { product_name: 'Americano Espresso', total_qty: 48, total_revenue: 4560.00 },
-      { product_name: 'Butter Croissant', total_qty: 40, total_revenue: 3400.00 }
-    ]
+    branch_comparison: [],
+    top_products: []
   });
 
-  const [inventoryMatrix, setInventoryMatrix] = useState<InventoryItem[]>([
-    { product_id: 1, name: 'Iced Caramel Macchiato', category: 'Coffee & Drinks', base_price: 145, cost_price: 45, branch_stocks: { 1: 80, 2: 50, 3: 30 }, total_stock: 160 },
-    { product_id: 2, name: 'Spanish Latte (Cold)', category: 'Coffee & Drinks', base_price: 135, cost_price: 40, branch_stocks: { 1: 100, 2: 75, 3: 40 }, total_stock: 215 },
-    { product_id: 3, name: 'Americano Espresso', category: 'Coffee & Drinks', base_price: 95, cost_price: 20, branch_stocks: { 1: 120, 2: 90, 3: 60 }, total_stock: 270 },
-    { product_id: 4, name: 'Butter Croissant', category: 'Bakery & Pastries', base_price: 85, cost_price: 30, branch_stocks: { 1: 35, 2: 20, 3: 15 }, total_stock: 70 },
-    { product_id: 5, name: 'Chocolate Lava Muffin', category: 'Bakery & Pastries', base_price: 95, cost_price: 35, branch_stocks: { 1: 25, 2: 18, 3: 10 }, total_stock: 53 },
-    { product_id: 6, name: 'Beef Tapa Rice Bowl', category: 'Hot Meals', base_price: 180, cost_price: 70, branch_stocks: { 1: 50, 2: 35, 3: 0 }, total_stock: 85 },
-    { product_id: 7, name: 'Chicken Teriyaki Bowl', category: 'Hot Meals', base_price: 165, cost_price: 60, branch_stocks: { 1: 45, 2: 40, 3: 0 }, total_stock: 85 },
-    { product_id: 8, name: 'Truffle Fries', category: 'Quick Snacks', base_price: 120, cost_price: 40, branch_stocks: { 1: 60, 2: 40, 3: 25 }, total_stock: 125 }
-  ]);
-
-  const [payrollData, setPayrollData] = useState<PayrollItem[]>([
-    { user_id: 1, staff_name: 'Maria Santos', role: 'cashier', branch_id: 1, branch_name: 'Downtown Flagship', period_start: '2026-08-01', period_end: '2026-08-15', hourly_rate: 85.00, total_hours: 88.0, gross_pay: 7480.00, deductions: 250.00, bonuses: 500.00, net_pay: 7730.00 },
-    { user_id: 2, staff_name: 'John Dela Cruz', role: 'cashier', branch_id: 2, branch_name: 'Mall Galleria', period_start: '2026-08-01', period_end: '2026-08-15', hourly_rate: 85.00, total_hours: 80.0, gross_pay: 6800.00, deductions: 200.00, bonuses: 300.00, net_pay: 6900.00 },
-    { user_id: 3, staff_name: 'Ana Reyes', role: 'cashier', branch_id: 3, branch_name: 'Express Kiosk', period_start: '2026-08-01', period_end: '2026-08-15', hourly_rate: 80.00, total_hours: 75.0, gross_pay: 6000.00, deductions: 150.00, bonuses: 200.00, net_pay: 6050.00 }
-  ]);
+  const [inventoryMatrix, setInventoryMatrix] = useState<InventoryItem[]>([]);
+  const [payrollData, setPayrollData] = useState<PayrollItem[]>([]);
 
   useEffect(() => {
     fetchFromSupabase();
@@ -74,31 +44,34 @@ export default function App() {
   const fetchFromSupabase = async () => {
     setIsLoading(true);
     try {
-      // 1. Fetch Branches from Supabase
+      // 1. Fetch Branches
       const { data: branchData } = await supabase.from('branches').select('*').order('id');
       if (branchData && branchData.length > 0) {
         setBranches(branchData);
       }
 
-      // 2. Fetch Products & Branch Inventories
+      // 2. Fetch Products & Branch Inventory
       const { data: prodData } = await supabase.from('products').select('*').order('id');
       const { data: invData } = await supabase.from('branch_inventory').select('*');
 
-      if (prodData && invData) {
-        const matrix = prodData.map((p) => {
+      if (prodData) {
+        const matrix: InventoryItem[] = prodData.map((p) => {
           const bStocks: Record<number, number> = {};
           let total = 0;
-          for (const inv of invData) {
-            if (inv.product_id === p.id) {
-              const qty = Number(inv.stock_quantity || 0);
-              bStocks[inv.branch_id] = qty;
-              total += qty;
+          if (invData) {
+            for (const inv of invData) {
+              if (inv.product_id === p.id) {
+                const qty = Number(inv.stock_quantity || 0);
+                bStocks[inv.branch_id] = qty;
+                total += qty;
+              }
             }
           }
           return {
             product_id: p.id,
             name: p.name,
             category: p.category,
+            image_url: p.image_url,
             base_price: Number(p.base_price),
             cost_price: Number(p.cost_price),
             branch_stocks: bStocks,
@@ -108,7 +81,7 @@ export default function App() {
         setInventoryMatrix(matrix);
       }
 
-      // 3. Fetch Daily Batches from Supabase
+      // 3. Fetch Daily Batches
       let batchQuery = supabase.from('daily_batches').select('*').order('sync_date', { ascending: false });
       if (selectedBranchId !== 'all') {
         batchQuery = batchQuery.eq('branch_id', Number(selectedBranchId));
@@ -122,58 +95,130 @@ export default function App() {
         let ewalletTotal = 0;
         let cardTotal = 0;
 
+        const branchMap: Record<number, { count: number; sales: number }> = {};
+
         for (const b of batches) {
-          totalGross += Number(b.gross_sales || 0);
-          totalOrders += Number(b.orders_count || 0);
+          const gross = Number(b.gross_sales || 0);
+          const count = Number(b.orders_count || 0);
+          totalGross += gross;
+          totalOrders += count;
           cashTotal += Number(b.cash_sales || 0);
           ewalletTotal += Number(b.ewallet_sales || 0);
           cardTotal += Number(b.card_sales || 0);
+
+          if (!branchMap[b.branch_id]) {
+            branchMap[b.branch_id] = { count: 0, sales: 0 };
+          }
+          branchMap[b.branch_id].count += count;
+          branchMap[b.branch_id].sales += gross;
         }
 
-        setAnalytics((prev) => ({
-          ...prev,
-          kpis: {
-            total_gross_revenue: totalGross || prev.kpis.total_gross_revenue,
-            total_sales_count: totalOrders || prev.kpis.total_sales_count,
-            average_order_value: totalOrders > 0 ? totalGross / totalOrders : prev.kpis.average_order_value,
-            payment_breakdown: {
-              cash: cashTotal || prev.kpis.payment_breakdown.cash,
-              ewallet: ewalletTotal || prev.kpis.payment_breakdown.ewallet,
-              card: cardTotal || prev.kpis.payment_breakdown.card
-            }
-          }
+        const comparison = (branchData || branches).map((br) => ({
+          branch_id: br.id,
+          name: br.name,
+          code: br.code,
+          import_code: br.import_code,
+          active_devices: 1,
+          total_sales: branchMap[br.id]?.sales || 0,
+          order_count: branchMap[br.id]?.count || 0
         }));
+
+        setAnalytics({
+          filters: { branch_id: selectedBranchId, range: selectedRange, start_date: '', end_date: '' },
+          kpis: {
+            total_gross_revenue: totalGross,
+            total_sales_count: totalOrders,
+            average_order_value: totalOrders > 0 ? totalGross / totalOrders : 0,
+            payment_breakdown: { cash: cashTotal, ewallet: ewalletTotal, card: cardTotal }
+          },
+          branch_comparison: comparison,
+          top_products: []
+        });
+      } else {
+        // Clean default 0 state
+        const comparison = (branchData || branches).map((br) => ({
+          branch_id: br.id,
+          name: br.name,
+          code: br.code,
+          import_code: br.import_code,
+          active_devices: 1,
+          total_sales: 0,
+          order_count: 0
+        }));
+
+        setAnalytics({
+          filters: { branch_id: selectedBranchId, range: selectedRange, start_date: '', end_date: '' },
+          kpis: {
+            total_gross_revenue: 0,
+            total_sales_count: 0,
+            average_order_value: 0,
+            payment_breakdown: { cash: 0, ewallet: 0, card: 0 }
+          },
+          branch_comparison: comparison,
+          top_products: []
+        });
       }
     } catch (e) {
-      console.log('Supabase read active with fallback state:', e);
+      console.warn('Supabase fetch:', e);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleImportOfflineBatch = (batchData: any) => {
-    if (batchData.orders) {
-      const addedRevenue = batchData.orders.reduce((sum: number, o: any) => sum + Number(o.total_amount || 0), 0);
-      const addedCount = batchData.orders.length;
-
-      setAnalytics((prev) => ({
-        ...prev,
-        kpis: {
-          ...prev.kpis,
-          total_gross_revenue: prev.kpis.total_gross_revenue + addedRevenue,
-          total_sales_count: prev.kpis.total_sales_count + addedCount,
-          average_order_value: (prev.kpis.total_gross_revenue + addedRevenue) / (prev.kpis.total_sales_count + addedCount)
-        }
-      }));
-    } else if (batchData.analytics) {
-      setAnalytics(batchData.analytics);
-      if (batchData.inventory) setInventoryMatrix(batchData.inventory);
-      if (batchData.payroll) setPayrollData(batchData.payroll);
+  // Branch Save / Create
+  const handleSaveBranch = async (branchData: Partial<Branch>) => {
+    try {
+      const { data, error } = await supabase.from('branches').upsert(branchData).select();
+      if (error) throw error;
+      await fetchFromSupabase();
+    } catch (e: any) {
+      alert('Failed to save branch: ' + e.message);
     }
   };
 
+  // Product Save / Create (with multi-branch stock allocation)
+  const handleSaveProduct = async (data: { product: Partial<Product>; branchStocks: Record<number, number> }) => {
+    try {
+      // 1. Upsert product
+      const { data: savedProd, error: prodErr } = await supabase
+        .from('products')
+        .upsert({
+          id: data.product.id,
+          name: data.product.name,
+          category: data.product.category,
+          image_url: data.product.image_url,
+          base_price: data.product.base_price,
+          cost_price: data.product.cost_price,
+          is_active: true
+        })
+        .select()
+        .single();
+
+      if (prodErr) throw prodErr;
+
+      // 2. Upsert stock for each branch
+      const prodId = savedProd.id;
+      for (const [branchId, stockQty] of Object.entries(data.branchStocks)) {
+        await supabase.from('branch_inventory').upsert(
+          {
+            branch_id: Number(branchId),
+            product_id: prodId,
+            stock_quantity: Number(stockQty || 0),
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: 'branch_id,product_id' }
+        );
+      }
+
+      await fetchFromSupabase();
+      alert('Product saved and inventory allocated to branches successfully!');
+    } catch (e: any) {
+      alert('Failed to save product: ' + e.message);
+    }
+  };
+
+  // Restock action
   const handleRestock = async (branchId: number, productId: number, qty: number, notes: string) => {
-    // 1. Update in Supabase cloud
     try {
       const { data: existing } = await supabase
         .from('branch_inventory')
@@ -193,74 +238,15 @@ export default function App() {
         },
         { onConflict: 'branch_id,product_id' }
       );
-    } catch (e) {
-      console.warn('Direct Supabase restock fallback:', e);
+
+      await fetchFromSupabase();
+    } catch (e: any) {
+      alert('Restock failed: ' + e.message);
     }
-
-    // 2. Local State update
-    setInventoryMatrix((prev) =>
-      prev.map((item) => {
-        if (item.product_id === productId) {
-          const currentBranchStock = item.branch_stocks[branchId] || 0;
-          const updatedBranchStock = currentBranchStock + qty;
-          return {
-            ...item,
-            branch_stocks: { ...item.branch_stocks, [branchId]: updatedBranchStock },
-            total_stock: item.total_stock + qty
-          };
-        }
-        return item;
-      })
-    );
   };
 
-  const handlePairNewDevice = async (serial: string, branchId: number, name: string) => {
-    const newDevice: Device = {
-      id: devices.length + 1,
-      branch_id: branchId,
-      device_serial: serial,
-      terminal_name: name,
-      device_token: 'DVT_' + serial,
-      status: 'online',
-      last_seen_at: new Date().toISOString()
-    };
-    setDevices([newDevice, ...devices]);
-  };
-
-  const handleCalculatePayroll = async (branchId: string, start: string, end: string) => {
-    try {
-      const { data: staff } = await supabase.from('staff_records').select('*');
-      if (staff && staff.length > 0) {
-        const computed = staff.map((s) => {
-          const branchObj = branches.find((b) => b.id === s.branch_id);
-          const hours = 80.0;
-          const rate = Number(s.hourly_rate || 85);
-          const gross = hours * rate;
-          const deductions = 200.0;
-          const bonuses = 300.0;
-          return {
-            user_id: s.id,
-            staff_name: s.name,
-            role: s.role,
-            branch_id: s.branch_id,
-            branch_name: branchObj ? branchObj.name : 'Main Store',
-            period_start: start,
-            period_end: end,
-            hourly_rate: rate,
-            total_hours: hours,
-            gross_pay: gross,
-            deductions,
-            bonuses,
-            net_pay: gross + bonuses - deductions
-          };
-        });
-        setPayrollData(computed);
-      }
-    } catch (e) {}
-  };
-
-  const handleApprovePayroll = async (records: PayrollItem[]) => {
-    alert('Payroll records approved and finalized!');
+  const handleImportOfflineBatch = (batchData: any) => {
+    fetchFromSupabase();
   };
 
   const selectedBranchName = selectedBranchId === 'all'
@@ -282,16 +268,16 @@ export default function App() {
 
       {/* 2. Navigation Tabs */}
       <nav className="bg-slate-900/60 border-b border-slate-800 px-6 py-2 no-print">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => setActiveTab('sales')}
+            onClick={() => setActiveTab('branches')}
             className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition ${
-              activeTab === 'sales'
+              activeTab === 'branches'
                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
             }`}
           >
-            <BarChart3 className="w-4 h-4" /> Live Sales & Overview
+            <Building2 className="w-4 h-4" /> 🏢 Branches & Sunmi Import Codes
           </button>
 
           <button
@@ -302,7 +288,18 @@ export default function App() {
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
             }`}
           >
-            <Package className="w-4 h-4" /> Multi-Branch Stock & Restock
+            <Package className="w-4 h-4" /> 📦 Menu Items & Stock Matrix
+          </button>
+
+          <button
+            onClick={() => setActiveTab('sales')}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition ${
+              activeTab === 'sales'
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+            }`}
+          >
+            <BarChart3 className="w-4 h-4" /> 📊 Live Sales & Overview
           </button>
 
           <button
@@ -313,7 +310,7 @@ export default function App() {
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
             }`}
           >
-            <Users className="w-4 h-4" /> Staff Timeclock & Payroll
+            <Users className="w-4 h-4" /> 👥 Staff & Payroll
           </button>
 
           <button
@@ -324,34 +321,31 @@ export default function App() {
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
             }`}
           >
-            <Printer className="w-4 h-4" /> Exports & Print Center
-          </button>
-
-          <button
-            onClick={() => setActiveTab('devices')}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition ${
-              activeTab === 'devices'
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-            }`}
-          >
-            <Smartphone className="w-4 h-4" /> Sunmi Devices ({devices.length})
+            <Printer className="w-4 h-4" /> 📥 Exports & Reports
           </button>
         </div>
       </nav>
 
       {/* 3. Tab Content */}
       <main className="flex-1 p-6 max-w-7xl w-full mx-auto">
-        {activeTab === 'sales' && <SalesOverviewTab data={analytics} branches={branches} />}
-        {activeTab === 'inventory' && (
-          <InventoryMatrixTab branches={branches} items={inventoryMatrix} onRestock={handleRestock} />
+        {activeTab === 'branches' && (
+          <BranchSetupManager branches={branches} onSaveBranch={handleSaveBranch} />
         )}
+        {activeTab === 'inventory' && (
+          <InventoryMatrixTab
+            branches={branches}
+            items={inventoryMatrix}
+            onRestock={handleRestock}
+            onSaveProduct={handleSaveProduct}
+          />
+        )}
+        {activeTab === 'sales' && <SalesOverviewTab data={analytics} branches={branches} />}
         {activeTab === 'payroll' && (
           <PayrollManagerTab
             branches={branches}
             payrollData={payrollData}
-            onCalculate={handleCalculatePayroll}
-            onApprove={handleApprovePayroll}
+            onCalculate={async () => {}}
+            onApprove={async () => {}}
           />
         )}
         {activeTab === 'reports' && (
@@ -362,13 +356,6 @@ export default function App() {
             payroll={payrollData}
             selectedBranchName={selectedBranchName}
             onImportOfflineBatch={handleImportOfflineBatch}
-          />
-        )}
-        {activeTab === 'devices' && (
-          <DeviceProvisioningTab
-            branches={branches}
-            devices={devices}
-            onPairNewDevice={handlePairNewDevice}
           />
         )}
       </main>

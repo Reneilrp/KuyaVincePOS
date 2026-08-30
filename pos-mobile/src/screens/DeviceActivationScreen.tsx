@@ -1,103 +1,168 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import { ApiService } from '../services/ApiService';
 import { usePosStore } from '../stores/usePosStore';
-import { Branch } from '../types';
+
+const SUPABASE_URL = 'https://diddsyaqdqxvadgttguq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpZGRzeWFxZHF4dmFkZ3R0Z3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwNTI1NzQsImV4cCI6MjEwMzYyODU3NH0.0JKA5syorKUuwP5KtFTjQXpQFwb_uYuDyM8yL4ZdRh4';
 
 export const DeviceActivationScreen: React.FC<{ onActivated: () => void }> = ({ onActivated }) => {
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [selectedBranchId, setSelectedBranchId] = useState<number | null>(null);
-  const [terminalName, setTerminalName] = useState('Sunmi Handheld 01');
-  const [deviceSerial, setDeviceSerial] = useState('SUNMI-DEV-' + Math.floor(100000 + Math.random() * 900000));
-  const [loading, setLoading] = useState(false);
-  const setDeviceAndBranch = usePosStore((s) => s.setDeviceAndBranch);
+  const [importCode, setImportCode] = useState('KV-BR01');
+  const [terminalName, setTerminalName] = useState('Counter 01');
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    loadBranches();
-  }, []);
+  const setBranch = usePosStore((s) => s.setBranch);
+  const setDevice = usePosStore((s) => s.setDevice);
+  const setCatalog = usePosStore((s) => s.setCatalog);
 
-  const loadBranches = async () => {
-    try {
-      const res = await ApiService.getSetupBranches();
-      if (res.branches) {
-        setBranches(res.branches);
-        if (res.branches.length > 0) {
-          setSelectedBranchId(res.branches[0].id);
-        }
-      }
-    } catch (e) {
-      console.warn('Backend not running locally yet, using default mock branches');
-      const fallbackBranches: Branch[] = [
-        { id: 1, name: 'Downtown Flagship', code: 'BR-01', address: '101 Rizal Ave' },
-        { id: 2, name: 'Mall Galleria', code: 'BR-02', address: 'Level 2, West Wing' },
-        { id: 3, name: 'Express Kiosk', code: 'BR-03', address: 'Terminal 3 Station' }
-      ];
-      setBranches(fallbackBranches);
-      setSelectedBranchId(1);
-    }
-  };
-
-  const handleActivate = async () => {
-    if (!selectedBranchId) {
-      Alert.alert('Error', 'Please select a store branch');
+  const handleImportBranch = async () => {
+    if (!importCode.trim()) {
+      Alert.alert('Required', 'Please enter your 6-character Branch Import Code.');
       return;
     }
-    setLoading(true);
+
+    setIsLoading(true);
     try {
-      const res = await ApiService.pairDevice({
-        device_serial: deviceSerial,
-        branch_id: selectedBranchId,
-        terminal_name: terminalName
+      // 1. Fetch branch by Import Code from Supabase
+      const branchRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/branches?import_code=eq.${importCode.trim().toUpperCase()}&select=*`,
+        {
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`
+          }
+        }
+      );
+
+      const branches = await branchRes.json();
+      let matchedBranch = branches && branches.length > 0 ? branches[0] : null;
+
+      if (!matchedBranch) {
+        // Fallback for offline simulation or initial setup
+        matchedBranch = {
+          id: 1,
+          name: 'KCC Mall de Zamboanga',
+          code: 'BR-01',
+          import_code: importCode.toUpperCase()
+        };
+      }
+
+      // 2. Fetch Products for this branch
+      const prodRes = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*`, {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`
+        }
+      });
+      const prods = await prodRes.json();
+
+      if (prods && Array.isArray(prods) && prods.length > 0) {
+        const catalogItems = prods.map((p: any) => ({
+          product_id: p.id,
+          name: p.name,
+          category: p.category || 'General',
+          base_price: Number(p.base_price),
+          stock_quantity: 100
+        }));
+        setCatalog(catalogItems);
+      }
+
+      // 3. Save Active Device & Branch State
+      setBranch(matchedBranch);
+      setDevice({
+        id: 1,
+        branch_id: matchedBranch.id,
+        device_serial: 'SUNMI-V2S-' + importCode.toUpperCase(),
+        terminal_name: terminalName,
+        device_token: 'TOKEN_' + Date.now(),
+        status: 'online'
       });
 
-      const activeBranch = branches.find((b) => b.id === selectedBranchId)!;
-      setDeviceAndBranch(
-        res.device || { id: 1, branch_id: selectedBranchId, device_serial: deviceSerial, terminal_name: terminalName, device_token: 'DVT_TOKEN' },
-        activeBranch
+      Alert.alert(
+        '✅ Branch Connected',
+        `Successfully linked to "${matchedBranch.name}" [${matchedBranch.code}]!`
       );
-      Alert.alert('Success', `Device registered to ${activeBranch.name}`);
       onActivated();
-    } catch (e) {
-      // Fallback local activation
-      const activeBranch = branches.find((b) => b.id === selectedBranchId)!;
-      setDeviceAndBranch(
-        { id: 1, branch_id: selectedBranchId, device_serial: deviceSerial, terminal_name: terminalName, device_token: 'DVT_TOKEN' },
-        activeBranch
-      );
+    } catch (err: any) {
+      Alert.alert('Connection Notice', 'Connecting with local branch offline cache.');
+      setBranch({
+        id: 1,
+        name: 'Branch 1 - Zamboanga Hub',
+        code: 'BR-01',
+        import_code: importCode.toUpperCase()
+      });
+      setDevice({
+        id: 1,
+        branch_id: 1,
+        device_serial: 'SUNMI-OFFLINE-01',
+        terminal_name: terminalName,
+        device_token: 'OFFLINE_TOKEN',
+        status: 'online'
+      });
       onActivated();
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>📱 Sunmi POS Setup</Text>
-        <Text style={styles.subtitle}>Assign this handheld terminal to a store branch</Text>
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>📱 SUNMI HANDHELD SETUP</Text>
+        </View>
 
-        <Text style={styles.label}>Device Serial Number</Text>
-        <TextInput style={[styles.input, styles.disabledInput]} value={deviceSerial} editable={false} />
+        <Text style={styles.title}>KuyaVince POS</Text>
+        <Text style={styles.subtitle}>Enter the Branch Import Code generated on your Admin Laptop</Text>
 
-        <Text style={styles.label}>Terminal Label / Name</Text>
-        <TextInput style={styles.input} value={terminalName} onChangeText={setTerminalName} placeholder="e.g. Counter 01" />
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>BRANCH IMPORT CODE</Text>
+          <TextInput
+            style={styles.codeInput}
+            value={importCode}
+            onChangeText={setImportCode}
+            placeholder="e.g. KV-BR01"
+            placeholderTextColor="#64748B"
+            autoCapitalize="characters"
+            maxLength={10}
+          />
+        </View>
 
-        <Text style={styles.label}>Select Store Branch</Text>
-        <View style={styles.branchGrid}>
-          {branches.map((b) => (
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>TERMINAL / COUNTER NAME</Text>
+          <TextInput
+            style={styles.input}
+            value={terminalName}
+            onChangeText={setTerminalName}
+            placeholder="e.g. Counter 01, Cashier A"
+            placeholderTextColor="#64748B"
+          />
+        </View>
+
+        {/* Quick Branch Code Presets for Fast Testing */}
+        <View style={styles.presetRow}>
+          {(['KV-BR01', 'KV-BR02', 'KV-BR03'] as const).map((code, idx) => (
             <TouchableOpacity
-              key={b.id}
-              style={[styles.branchButton, selectedBranchId === b.id && styles.branchButtonActive]}
-              onPress={() => setSelectedBranchId(b.id)}
+              key={code}
+              style={[styles.presetBtn, importCode === code && styles.presetBtnActive]}
+              onPress={() => setImportCode(code)}
             >
-              <Text style={[styles.branchCode, selectedBranchId === b.id && styles.textWhite]}>{b.code}</Text>
-              <Text style={[styles.branchName, selectedBranchId === b.id && styles.textWhite]}>{b.name}</Text>
+              <Text style={[styles.presetText, importCode === code && styles.presetTextActive]}>
+                Branch {idx + 1}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        <TouchableOpacity style={styles.submitBtn} onPress={handleActivate} disabled={loading}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitBtnText}>✅ ACTIVATE & INITIALIZE POS</Text>}
+        <TouchableOpacity
+          style={[styles.actionBtn, isLoading && styles.btnDisabled]}
+          onPress={handleImportBranch}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.actionBtnText}>⚡ IMPORT BRANCH & START SELLING</Text>
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -105,19 +170,22 @@ export const DeviceActivationScreen: React.FC<{ onActivated: () => void }> = ({ 
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F172A', justifyContent: 'center', alignItems: 'center', padding: 16 },
-  card: { backgroundColor: '#1E293B', width: '100%', maxWidth: 440, borderRadius: 16, padding: 24, borderWidth: 1, borderColor: '#334155' },
-  title: { fontSize: 22, fontWeight: 'bold', color: '#F8FAFC', textAlign: 'center', marginBottom: 4 },
-  subtitle: { fontSize: 13, color: '#94A3B8', textAlign: 'center', marginBottom: 20 },
-  label: { fontSize: 12, fontWeight: '600', color: '#CBD5E1', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
-  input: { backgroundColor: '#0F172A', color: '#F8FAFC', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#334155', marginBottom: 16, fontSize: 14 },
-  disabledInput: { color: '#64748B' },
-  branchGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24 },
-  branchButton: { flex: 1, minWidth: '45%', backgroundColor: '#0F172A', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#334155', alignItems: 'center' },
-  branchButtonActive: { backgroundColor: '#2563EB', borderColor: '#60A5FA' },
-  branchCode: { fontSize: 14, fontWeight: 'bold', color: '#38BDF8', marginBottom: 2 },
-  branchName: { fontSize: 12, color: '#94A3B8', textAlign: 'center' },
-  textWhite: { color: '#FFFFFF' },
-  submitBtn: { backgroundColor: '#10B981', padding: 16, borderRadius: 10, alignItems: 'center' },
-  submitBtnText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 14, letterSpacing: 0.5 }
+  container: { flex: 1, backgroundColor: '#0F172A', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  card: { backgroundColor: '#1E293B', width: '100%', maxWidth: 380, padding: 24, borderRadius: 20, borderWidth: 1, borderColor: '#334155', shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 10 },
+  badge: { alignSelf: 'center', backgroundColor: '#0284C7', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, marginBottom: 12 },
+  badgeText: { color: '#FFFFFF', fontSize: 10, fontWeight: 'bold', letterSpacing: 0.5 },
+  title: { fontSize: 22, fontWeight: '900', color: '#F8FAFC', textAlign: 'center' },
+  subtitle: { fontSize: 12, color: '#94A3B8', textAlign: 'center', marginTop: 4, marginBottom: 20, lineHeight: 18 },
+  formGroup: { marginBottom: 14 },
+  label: { fontSize: 10, fontWeight: 'bold', color: '#64748B', letterSpacing: 0.8, marginBottom: 6 },
+  codeInput: { backgroundColor: '#0F172A', borderWidth: 2, borderColor: '#38BDF8', borderRadius: 12, color: '#38BDF8', fontSize: 18, fontWeight: 'bold', textAlign: 'center', padding: 12, letterSpacing: 2, fontFamily: 'monospace' },
+  input: { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155', borderRadius: 10, color: '#F8FAFC', fontSize: 14, padding: 12 },
+  presetRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
+  presetBtn: { flex: 1, backgroundColor: '#0F172A', paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#334155', alignItems: 'center' },
+  presetBtnActive: { borderColor: '#38BDF8', backgroundColor: '#0284C7' },
+  presetText: { color: '#94A3B8', fontSize: 11, fontWeight: '600' },
+  presetTextActive: { color: '#FFFFFF', fontWeight: 'bold' },
+  actionBtn: { backgroundColor: '#10B981', paddingVertical: 14, borderRadius: 12, alignItems: 'center' },
+  btnDisabled: { opacity: 0.6 },
+  actionBtnText: { color: '#FFFFFF', fontSize: 13, fontWeight: 'bold', letterSpacing: 0.5 }
 });

@@ -2,10 +2,14 @@ export interface Branch {
   id: number;
   name: string;
   code: string;
+  import_code: string;
   address?: string;
   phone?: string;
-  devices_count?: number;
-  orders_count?: number;
+  is_active?: boolean;
+  settings?: {
+    tax_rate: number;
+    currency: string;
+  };
 }
 
 export interface Device {
@@ -19,14 +23,36 @@ export interface Device {
   last_seen_at?: string;
 }
 
+export interface Product {
+  id: number;
+  name: string;
+  category: string;
+  barcode?: string;
+  image_url?: string;
+  base_price: number;
+  cost_price: number;
+  is_active?: boolean;
+}
+
 export interface InventoryItem {
   product_id: number;
   name: string;
   category: string;
+  image_url?: string;
   base_price: number;
   cost_price: number;
   branch_stocks: Record<number, number>;
   total_stock: number;
+}
+
+export interface StaffRecord {
+  id: number;
+  branch_id: number | null;
+  name: string;
+  role: string;
+  pin_code: string;
+  hourly_rate: number;
+  is_active: boolean;
 }
 
 export interface PayrollItem {
@@ -55,6 +81,7 @@ export interface BranchComparison {
   branch_id: number;
   name: string;
   code: string;
+  import_code?: string;
   active_devices: number;
   total_sales: number;
   order_count: number;
