@@ -99,6 +99,8 @@ describe('Live Supabase Full-Stack Database Verification', () => {
 
   // 3. Test Staff Records with Salted PIN Hashing & Soft Deletes
   test('3. Staff: Salted PIN Security, Soft-Delete & Restore Cycle', async () => {
+    const curStaff = await (await fetch(`${SUPABASE_URL}/rest/v1/staff_records?select=*`, { headers })).json();
+    const nextStaffId = Math.max(...curStaff.map((s: any) => Number(s.id)), 0) + 1;
     const salt = generatePinSalt();
     const hash = await hashPin('4321', salt);
     const staffName = `Cashier Test (${timestamp.toString().slice(-4)})`;
@@ -108,6 +110,7 @@ describe('Live Supabase Full-Stack Database Verification', () => {
       method: 'POST',
       headers,
       body: JSON.stringify({
+        id: nextStaffId,
         branch_id: 1,
         name: staffName,
         role: 'cashier',
