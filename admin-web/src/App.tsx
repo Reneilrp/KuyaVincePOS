@@ -1,56 +1,73 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Package, Users, Printer, Building2 } from 'lucide-react';
+import { SidebarMenuBar, TabKey } from './components/SidebarMenuBar';
 import { BranchFilterHeader } from './components/BranchFilterHeader';
-import { SalesOverviewTab } from './components/SalesOverviewTab';
-import { InventoryMatrixTab } from './components/InventoryMatrixTab';
 import { BranchSetupManager } from './components/BranchSetupManager';
+import { InventoryMatrixTab } from './components/InventoryMatrixTab';
+import { SalesOverviewTab } from './components/SalesOverviewTab';
 import { PayrollManagerTab } from './components/PayrollManagerTab';
 import { ReportsPrintTab } from './components/ReportsPrintTab';
+import { AdminLoginScreen } from './components/AdminLoginScreen';
 import { supabase } from './services/supabaseClient';
 import { AnalyticsData, Branch, InventoryItem, PayrollItem, Product } from './types';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'sales' | 'inventory' | 'branches' | 'payroll' | 'reports'>('branches');
+  // Authentication State
+  const [currentUser, setCurrentUser] = useState<{ email: string; role: string } | null>(() => {
+    const saved = localStorage.getItem('kv_pos_admin_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  // Navigation & Filter State
+  const [activeTab, setActiveTab] = useState<TabKey>('branches');
   const [selectedBranchId, setSelectedBranchId] = useState<string>('all');
   const [selectedRange, setSelectedRange] = useState<string>('today');
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Clean Production State (Zero Demo Junk)
-  const [branches, setBranches] = useState<Branch[]>([
-    { id: 1, name: 'Branch 1 - Main Hub', code: 'BR-01', import_code: 'KV-BR01', address: 'Zamboanga City', phone: '+63 917 000 0001' },
-    { id: 2, name: 'Branch 2 - Mall Outlet', code: 'BR-02', import_code: 'KV-BR02', address: 'Zamboanga City', phone: '+63 917 000 0002' },
-    { id: 3, name: 'Branch 3 - Kiosk', code: 'BR-03', import_code: 'KV-BR03', address: 'Zamboanga City', phone: '+63 917 000 0003' }
-  ]);
-
+  // 100% Real Live State from Supabase (Zero Mock Data)
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [inventoryMatrix, setInventoryMatrix] = useState<InventoryItem[]>([]);
+  const [payrollData, setPayrollData] = useState<PayrollItem[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsData>({
     filters: { branch_id: 'all', range: 'today', start_date: '', end_date: '' },
     kpis: {
-      total_gross_revenue: 0.00,
+      total_gross_revenue: 0,
       total_sales_count: 0,
-      average_order_value: 0.00,
-      payment_breakdown: { cash: 0.00, ewallet: 0.00, card: 0.00 }
+      average_order_value: 0,
+      payment_breakdown: { cash: 0, ewallet: 0, card: 0 }
     },
     branch_comparison: [],
     top_products: []
   });
 
-  const [inventoryMatrix, setInventoryMatrix] = useState<InventoryItem[]>([]);
-  const [payrollData, setPayrollData] = useState<PayrollItem[]>([]);
+  const handleLoginSuccess = (user: { email: string; role: string }) => {
+    setCurrentUser(user);
+    localStorage.setItem('kv_pos_admin_user', JSON.stringify(user));
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('kv_pos_admin_user');
+  };
 
   useEffect(() => {
-    fetchFromSupabase();
-  }, [selectedBranchId, selectedRange]);
+    if (currentUser) {
+      fetchLiveSupabaseData();
+    }
+  }, [currentUser, selectedBranchId, selectedRange]);
 
-  const fetchFromSupabase = async () => {
+  const fetchLiveSupabaseData = async () => {
     setIsLoading(true);
     try {
-      // 1. Fetch Branches
-      const { data: branchData } = await supabase.from('branches').select('*').order('id');
-      if (branchData && branchData.length > 0) {
-        setBranches(branchData);
-      }
+      // 1. Fetch Branches from Supabase
+      const { data: branchData, error: bErr } = await supabase
+        .from('branches')
+        .select('*')
+        .order('id');
 
-      // 2. Fetch Products & Branch Inventory
+      const liveBranches: Branch[] = branchData || [];
+      setBranches(liveBranches);
+
+      // 2. Fetch Products & Branch Inventory from Supabase
       const { data: prodData } = await supabase.from('products').select('*').order('id');
       const { data: invData } = await supabase.from('branch_inventory').select('*');
 
@@ -81,7 +98,7 @@ export default function App() {
         setInventoryMatrix(matrix);
       }
 
-      // 3. Fetch Daily Batches
+      // 3. Fetch Real Daily Batches from Supabase
       let batchQuery = supabase.from('daily_batches').select('*').order('sync_date', { ascending: false });
       if (selectedBranchId !== 'all') {
         batchQuery = batchQuery.eq('branch_id', Number(selectedBranchId));
@@ -94,8 +111,8 @@ export default function App() {
         let cashTotal = 0;
         let ewalletTotal = 0;
         let cardTotal = 0;
-
         const branchMap: Record<number, { count: number; sales: number }> = {};
+        const productMap: Record<string, { qty: number; revenue: number }> = {};
 
         for (const b of batches) {
           const gross = Number(b.gross_sales || 0);
@@ -111,9 +128,28 @@ export default function App() {
           }
           branchMap[b.branch_id].count += count;
           branchMap[b.branch_id].sales += gross;
+
+          // Process item sales if available
+          if (Array.isArray(b.orders_payload)) {
+            for (const ord of b.orders_payload) {
+              if (Array.isArray(ord.items)) {
+                for (const it of ord.items) {
+                  const pName = it.name || 'Custom Item';
+                  if (!productMap[pName]) productMap[pName] = { qty: 0, revenue: 0 };
+                  productMap[pName].qty += Number(it.qty || 1);
+                  productMap[pName].revenue += Number(it.total_price || (it.qty * it.unit_price) || 0);
+                }
+              }
+            }
+          }
         }
 
-        const comparison = (branchData || branches).map((br) => ({
+        const topProds = Object.entries(productMap)
+          .map(([name, stat]) => ({ product_name: name, total_qty: stat.qty, total_revenue: stat.revenue }))
+          .sort((a, b) => b.total_revenue - a.total_revenue)
+          .slice(0, 5);
+
+        const comparison = liveBranches.map((br) => ({
           branch_id: br.id,
           name: br.name,
           code: br.code,
@@ -132,11 +168,11 @@ export default function App() {
             payment_breakdown: { cash: cashTotal, ewallet: ewalletTotal, card: cardTotal }
           },
           branch_comparison: comparison,
-          top_products: []
+          top_products: topProds
         });
       } else {
-        // Clean default 0 state
-        const comparison = (branchData || branches).map((br) => ({
+        // Zero-sales clean state
+        const comparison = liveBranches.map((br) => ({
           branch_id: br.id,
           name: br.name,
           code: br.code,
@@ -168,18 +204,17 @@ export default function App() {
   // Branch Save / Create
   const handleSaveBranch = async (branchData: Partial<Branch>) => {
     try {
-      const { data, error } = await supabase.from('branches').upsert(branchData).select();
+      const { error } = await supabase.from('branches').upsert(branchData);
       if (error) throw error;
-      await fetchFromSupabase();
+      await fetchLiveSupabaseData();
     } catch (e: any) {
       alert('Failed to save branch: ' + e.message);
     }
   };
 
-  // Product Save / Create (with multi-branch stock allocation)
+  // Product Save / Create with multi-branch stock allocation
   const handleSaveProduct = async (data: { product: Partial<Product>; branchStocks: Record<number, number> }) => {
     try {
-      // 1. Upsert product
       const { data: savedProd, error: prodErr } = await supabase
         .from('products')
         .upsert({
@@ -196,13 +231,12 @@ export default function App() {
 
       if (prodErr) throw prodErr;
 
-      // 2. Upsert stock for each branch
-      const prodId = savedProd.id;
+      // Upsert stock per branch
       for (const [branchId, stockQty] of Object.entries(data.branchStocks)) {
         await supabase.from('branch_inventory').upsert(
           {
             branch_id: Number(branchId),
-            product_id: prodId,
+            product_id: savedProd.id,
             stock_quantity: Number(stockQty || 0),
             updated_at: new Date().toISOString()
           },
@@ -210,8 +244,8 @@ export default function App() {
         );
       }
 
-      await fetchFromSupabase();
-      alert('Product saved and inventory allocated to branches successfully!');
+      await fetchLiveSupabaseData();
+      alert('Product saved and stock allocated successfully in Supabase!');
     } catch (e: any) {
       alert('Failed to save product: ' + e.message);
     }
@@ -239,14 +273,22 @@ export default function App() {
         { onConflict: 'branch_id,product_id' }
       );
 
-      await fetchFromSupabase();
+      await fetchLiveSupabaseData();
     } catch (e: any) {
       alert('Restock failed: ' + e.message);
     }
   };
 
-  const handleImportOfflineBatch = (batchData: any) => {
-    fetchFromSupabase();
+  if (!currentUser) {
+    return <AdminLoginScreen onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  const tabTitles: Record<TabKey, string> = {
+    branches: '🏢 Store Branches & Sunmi Import Codes',
+    inventory: '📦 Menu Catalog & Multi-Branch Stock Matrix',
+    sales: '📊 Real-Time Multi-Branch Sales & Revenue Overview',
+    payroll: '👥 Staff Timeclocks & Hourly Payroll Manager',
+    reports: '📥 Client Data Retrieval, 1-Click Exports & Prints'
   };
 
   const selectedBranchName = selectedBranchId === 'all'
@@ -254,111 +296,67 @@ export default function App() {
     : (branches.find((b) => String(b.id) === selectedBranchId)?.name || 'Selected Branch');
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      {/* 1. Top Fixed Header */}
-      <BranchFilterHeader
-        branches={branches}
-        selectedBranchId={selectedBranchId}
-        onSelectBranch={setSelectedBranchId}
-        selectedRange={selectedRange}
-        onSelectRange={setSelectedRange}
-        onRefresh={fetchFromSupabase}
-        isLoading={isLoading}
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex">
+      {/* 1. Sleek Left Menu Bar */}
+      <SidebarMenuBar
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+        branchesCount={branches.length}
+        productsCount={inventoryMatrix.length}
       />
 
-      {/* 2. Navigation Tabs */}
-      <nav className="bg-slate-900/60 border-b border-slate-800 px-6 py-2 no-print">
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setActiveTab('branches')}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition ${
-              activeTab === 'branches'
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-            }`}
-          >
-            <Building2 className="w-4 h-4" /> 🏢 Branches & Sunmi Import Codes
-          </button>
+      {/* 2. Main Content Container */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top Minimalist Header */}
+        <BranchFilterHeader
+          branches={branches}
+          selectedBranchId={selectedBranchId}
+          onSelectBranch={setSelectedBranchId}
+          selectedRange={selectedRange}
+          onSelectRange={setSelectedRange}
+          onRefresh={fetchLiveSupabaseData}
+          isLoading={isLoading}
+          pageTitle={tabTitles[activeTab]}
+        />
 
-          <button
-            onClick={() => setActiveTab('inventory')}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition ${
-              activeTab === 'inventory'
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-            }`}
-          >
-            <Package className="w-4 h-4" /> 📦 Menu Items & Stock Matrix
-          </button>
-
-          <button
-            onClick={() => setActiveTab('sales')}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition ${
-              activeTab === 'sales'
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-            }`}
-          >
-            <BarChart3 className="w-4 h-4" /> 📊 Live Sales & Overview
-          </button>
-
-          <button
-            onClick={() => setActiveTab('payroll')}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition ${
-              activeTab === 'payroll'
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-            }`}
-          >
-            <Users className="w-4 h-4" /> 👥 Staff & Payroll
-          </button>
-
-          <button
-            onClick={() => setActiveTab('reports')}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition ${
-              activeTab === 'reports'
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-            }`}
-          >
-            <Printer className="w-4 h-4" /> 📥 Exports & Reports
-          </button>
-        </div>
-      </nav>
-
-      {/* 3. Tab Content */}
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto">
-        {activeTab === 'branches' && (
-          <BranchSetupManager branches={branches} onSaveBranch={handleSaveBranch} />
-        )}
-        {activeTab === 'inventory' && (
-          <InventoryMatrixTab
-            branches={branches}
-            items={inventoryMatrix}
-            onRestock={handleRestock}
-            onSaveProduct={handleSaveProduct}
-          />
-        )}
-        {activeTab === 'sales' && <SalesOverviewTab data={analytics} branches={branches} />}
-        {activeTab === 'payroll' && (
-          <PayrollManagerTab
-            branches={branches}
-            payrollData={payrollData}
-            onCalculate={async () => {}}
-            onApprove={async () => {}}
-          />
-        )}
-        {activeTab === 'reports' && (
-          <ReportsPrintTab
-            branches={branches}
-            analytics={analytics}
-            inventory={inventoryMatrix}
-            payroll={payrollData}
-            selectedBranchName={selectedBranchName}
-            onImportOfflineBatch={handleImportOfflineBatch}
-          />
-        )}
-      </main>
+        {/* Dynamic Container Feature View */}
+        <main className="flex-1 p-6 max-w-7xl w-full mx-auto">
+          {activeTab === 'branches' && (
+            <BranchSetupManager branches={branches} onSaveBranch={handleSaveBranch} />
+          )}
+          {activeTab === 'inventory' && (
+            <InventoryMatrixTab
+              branches={branches}
+              items={inventoryMatrix}
+              onRestock={handleRestock}
+              onSaveProduct={handleSaveProduct}
+            />
+          )}
+          {activeTab === 'sales' && (
+            <SalesOverviewTab data={analytics} branches={branches} />
+          )}
+          {activeTab === 'payroll' && (
+            <PayrollManagerTab
+              branches={branches}
+              payrollData={payrollData}
+              onCalculate={async () => {}}
+              onApprove={async () => {}}
+            />
+          )}
+          {activeTab === 'reports' && (
+            <ReportsPrintTab
+              branches={branches}
+              analytics={analytics}
+              inventory={inventoryMatrix}
+              payroll={payrollData}
+              selectedBranchName={selectedBranchName}
+              onImportOfflineBatch={() => fetchLiveSupabaseData()}
+            />
+          )}
+        </main>
+      </div>
     </div>
   );
 }
