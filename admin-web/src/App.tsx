@@ -230,7 +230,7 @@ export default function App() {
   };
 
   // Master Product Save / Create
-  const handleSaveProduct = async (data: { product: Partial<Product>; branchStocks: Record<number, number> }) => {
+  const handleSaveProduct = async (data: { product: Partial<Product>; branchStocks: Record<number, number | null> }) => {
     try {
       const { data: savedProd, error: prodErr } = await supabase
         .from("products")
@@ -248,21 +248,30 @@ export default function App() {
 
       if (prodErr) throw prodErr;
 
-      // Upsert stock per branch
+      // Upsert or delete stock per branch
       for (const [branchId, stockQty] of Object.entries(data.branchStocks)) {
-        await supabase.from("branch_inventory").upsert(
-          {
-            branch_id: Number(branchId),
-            product_id: savedProd.id,
-            stock_quantity: Number(stockQty || 0),
-            updated_at: new Date().toISOString()
-          },
-          { onConflict: "branch_id,product_id" }
-        );
+        if (stockQty === null || stockQty === undefined) {
+          // Excluded from branch — delete if existing
+          await supabase
+            .from("branch_inventory")
+            .delete()
+            .match({ branch_id: Number(branchId), product_id: savedProd.id });
+        } else {
+          // Included in branch — upsert stock quantity
+          await supabase.from("branch_inventory").upsert(
+            {
+              branch_id: Number(branchId),
+              product_id: savedProd.id,
+              stock_quantity: Number(stockQty || 0),
+              updated_at: new Date().toISOString()
+            },
+            { onConflict: "branch_id,product_id" }
+          );
+        }
       }
 
       await fetchLiveSupabaseData();
-      alert("Product saved and stock allocated successfully in Supabase!");
+      alert("Product saved and branch allocation updated successfully!");
     } catch (e: any) {
       alert("Failed to save product: " + e.message);
     }

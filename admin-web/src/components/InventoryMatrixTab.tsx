@@ -7,7 +7,7 @@ interface Props {
   branches: Branch[];
   items: InventoryItem[];
   onRestock: (branchId: number, productId: number, qty: number, notes: string) => Promise<void>;
-  onSaveProduct: (productData: { product: Partial<Product>; branchStocks: Record<number, number> }) => Promise<void>;
+  onSaveProduct: (productData: { product: Partial<Product>; branchStocks: Record<number, number | null> }) => Promise<void>;
 }
 
 export const InventoryMatrixTab: React.FC<Props> = ({ branches, items, onRestock, onSaveProduct }) => {
@@ -151,19 +151,26 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches, items, onRestock
                       <td className="p-4 font-bold text-emerald-400">₱{item.base_price.toFixed(2)}</td>
                       <td className="p-4 text-slate-400">₱{item.cost_price.toFixed(2)}</td>
                       {branches.map((b) => {
+                        const hasStock = item.branch_stocks[b.id] !== undefined;
                         const stock = item.branch_stocks[b.id] ?? 0;
                         const isBranchLow = stock <= 10;
                         return (
                           <td key={b.id} className="p-4 text-center">
-                            <span
-                              className={`inline-block px-2.5 py-1 rounded-md font-mono font-bold ${
-                                isBranchLow
-                                  ? 'bg-amber-950/80 text-amber-400 border border-amber-800/60'
-                                  : 'bg-slate-950 text-slate-200'
-                              }`}
-                            >
-                              {stock}
-                            </span>
+                            {hasStock ? (
+                              <span
+                                className={`inline-block px-2.5 py-1 rounded-md font-mono font-bold ${
+                                  isBranchLow
+                                    ? 'bg-amber-950/80 text-amber-400 border border-amber-800/60'
+                                    : 'bg-slate-950 text-slate-200'
+                                }`}
+                              >
+                                {stock}
+                              </span>
+                            ) : (
+                              <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-slate-500 bg-slate-950/40 border border-slate-800/60">
+                                — Excluded
+                              </span>
+                            )}
                           </td>
                         );
                       })}

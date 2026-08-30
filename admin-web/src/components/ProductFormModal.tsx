@@ -10,7 +10,7 @@ interface Props {
   initialProduct?: InventoryItem | null;
   onSave: (productData: {
     product: Partial<Product>;
-    branchStocks: Record<number, number>;
+    branchStocks: Record<number, number | null>;
   }) => Promise<void>;
 }
 
@@ -38,6 +38,19 @@ export const ProductFormModal: React.FC<Props> = ({
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // 1-Click Branch Inclusion State (Optional per branch)
+  const [includedBranches, setIncludedBranches] = useState<Record<number, boolean>>(() => {
+    const initial: Record<number, boolean> = {};
+    for (const b of branches) {
+      if (initialProduct) {
+        initial[b.id] = initialProduct.branch_stocks[b.id] !== undefined;
+      } else {
+        initial[b.id] = true; // Default included for new products
+      }
+    }
+    return initial;
+  });
+
   const [branchStocks, setBranchStocks] = useState<Record<number, string>>(() => {
     const initial: Record<number, string> = {};
     for (const b of branches) {
@@ -51,6 +64,18 @@ export const ProductFormModal: React.FC<Props> = ({
 
   const handleStockChange = (branchId: number, val: string) => {
     setBranchStocks((prev) => ({ ...prev, [branchId]: val }));
+  };
+
+  const toggleBranchInclusion = (branchId: number) => {
+    setIncludedBranches((prev) => ({ ...prev, [branchId]: !prev[branchId] }));
+  };
+
+  const setAllBranchesInclusion = (include: boolean) => {
+    const updated: Record<number, boolean> = {};
+    for (const b of branches) {
+      updated[b.id] = include;
+    }
+    setIncludedBranches(updated);
   };
 
   // Compress & optimize image for fast cloud sync and lightweight mobile rendering
@@ -176,9 +201,13 @@ export const ProductFormModal: React.FC<Props> = ({
 
     setIsSubmitting(true);
     try {
-      const parsedStocks: Record<number, number> = {};
+      const parsedStocks: Record<number, number | null> = {};
       for (const b of branches) {
-        parsedStocks[b.id] = parseFloat(branchStocks[b.id] || '0');
+        if (includedBranches[b.id]) {
+          parsedStocks[b.id] = parseFloat(branchStocks[b.id] || '0');
+        } else {
+          parsedStocks[b.id] = null;
+        }
       }
 
       await onSave({
@@ -467,27 +496,93 @@ export const ProductFormModal: React.FC<Props> = ({
             </div>
           )}
 
-          {/* 5. Initial Stock Allocation Per Branch */}
+          {/* 5. Initial Stock Allocation Per Branch (1-Click Include/Exclude) */}
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
-            <span className="text-xs font-bold text-slate-300 uppercase flex items-center gap-1.5">
-              <Layers className="w-4 h-4 text-blue-400" /> Initial Stock per Branch
-            </span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <span className="text-xs font-bold text-slate-300 uppercase flex items-center gap-1.5">
+                  <Layers className="w-4 h-4 text-blue-400" /> Stock per Branch (Optional)
+                </span>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Click a branch badge to include or exclude it from carrying this item
+                </p>
+              </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {branches.map((b) => (
-                <div key={b.id}>
-                  <label className="block text-[11px] text-slate-400 mb-1 truncate">
-                    🏢 {b.name}
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={branchStocks[b.id] ?? '0'}
-                    onChange={(e) => handleStockChange(b.id, e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-sm text-center font-bold text-white focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-              ))}
+              {/* Bulk Quick Actions */}
+              <div className="flex items-center gap-1.5 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setAllBranchesInclusion(true)}
+                  className="px-2.5 py-1 text-[11px] font-semibold bg-slate-900 hover:bg-slate-800 text-blue-400 border border-slate-800 rounded-md transition"
+                >
+                  ✓ Include All
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAllBranchesInclusion(false)}
+                  className="px-2.5 py-1 text-[11px] font-semibold bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 rounded-md transition"
+                >
+                  ✕ Exclude All
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+              {branches.map((b) => {
+                const isIncluded = includedBranches[b.id] ?? false;
+
+                return (
+                  <div
+                    key={b.id}
+                    className={`p-3 rounded-xl border transition flex flex-col justify-between ${
+                      isIncluded
+                        ? 'bg-slate-900 border-slate-700/80 shadow-sm'
+                        : 'bg-slate-950/60 border-slate-900 opacity-60'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1 mb-2">
+                      <label className="text-[11px] font-bold text-slate-300 truncate">
+                        🏢 {b.name}
+                      </label>
+
+                      {/* 1-Click Toggle Badge */}
+                      <button
+                        type="button"
+                        onClick={() => toggleBranchInclusion(b.id)}
+                        className={`text-[10px] px-2 py-0.5 rounded-full font-bold transition flex items-center gap-0.5 cursor-pointer ${
+                          isIncluded
+                            ? 'bg-emerald-950/90 text-emerald-400 border border-emerald-800/80 hover:bg-emerald-900'
+                            : 'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'
+                        }`}
+                        title={isIncluded ? 'Click to exclude this branch' : 'Click to include this branch'}
+                      >
+                        {isIncluded ? '✓ Stocked' : '✕ Excluded'}
+                      </button>
+                    </div>
+
+                    {isIncluded ? (
+                      <div>
+                        <input
+                          type="number"
+                          min="0"
+                          value={branchStocks[b.id] ?? '0'}
+                          onChange={(e) => handleStockChange(b.id, e.target.value)}
+                          placeholder="Stock qty"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-sm text-center font-bold text-white focus:outline-none focus:border-blue-500 font-mono"
+                        />
+                        <span className="block text-[10px] text-slate-500 text-center mt-1">Initial units</span>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => toggleBranchInclusion(b.id)}
+                        className="py-2.5 text-center cursor-pointer rounded-lg bg-slate-900/60 border border-dashed border-slate-800 hover:border-slate-700"
+                      >
+                        <span className="text-[11px] text-slate-500 font-medium">Click to include</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
