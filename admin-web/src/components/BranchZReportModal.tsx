@@ -9,8 +9,7 @@ interface Props {
   grossSales: number;
   ordersCount: number;
   cashSales: number;
-  ewalletSales: number;
-  cardSales: number;
+
   openingFloat?: number;
   countedCash?: number;
 }
@@ -22,8 +21,6 @@ export const BranchZReportModal: React.FC<Props> = ({
   grossSales,
   ordersCount,
   cashSales,
-  ewalletSales,
-  cardSales,
   openingFloat = 1000.0,
   countedCash
 }) => {
@@ -85,14 +82,8 @@ export const BranchZReportModal: React.FC<Props> = ({
                 <span>Cash:</span>
                 <span>₱{cashSales.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between">
-                <span>E-Wallets (GCash/Maya):</span>
-                <span>₱{ewalletSales.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Card Terminal:</span>
-                <span>₱{cardSales.toFixed(2)}</span>
-              </div>
+              
+              
             </div>
 
             <div className="border-t border-dashed border-black my-2 pt-2">

@@ -96,16 +96,12 @@ export const BranchDetailView: React.FC<Props> = ({
   let branchGrossSales = 0;
   let branchOrdersCount = 0;
   let cashSales = 0;
-  let ewalletSales = 0;
-  let cardSales = 0;
   const itemSalesMap: Record<string, { qty: number; revenue: number }> = {};
 
   for (const b of branchBatches) {
     branchGrossSales += Number(b.gross_sales || 0);
     branchOrdersCount += Number(b.orders_count || 0);
     cashSales += Number(b.cash_sales || 0);
-    ewalletSales += Number(b.ewallet_sales || 0);
-    cardSales += Number(b.card_sales || 0);
 
     if (Array.isArray(b.orders_payload)) {
       for (const ord of b.orders_payload) {
@@ -302,54 +298,6 @@ export const BranchDetailView: React.FC<Props> = ({
             onSaveCountedCash={(val) => setCountedCash(val)}
             onEnableOverride={() => setIsAdminOverride(true)}
           />
-
-          {/* Payment Method Breakdown for this branch */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              💳 Payment Collection at {branch.name}
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-950 border border-emerald-900 flex items-center justify-center text-emerald-400">
-                    <DollarSign className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-white">Cash in Drawer</p>
-                    <p className="text-[10px] text-slate-400">Cashier register physical cash</p>
-                  </div>
-                </div>
-                <p className="text-base font-bold text-emerald-400">₱{cashSales.toFixed(2)}</p>
-              </div>
-
-              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-950 border border-blue-900 flex items-center justify-center text-blue-400">
-                    <Wallet className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-white">E-Wallets (GCash / Maya)</p>
-                    <p className="text-[10px] text-slate-400">QR digital payments</p>
-                  </div>
-                </div>
-                <p className="text-base font-bold text-blue-400">₱{ewalletSales.toFixed(2)}</p>
-              </div>
-
-              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-purple-950 border border-purple-900 flex items-center justify-center text-purple-400">
-                    <CreditCard className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-white">Credit / Debit Cards</p>
-                    <p className="text-[10px] text-slate-400">Card terminal sales</p>
-                  </div>
-                </div>
-                <p className="text-base font-bold text-purple-400">₱{cardSales.toFixed(2)}</p>
-              </div>
-            </div>
-          </div>
 
           {/* Daily Batch Sync History for this Branch */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
@@ -612,8 +560,6 @@ export const BranchDetailView: React.FC<Props> = ({
         grossSales={branchGrossSales}
         ordersCount={branchOrdersCount}
         cashSales={cashSales}
-        ewalletSales={ewalletSales}
-        cardSales={cardSales}
         openingFloat={1000.0}
         countedCash={countedCash}
       />

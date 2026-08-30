@@ -126,57 +126,10 @@ export const SalesOverviewTab: React.FC<Props> = ({ data, branches, lastSyncAt }
         </div>
       </div>
 
-      {/* 3. Payment Methods & Top Selling Products */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Payment Breakdown */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-sm">
-          <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-            💳 Payment Method Mix
-          </h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-950/60 border border-slate-800/80">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-md bg-emerald-950 text-emerald-400">
-                  <Banknote className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-200">Cash Payments</p>
-                  <p className="text-xs text-slate-400">Physical Register Drawer</p>
-                </div>
-              </div>
-              <p className="text-sm font-bold text-white">₱{kpis.payment_breakdown.cash.toFixed(2)}</p>
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-950/60 border border-slate-800/80">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-md bg-blue-950 text-blue-400">
-                  <QrCode className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-200">E-Wallets (GCash / Maya)</p>
-                  <p className="text-xs text-slate-400">QR Standee Scans</p>
-                </div>
-              </div>
-              <p className="text-sm font-bold text-white">₱{kpis.payment_breakdown.ewallet.toFixed(2)}</p>
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-950/60 border border-slate-800/80">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-md bg-purple-950 text-purple-400">
-                  <CreditCard className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-200">Cards / Debit</p>
-                  <p className="text-xs text-slate-400">Terminal Swipes</p>
-                </div>
-              </div>
-              <p className="text-sm font-bold text-white">₱{kpis.payment_breakdown.card.toFixed(2)}</p>
-            </div>
-          </div>
-        </div>
-
+      {/* 3. Top Selling Products */}
+      <div className="grid grid-cols-1 gap-6">
         {/* Top-Selling Products */}
-        <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-sm">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-sm">
           <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
             🏆 Top-Selling Products by Volume
           </h3>
