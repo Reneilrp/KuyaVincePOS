@@ -10,11 +10,12 @@ import { ReceiptSuccessScreen } from './src/screens/ReceiptSuccessScreen';
 import { StockRestockModal } from './src/screens/StockRestockModal';
 import { TimeclockScreen } from './src/screens/TimeclockScreen';
 import { usePosStore } from './src/stores/usePosStore';
+import { LanguageProvider } from './src/context/LanguageContext';
 import { ThermalReceiptData } from './src/types';
 
 type Screen = 'activation' | 'pin' | 'menu' | 'cart' | 'payment' | 'receipt' | 'endofday';
 
-export default function App() {
+function MainApp() {
   const [screen, setScreen] = useState<Screen>('activation');
   const [isRestockOpen, setIsRestockOpen] = useState(false);
   const [isTimeclockOpen, setIsTimeclockOpen] = useState(false);
@@ -82,6 +83,14 @@ export default function App() {
       <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
       {renderScreen()}
     </SafeAreaView>
+  );
+}
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <MainApp />
+    </LanguageProvider>
   );
 }
 

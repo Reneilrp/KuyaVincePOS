@@ -4,6 +4,7 @@ import { ThermalReceiptData } from '../types';
 import { ApiService } from '../services/ApiService';
 import { SunmiPrinterDriver } from '../services/SunmiPrinterDriver';
 import { usePosStore } from '../stores/usePosStore';
+import { useLanguage } from '../context/LanguageContext';
 
 interface Props {
   onBack: () => void;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export const PaymentScreen: React.FC<Props> = ({ onBack, onSuccess }) => {
+  const { t } = useLanguage();
   const [tenderedInput, setTenderedInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -37,7 +39,7 @@ export const PaymentScreen: React.FC<Props> = ({ onBack, onSuccess }) => {
 
   const handleConfirm = async () => {
     if (!isSufficient) {
-      Alert.alert('Payment Error', `Cash tendered is less than total amount (₱${total.toFixed(2)}).`);
+      Alert.alert(t('accessDenied'), t('enterValidAmount'));
       return;
     }
     
@@ -117,26 +119,26 @@ export const PaymentScreen: React.FC<Props> = ({ onBack, onSuccess }) => {
       {/* Top Header */}
       <View style={{ height: 56, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, backgroundColor: '#1E293B', borderBottomWidth: 1, borderBottomColor: '#334155' }}>
         <TouchableOpacity onPress={onBack}>
-          <Text style={{ color: '#3B82F6', fontSize: 14, fontWeight: 'bold' }}>← Back</Text>
+          <Text style={{ color: '#3B82F6', fontSize: 14, fontWeight: 'bold' }}>{t('back')}</Text>
         </TouchableOpacity>
-        <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', flex: 1, textAlign: 'center' }}>Cash Payment</Text>
+        <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold', flex: 1, textAlign: 'center' }}>{t('cashPaymentHeader')}</Text>
         <View style={{ width: 60 }} />
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
         {/* Order Total Display */}
         <View style={{ marginHorizontal: 16, marginTop: 16, marginBottom: 16, backgroundColor: '#1E293B', borderRadius: 20, padding: 20, alignItems: 'center', borderWidth: 1, borderColor: '#334155' }}>
-          <Text style={{ color: '#94A3B8', fontSize: 10, fontWeight: 'bold', letterSpacing: 1.5, textAlign: 'center' }}>TOTAL AMOUNT DUE</Text>
+          <Text style={{ color: '#94A3B8', fontSize: 10, fontWeight: 'bold', letterSpacing: 1.5, textAlign: 'center' }}>{t('totalAmountDue')}</Text>
           <Text style={{ color: '#34D399', fontWeight: 'bold', fontSize: 38, fontFamily: 'monospace', textAlign: 'center', marginTop: 4 }}>₱{total.toFixed(2)}</Text>
-          <Text style={{ color: '#94A3B8', fontSize: 12, textAlign: 'center', marginTop: 2 }}>{cart.reduce((s, i) => s + i.quantity, 0)} items in order</Text>
+          <Text style={{ color: '#94A3B8', fontSize: 12, textAlign: 'center', marginTop: 2 }}>{cart.reduce((s, i) => s + i.quantity, 0)} {t('items')}</Text>
         </View>
 
         {/* Cash Tendered Input */}
         <View style={{ marginHorizontal: 16, marginBottom: 12 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: 'bold', letterSpacing: 1.2 }}>CASH TENDERED (BAYAD)</Text>
+            <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: 'bold', letterSpacing: 1.2 }}>{t('cashTendered')}</Text>
             <TouchableOpacity onPress={handleExactCash} style={{ backgroundColor: '#1E3A5F', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
-              <Text style={{ color: '#60A5FA', fontSize: 11, fontWeight: 'bold' }}>Exact Amount</Text>
+              <Text style={{ color: '#60A5FA', fontSize: 11, fontWeight: 'bold' }}>{t('exactAmount')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -167,8 +169,8 @@ export const PaymentScreen: React.FC<Props> = ({ onBack, onSuccess }) => {
         {/* Change Display Card */}
         <View style={{ marginHorizontal: 16, backgroundColor: isSufficient ? '#022C22' : '#1E293B', borderWidth: 1, borderColor: isSufficient ? '#065F46' : '#334155', borderRadius: 16, padding: 18, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <Text style={{ color: '#94A3B8', fontSize: 13, fontWeight: 'bold' }}>Sukli / Change:</Text>
-            <Text style={{ color: '#64748B', fontSize: 10, marginTop: 2 }}>{isSufficient ? 'Return to customer' : 'Awaiting payment'}</Text>
+            <Text style={{ color: '#94A3B8', fontSize: 13, fontWeight: 'bold' }}>{t('sukliChange')}</Text>
+            <Text style={{ color: '#64748B', fontSize: 10, marginTop: 2 }}>{isSufficient ? t('returnToCustomer') : t('awaitingPayment')}</Text>
           </div>
           <Text style={{ color: isSufficient ? '#34D399' : '#64748B', fontWeight: 'bold', fontSize: 26, fontFamily: 'monospace' }}>
             ₱ {changeAmount.toFixed(2)}
@@ -192,7 +194,7 @@ export const PaymentScreen: React.FC<Props> = ({ onBack, onSuccess }) => {
               <ActivityIndicator color="white" />
             ) : (
               <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>
-                {isSufficient ? '🖸️ Confirm & Print Receipt' : 'Enter Valid Cash Amount'}
+                {isSufficient ? t('confirmPrintReceipt') : t('enterValidAmount')}
               </Text>
             )}
           </TouchableOpacity>

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { ThermalReceiptData } from '../types';
 import { SunmiPrinterDriver } from '../services/SunmiPrinterDriver';
-import C from '../theme/colors';
+import { useLanguage } from '../context/LanguageContext';
 
 interface Props {
   receiptData: ThermalReceiptData;
@@ -10,6 +10,8 @@ interface Props {
 }
 
 export const ReceiptSuccessScreen: React.FC<Props> = ({ receiptData, onNewOrder }) => {
+  const { t } = useLanguage();
+
   useEffect(() => {
     SunmiPrinterDriver.printReceipt(receiptData).catch(console.warn);
   }, []);
@@ -20,8 +22,8 @@ export const ReceiptSuccessScreen: React.FC<Props> = ({ receiptData, onNewOrder 
         <View style={styles.successCircle}>
           <Text style={styles.successIcon}>✓</Text>
         </View>
-        <Text style={styles.heroTitle}>Payment Successful!</Text>
-        <Text style={styles.heroSub}>Receipt is printing from your device...</Text>
+        <Text style={styles.heroTitle}>{t('paymentSuccessful')}</Text>
+        <Text style={styles.heroSub}>{t('receiptPrinting')}</Text>
       </View>
 
       <View style={styles.receiptCard}>
@@ -49,7 +51,7 @@ export const ReceiptSuccessScreen: React.FC<Props> = ({ receiptData, onNewOrder 
           <Text style={styles.cashLabel}>Cash: ₱{receiptData.totals.amount_tendered}</Text>
         </View>
         <View style={styles.rowRight}>
-          <Text style={styles.changeLabel}>Change: ₱{receiptData.totals.change}</Text>
+          <Text style={styles.changeLabel}>Sukli / Change: ₱{receiptData.totals.change}</Text>
         </View>
         <Text style={styles.dashedLine}>{'-'.repeat(30)}</Text>
         <Text style={styles.footerMessage}>{receiptData.footer.message}</Text>
@@ -58,10 +60,10 @@ export const ReceiptSuccessScreen: React.FC<Props> = ({ receiptData, onNewOrder 
 
       <View style={styles.buttonsRow}>
         <TouchableOpacity style={styles.newOrderBtn} onPress={onNewOrder}>
-          <Text style={styles.newOrderText}>New Order</Text>
+          <Text style={styles.newOrderText}>{t('newOrderBtn')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.printAgainBtn} onPress={() => SunmiPrinterDriver.printReceipt(receiptData)}>
-          <Text style={styles.printAgainText}>Print Again</Text>
+          <Text style={styles.printAgainText}>{t('printAgainBtn')}</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

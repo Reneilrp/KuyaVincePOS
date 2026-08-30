@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, SafeAreaView } from 'react-native';
 import { ApiService } from '../services/ApiService';
 import { usePosStore } from '../stores/usePosStore';
+import { useLanguage } from '../context/LanguageContext';
 
 export const CashierPinScreen: React.FC<{ onAuthenticated: () => void }> = ({ onAuthenticated }) => {
+  const { t, language, toggleLanguage } = useLanguage();
   const [pin, setPin] = useState('');
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockoutRemaining, setLockoutRemaining] = useState(0);
@@ -61,8 +63,8 @@ export const CashierPinScreen: React.FC<{ onAuthenticated: () => void }> = ({ on
       );
     } else {
       Alert.alert(
-        'Access Denied',
-        `Incorrect PIN. ${5 - nextAttempts} attempt${5 - nextAttempts === 1 ? '' : 's'} remaining before lockout.`
+        t('accessDenied'),
+        t('incorrectPinWarning', { attempts: 5 - nextAttempts })
       );
     }
   };
@@ -76,7 +78,7 @@ export const CashierPinScreen: React.FC<{ onAuthenticated: () => void }> = ({ on
         setActiveCashier(res.user);
         setFailedAttempts(0);
 
-        // Auto-Clock In & Shift Initiation (Issue 1: Unified Shift/Timeclock)
+        // Auto-Clock In & Shift Initiation
         try {
           const shiftRes = await ApiService.openShift({
             branch_id: branch ? branch.id : 1,
@@ -89,7 +91,7 @@ export const CashierPinScreen: React.FC<{ onAuthenticated: () => void }> = ({ on
             setActiveShiftId(shiftRes.shift.id);
           }
         } catch (e) {
-          console.warn('Auto-shift/timeclock clock-in info', e);
+          console.warn('Auto-shift clock-in info', e);
         }
 
         onAuthenticated();
@@ -111,8 +113,17 @@ export const CashierPinScreen: React.FC<{ onAuthenticated: () => void }> = ({ on
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.onlineBadge}>
-        <Text style={styles.onlineBadgeText}>● Online</Text>
+      {/* Top Bar with Language Toggle & Online Status */}
+      <View style={styles.topBar}>
+        <TouchableOpacity style={styles.langToggleBtn} onPress={toggleLanguage}>
+          <Text style={styles.langToggleText}>
+            {language === 'en' ? '🇺🇸 EN' : '🇵🇭 TL'}
+          </Text>
+        </TouchableOpacity>
+
+        <View style={styles.onlineBadge}>
+          <Text style={styles.onlineBadgeText}>● {t('online')}</Text>
+        </View>
       </View>
       
       <View style={styles.centerSection}>
@@ -122,15 +133,15 @@ export const CashierPinScreen: React.FC<{ onAuthenticated: () => void }> = ({ on
         <Text style={styles.title}>KuyaVince POS</Text>
         <Text style={styles.subtitle}>{branch?.name || 'Branch 1 - Main Hub'}</Text>
         
-        <View style={{ height: 24 }} />
+        <View style={{ height: 20 }} />
         
-        <Text style={styles.welcomeText}>Welcome Back 👋</Text>
-        <Text style={styles.instructionText}>Enter 4-digit PIN to clock in & start shift</Text>
+        <Text style={styles.welcomeText}>{t('welcomeBack')}</Text>
+        <Text style={styles.instructionText}>{t('enterPinInstruction')}</Text>
 
         {/* Lockout Warning Banner */}
         {isLocked && (
           <View style={styles.lockoutBanner}>
-            <Text style={styles.lockoutText}>🔒 LOCKED: Cooldown active ({lockoutRemaining}s)</Text>
+            <Text style={styles.lockoutText}>{t('terminalLocked', { seconds: lockoutRemaining })}</Text>
           </View>
         )}
         
@@ -147,7 +158,7 @@ export const CashierPinScreen: React.FC<{ onAuthenticated: () => void }> = ({ on
           ))}
         </View>
         
-        <View style={{ height: 24 }} />
+        <View style={{ height: 20 }} />
         
         <View style={styles.numpadGrid}>
           {['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', '✓'].map((key) => {
@@ -178,7 +189,7 @@ export const CashierPinScreen: React.FC<{ onAuthenticated: () => void }> = ({ on
           })}
         </View>
         
-        <Text style={styles.forgotText}>Forgot PIN? Ask your store manager</Text>
+        <Text style={styles.forgotText}>{t('forgotPin')}</Text>
       </View>
     </SafeAreaView>
   );
@@ -186,33 +197,36 @@ export const CashierPinScreen: React.FC<{ onAuthenticated: () => void }> = ({ on
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0F172A' },
-  onlineBadge: { position: 'absolute', top: 16, right: 16, backgroundColor: '#022C22', borderWidth: 1, borderColor: '#065F46', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 },
+  topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 12 },
+  langToggleBtn: { backgroundColor: '#1E293B', borderWidth: 1, borderColor: '#334155', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 6 },
+  langToggleText: { color: '#F8FAFC', fontWeight: 'bold', fontSize: 11 },
+  onlineBadge: { backgroundColor: '#022C22', borderWidth: 1, borderColor: '#065F46', borderRadius: 14, paddingHorizontal: 10, paddingVertical: 6 },
   onlineBadgeText: { color: '#34D399', fontSize: 10, fontWeight: 'bold' },
   
-  centerSection: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
+  centerSection: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   logo: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#3B82F6', alignItems: 'center', justifyContent: 'center' },
   logoText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 },
   title: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 18, marginTop: 8 },
   subtitle: { color: '#94A3B8', fontSize: 12 },
   
   welcomeText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 24 },
-  instructionText: { color: '#94A3B8', fontSize: 13, marginTop: 4, marginBottom: 20 },
+  instructionText: { color: '#94A3B8', fontSize: 12, marginTop: 4, marginBottom: 16 },
 
-  lockoutBanner: { backgroundColor: '#7F1D1D', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, marginBottom: 16, borderWidth: 1, borderColor: '#DC2626' },
+  lockoutBanner: { backgroundColor: '#7F1D1D', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: '#DC2626' },
   lockoutText: { color: '#FEF2F2', fontWeight: 'bold', fontSize: 12 },
   
   pinRow: { flexDirection: 'row', gap: 16 },
-  pinDot: { width: 50, height: 50, borderRadius: 25, borderWidth: 2, borderColor: '#334155', backgroundColor: 'transparent' },
+  pinDot: { width: 48, height: 48, borderRadius: 24, borderWidth: 2, borderColor: '#334155', backgroundColor: 'transparent' },
   pinDotFilled: { borderColor: '#3B82F6', backgroundColor: '#3B82F6' },
   pinDotLocked: { borderColor: '#7F1D1D', backgroundColor: '#450A0A' },
   
   numpadGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, width: 296, justifyContent: 'center' },
-  keyButton: { width: 88, height: 60, borderRadius: 14, backgroundColor: '#1E293B', borderWidth: 1, borderColor: '#334155', alignItems: 'center', justifyContent: 'center' },
+  keyButton: { width: 88, height: 58, borderRadius: 14, backgroundColor: '#1E293B', borderWidth: 1, borderColor: '#334155', alignItems: 'center', justifyContent: 'center' },
   submitButton: { backgroundColor: '#3B82F6', borderColor: '#3B82F6' },
   keyDisabled: { backgroundColor: '#0F172A', borderColor: '#1E293B', opacity: 0.4 },
   keyText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 22 },
   submitKeyText: { color: '#FFFFFF' },
   textMuted: { color: '#475569' },
   
-  forgotText: { color: '#94A3B8', fontSize: 12, marginTop: 18 }
+  forgotText: { color: '#94A3B8', fontSize: 12, marginTop: 16 }
 });

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Modal, Alert, ActivityIndicator } from 'react-native';
-import { BatchSyncService, LocalOrderRecord } from '../services/BatchSyncService';
+import { BatchSyncService } from '../services/BatchSyncService';
 import { SunmiPrinterDriver } from '../services/SunmiPrinterDriver';
 import { usePosStore } from '../stores/usePosStore';
+import { useLanguage } from '../context/LanguageContext';
 
 type SyncStatus = 'idle' | 'syncing' | 'success' | 'error';
 
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export const EndOfDaySyncScreen: React.FC<Props> = ({ visible, onClose }) => {
+  const { t } = useLanguage();
   const branch = usePosStore((s) => s.branch);
   const device = usePosStore((s) => s.device);
   const cashier = usePosStore((s) => s.activeCashier);
@@ -111,19 +113,19 @@ export const EndOfDaySyncScreen: React.FC<Props> = ({ visible, onClose }) => {
     }
   };
 
-  // Issue 3: Safeguard against ending shift without syncing
+  // Safeguard against ending shift without syncing
   const handleSignOut = () => {
     if (unsyncedCount > 0 && syncStatus !== 'success') {
       Alert.alert(
-        '⚠️ Unsynced Orders Detected',
-        `You have ${unsyncedCount} sales order${unsyncedCount === 1 ? '' : 's'} not yet uploaded to the cloud.\n\nPlease upload before ending your shift so the admin receives today's revenue.`,
+        t('unsyncedWarningTitle'),
+        t('unsyncedWarningMsg', { count: unsyncedCount }),
         [
           {
-            text: '📤 Upload Now',
+            text: t('uploadNow'),
             onPress: handle1TapBatchSync
           },
           {
-            text: 'Skip & Exit (Offline)',
+            text: t('skipExitOffline'),
             style: 'destructive',
             onPress: () => {
               setActiveCashier(null);
@@ -132,7 +134,7 @@ export const EndOfDaySyncScreen: React.FC<Props> = ({ visible, onClose }) => {
             }
           },
           {
-            text: 'Cancel',
+            text: t('cancel'),
             style: 'cancel'
           }
         ]
@@ -148,36 +150,36 @@ export const EndOfDaySyncScreen: React.FC<Props> = ({ visible, onClose }) => {
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.modalBg}>
         <ScrollView contentContainerStyle={styles.container}>
-          <Text style={styles.headerTitle}>End of Day & Cash Balancing</Text>
+          <Text style={styles.headerTitle}>{t('endOfDayHeader')}</Text>
           <Text style={styles.headerSub}>{branch?.name || 'Main Branch'}</Text>
 
           <View style={styles.summaryCard}>
-            <Text style={styles.summaryTitle}>📊 Today's Shift Performance</Text>
+            <Text style={styles.summaryTitle}>{t('shiftPerformance')}</Text>
             
             <View style={styles.row}>
-              <Text style={styles.rowLabel}>Total Orders Completed</Text>
-              <Text style={styles.rowValueWhite}>{totalOrdersCount} orders</Text>
+              <Text style={styles.rowLabel}>{t('totalOrdersCompleted')}</Text>
+              <Text style={styles.rowValueWhite}>{totalOrdersCount} {t('items')}</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.rowLabel}>Total Cash Sales (Gross)</Text>
+              <Text style={styles.rowLabel}>{t('totalCashSales')}</Text>
               <Text style={styles.rowValueHighlight}>₱{totalGrossRevenue.toFixed(2)}</Text>
             </View>
             
             <View style={styles.divider} />
             
             <View style={styles.simpleRow}>
-              <Text style={styles.rowLabel}>1. Starting Panukli (Float)</Text>
+              <Text style={styles.rowLabel}>{t('startingFloat')}</Text>
               <Text style={styles.rowLabel}>₱{openingFloat.toFixed(2)}</Text>
             </View>
             <View style={styles.simpleRow}>
-              <Text style={styles.rowLabel}>2. Expected in Drawer</Text>
+              <Text style={styles.rowLabel}>{t('expectedInDrawer')}</Text>
               <Text style={styles.rowValueWhite}>₱{expectedDrawer.toFixed(2)}</Text>
             </View>
 
             <View style={styles.countedRow}>
               <div>
-                <Text style={styles.rowLabelHighlight}>3. Actual Counted Cash</Text>
-                <Text style={styles.subText}>Binilang sa drawer</Text>
+                <Text style={styles.rowLabelHighlight}>{t('actualCountedCash')}</Text>
+                <Text style={styles.subText}>{t('drawerCountSub')}</Text>
               </div>
               <TextInput
                 style={styles.input}
@@ -193,11 +195,11 @@ export const EndOfDaySyncScreen: React.FC<Props> = ({ visible, onClose }) => {
           {/* Status Badge */}
           <View style={styles.statusBadgeContainer}>
             {isBalanced ? (
-              <View style={styles.badgeBalanced}><Text style={styles.badgeBalancedText}>✓ SAKTO / BALANCED (₱0.00)</Text></View>
+              <View style={styles.badgeBalanced}><Text style={styles.badgeBalancedText}>{t('balancedStatus')}</Text></View>
             ) : variance < 0 ? (
-              <View style={styles.badgeShort}><Text style={styles.badgeShortText}>⚠ KULANG / SHORT ₱{Math.abs(variance).toFixed(2)}</Text></View>
+              <View style={styles.badgeShort}><Text style={styles.badgeShortText}>{t('shortStatus', { amount: Math.abs(variance).toFixed(2) })}</Text></View>
             ) : (
-              <View style={styles.badgeOver}><Text style={styles.badgeOverText}>▲ SOBRA / OVER ₱{variance.toFixed(2)}</Text></View>
+              <View style={styles.badgeOver}><Text style={styles.badgeOverText}>{t('overStatus', { amount: variance.toFixed(2) })}</Text></View>
             )}
           </View>
 
@@ -205,12 +207,12 @@ export const EndOfDaySyncScreen: React.FC<Props> = ({ visible, onClose }) => {
           {(syncStatus === 'idle' || syncStatus === 'error') && (
             <>
               <TouchableOpacity style={styles.uploadBtn} onPress={handle1TapBatchSync}>
-                <Text style={styles.uploadBtnText}>📤 Upload Today's Sales to Cloud</Text>
+                <Text style={styles.uploadBtnText}>{t('uploadSalesBtn')}</Text>
               </TouchableOpacity>
               <Text style={styles.uploadHelper}>
                 {unsyncedCount > 0
-                  ? `Sync ${unsyncedCount} pending order${unsyncedCount === 1 ? '' : 's'} to Admin Dashboard`
-                  : 'All orders already backed up to cloud'}
+                  ? t('uploadHelperPending', { count: unsyncedCount })
+                  : t('uploadHelperAllSynced')}
               </Text>
             </>
           )}
@@ -218,22 +220,22 @@ export const EndOfDaySyncScreen: React.FC<Props> = ({ visible, onClose }) => {
           {syncStatus === 'syncing' && (
             <View style={styles.syncingContainer}>
               <ActivityIndicator color="#3B82F6" size="large" />
-              <Text style={styles.syncingText}>Uploading sales batch & inventory restocks...</Text>
+              <Text style={styles.syncingText}>{t('uploadingOrders')}</Text>
             </View>
           )}
 
           {syncStatus === 'success' && (
             <View style={styles.successContainer}>
-              <Text style={styles.successText}>✅ Synced Successfully! Cloud database updated.</Text>
+              <Text style={styles.successText}>{t('syncedSuccess')}</Text>
             </View>
           )}
 
           <TouchableOpacity style={styles.printBtn} onPress={handlePrintZReport}>
-            <Text style={styles.printBtnText}>🖸️ Print 58mm Z-Reading Slip</Text>
+            <Text style={styles.printBtnText}>{t('printZReportBtn')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
-            <Text style={styles.signOutBtnText}>Sign Out / End Shift</Text>
+            <Text style={styles.signOutBtnText}>{t('signOutEndShift')}</Text>
           </TouchableOpacity>
         </ScrollView>
       </View>
