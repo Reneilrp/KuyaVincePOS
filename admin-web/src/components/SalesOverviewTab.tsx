@@ -72,7 +72,10 @@ export const SalesOverviewTab: React.FC<Props> = ({ data, branches }) => {
           <h2 className="text-base font-bold text-white flex items-center gap-2">
             🏢 Side-by-Side Branch Comparison
           </h2>
-          <span className="text-xs text-slate-400">Live Breakdown</span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-400 text-[10px] font-bold uppercase tracking-wide">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            Live Data
+          </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

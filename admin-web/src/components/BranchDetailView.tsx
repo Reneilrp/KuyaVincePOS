@@ -222,7 +222,7 @@ export const BranchDetailView: React.FC<Props> = ({
                       : "bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  {r === "today" ? "Today" : r === "week" ? "This Week" : "This Month"}
+                  {r === "today" ? "Today" : r === "week" ? "This Week" : r === "month" ? "This Month" : "This Year"}
                 </button>
               ))}
 
@@ -533,24 +533,14 @@ export const BranchDetailView: React.FC<Props> = ({
                 </div>
               </div>
 
-              {/* Sunmi Mobile Import Code Highlight */}
-              <div className="bg-slate-950 border-2 border-dashed border-blue-500/50 rounded-xl px-4 py-2.5 flex items-center gap-3">
-                <div>
-                  <span className="block text-[9px] uppercase font-bold text-slate-400 tracking-wider">
-                    📱 Device Import Code
-                  </span>
-                  <span className="text-base font-mono font-black text-blue-400 tracking-wider">
-                    {branch.import_code || branch.code}
-                  </span>
+              {/* Device Status — unique context only on the pairing screen */}
+              <div className="flex flex-col gap-1.5 text-right">
+                <div className="flex items-center gap-1.5 justify-end">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0"></span>
+                  <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wide">Awaiting First Sync</span>
                 </div>
-                <button
-                  onClick={handleCopyCode}
-                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white transition flex items-center gap-1 text-xs font-bold"
-                  title="Copy Import Code"
-                >
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copied ? "Copied" : "Copy"}</span>
-                </button>
+                <span className="text-[10px] text-slate-500 font-mono">Last Sync: —</span>
+                <span className="text-[10px] text-slate-500">Device: Sunmi V2s (not yet paired)</span>
               </div>
             </div>
           </div>
