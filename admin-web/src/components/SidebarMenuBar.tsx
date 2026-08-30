@@ -31,12 +31,12 @@ export const SidebarMenuBar: React.FC<Props> = ({
       items: [
         {
           key: 'branches' as TabKey,
-          label: 'Branches & Import Codes',
+          label: 'Branches Hub',
           icon: Building2
         },
         {
           key: 'inventory' as TabKey,
-          label: 'Products & Stock Matrix',
+          label: 'Master Products & Catalog',
           icon: Package
         }
       ]

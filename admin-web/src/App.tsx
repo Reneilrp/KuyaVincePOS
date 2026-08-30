@@ -23,7 +23,7 @@ export default function App() {
   const [selectedRange, setSelectedRange] = useState<string>('today');
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // 100% Real Live State from Supabase (Zero Mock Data)
+  // 100% Real Live State from Supabase
   const [branches, setBranches] = useState<Branch[]>([]);
   const [inventoryMatrix, setInventoryMatrix] = useState<InventoryItem[]>([]);
   const [payrollData, setPayrollData] = useState<PayrollItem[]>([]);
@@ -58,8 +58,8 @@ export default function App() {
   const fetchLiveSupabaseData = async () => {
     setIsLoading(true);
     try {
-      // 1. Fetch Branches from Supabase
-      const { data: branchData, error: bErr } = await supabase
+      // 1. Fetch Branches
+      const { data: branchData } = await supabase
         .from('branches')
         .select('*')
         .order('id');
@@ -67,7 +67,7 @@ export default function App() {
       const liveBranches: Branch[] = branchData || [];
       setBranches(liveBranches);
 
-      // 2. Fetch Products & Branch Inventory from Supabase
+      // 2. Fetch Master Products & Branch Inventories
       const { data: prodData } = await supabase.from('products').select('*').order('id');
       const { data: invData } = await supabase.from('branch_inventory').select('*');
 
@@ -98,7 +98,7 @@ export default function App() {
         setInventoryMatrix(matrix);
       }
 
-      // 3. Fetch Real Daily Batches from Supabase
+      // 3. Fetch Real Daily Batches
       let batchQuery = supabase.from('daily_batches').select('*').order('sync_date', { ascending: false });
       if (selectedBranchId !== 'all') {
         batchQuery = batchQuery.eq('branch_id', Number(selectedBranchId));
@@ -129,7 +129,6 @@ export default function App() {
           branchMap[b.branch_id].count += count;
           branchMap[b.branch_id].sales += gross;
 
-          // Process item sales if available
           if (Array.isArray(b.orders_payload)) {
             for (const ord of b.orders_payload) {
               if (Array.isArray(ord.items)) {
@@ -171,7 +170,6 @@ export default function App() {
           top_products: topProds
         });
       } else {
-        // Zero-sales clean state
         const comparison = liveBranches.map((br) => ({
           branch_id: br.id,
           name: br.name,
@@ -212,7 +210,7 @@ export default function App() {
     }
   };
 
-  // Product Save / Create with multi-branch stock allocation
+  // Master Product Save / Create
   const handleSaveProduct = async (data: { product: Partial<Product>; branchStocks: Record<number, number> }) => {
     try {
       const { data: savedProd, error: prodErr } = await supabase
@@ -251,6 +249,26 @@ export default function App() {
     }
   };
 
+  // Assign product from master catalog directly into a specific branch
+  const handleAssignProductToBranch = async (branchId: number, productId: number, stockQty: number) => {
+    try {
+      await supabase.from('branch_inventory').upsert(
+        {
+          branch_id: branchId,
+          product_id: productId,
+          stock_quantity: stockQty,
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: 'branch_id,product_id' }
+      );
+
+      await fetchLiveSupabaseData();
+      alert('Product successfully assigned to branch with stock!');
+    } catch (e: any) {
+      alert('Assignment failed: ' + e.message);
+    }
+  };
+
   // Restock action
   const handleRestock = async (branchId: number, productId: number, qty: number, notes: string) => {
     try {
@@ -284,8 +302,8 @@ export default function App() {
   }
 
   const tabTitles: Record<TabKey, string> = {
-    branches: '🏢 Store Branches & Sunmi Import Codes',
-    inventory: '📦 Menu Catalog & Multi-Branch Stock Matrix',
+    branches: '🏢 Store Branches Hub',
+    inventory: '📦 Centralized Master Product Catalog & Stocks',
     sales: '📊 Real-Time Multi-Branch Sales & Revenue Overview',
     payroll: '👥 Staff Timeclocks & Hourly Payroll Manager',
     reports: '📥 Client Data Retrieval, 1-Click Exports & Prints'
@@ -294,6 +312,17 @@ export default function App() {
   const selectedBranchName = selectedBranchId === 'all'
     ? 'All Branches (Consolidated)'
     : (branches.find((b) => String(b.id) === selectedBranchId)?.name || 'Selected Branch');
+
+  // Master products list for branch assignment dropdowns
+  const masterProducts: Product[] = inventoryMatrix.map((i) => ({
+    id: i.product_id,
+    name: i.name,
+    category: i.category,
+    base_price: i.base_price,
+    cost_price: i.cost_price,
+    image_url: i.image_url,
+    is_active: true
+  }));
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex">
@@ -323,7 +352,15 @@ export default function App() {
         {/* Dynamic Container Feature View */}
         <main className="flex-1 p-6 max-w-7xl w-full mx-auto">
           {activeTab === 'branches' && (
-            <BranchSetupManager branches={branches} onSaveBranch={handleSaveBranch} />
+            <BranchSetupManager
+              branches={branches}
+              onSaveBranch={handleSaveBranch}
+              masterProducts={masterProducts}
+              branchInventory={inventoryMatrix}
+              analytics={analytics}
+              onAssignProduct={handleAssignProductToBranch}
+              onRestock={handleRestock}
+            />
           )}
           {activeTab === 'inventory' && (
             <InventoryMatrixTab

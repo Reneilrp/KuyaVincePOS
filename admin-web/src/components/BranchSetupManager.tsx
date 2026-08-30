@@ -1,19 +1,35 @@
 import React, { useState } from 'react';
-import { Building2, Copy, Check, Plus, Edit2, QrCode, Smartphone } from 'lucide-react';
-import { Branch } from '../types';
+import { Building2, Copy, Check, Plus, Edit2, ChevronRight, TrendingUp, ShoppingBag, Layers } from 'lucide-react';
+import { BranchDetailView } from './BranchDetailView';
+import { AnalyticsData, Branch, InventoryItem, Product } from '../types';
 
 interface Props {
   branches: Branch[];
   onSaveBranch: (branch: Partial<Branch>) => Promise<void>;
+  masterProducts: Product[];
+  branchInventory: InventoryItem[];
+  analytics: AnalyticsData;
+  onAssignProduct: (branchId: number, productId: number, stockQty: number) => Promise<void>;
+  onRestock: (branchId: number, productId: number, qty: number, notes: string) => Promise<void>;
 }
 
-export const BranchSetupManager: React.FC<Props> = ({ branches, onSaveBranch }) => {
+export const BranchSetupManager: React.FC<Props> = ({
+  branches,
+  onSaveBranch,
+  masterProducts,
+  branchInventory,
+  analytics,
+  onAssignProduct,
+  onRestock
+}) => {
+  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingBranch, setEditingBranch] = useState<Partial<Branch> | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleCopy = (code: string) => {
+  const handleCopy = (e: React.MouseEvent, code: string) => {
+    e.stopPropagation();
     navigator.clipboard.writeText(code);
     setCopiedCode(code);
     setTimeout(() => setCopiedCode(null), 3000);
@@ -32,7 +48,8 @@ export const BranchSetupManager: React.FC<Props> = ({ branches, onSaveBranch }) 
     setIsEditModalOpen(true);
   };
 
-  const handleOpenEdit = (branch: Branch) => {
+  const handleOpenEdit = (e: React.MouseEvent, branch: Branch) => {
+    e.stopPropagation();
     setEditingBranch({ ...branch });
     setIsEditModalOpen(true);
   };
@@ -50,82 +67,128 @@ export const BranchSetupManager: React.FC<Props> = ({ branches, onSaveBranch }) 
     }
   };
 
+  // If a branch is clicked, drill down to its dedicated Branch Detail View (AccommoTrack-M style)
+  if (selectedBranch) {
+    const branchComparison = analytics.branch_comparison.find((b) => b.branch_id === selectedBranch.id);
+    const branchSales = branchComparison?.total_sales || 0;
+    const branchOrders = branchComparison?.order_count || 0;
+
+    return (
+      <BranchDetailView
+        branch={selectedBranch}
+        onBack={() => setSelectedBranch(null)}
+        masterProducts={masterProducts}
+        branchInventory={branchInventory}
+        onAssignProduct={onAssignProduct}
+        onRestock={onRestock}
+        totalBranchSales={branchSales}
+        totalBranchOrders={branchOrders}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* 1. Header with Add Branch button */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-base font-bold text-white flex items-center gap-2">
-            🏢 Store Branches & Sunmi Device Import Codes
+            🏢 Store Branches Hub
           </h2>
           <p className="text-xs text-slate-400">
-            Set up your physical branches and get the unique 6-character Import Codes for your Sunmi handhelds
+            Click on any branch card to view its sales, live stock, and assign products from the Master Catalog
           </p>
         </div>
 
         <button
           onClick={handleOpenNew}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition shadow-sm"
         >
           <Plus className="w-4 h-4" /> Add New Branch
         </button>
       </div>
 
-      {/* 2. Branch Cards Grid with Highlighted Import Codes */}
+      {/* 2. Interactive Clickable Branch Cards Grid (AccommoTrack-M Dorm Pattern) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {branches.map((branch) => {
           const isCopied = copiedCode === branch.import_code;
+          const branchStat = analytics.branch_comparison.find((b) => b.branch_id === branch.id);
+          const totalSales = branchStat?.total_sales || 0;
+          const totalOrders = branchStat?.order_count || 0;
+
+          // Count products with stock at this branch
+          const branchItemsCount = branchInventory.filter(
+            (i) => (i.branch_stocks[branch.id] ?? 0) > 0
+          ).length;
 
           return (
             <div
               key={branch.id}
-              className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-4 relative overflow-hidden"
+              onClick={() => setSelectedBranch(branch)}
+              className="bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-blue-500/60 rounded-2xl p-6 shadow-sm space-y-4 cursor-pointer transition-all hover:scale-[1.01] group relative overflow-hidden"
             >
               <div className="flex justify-between items-start">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-blue-950 border border-blue-900 flex items-center justify-center text-blue-400 font-bold">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-blue-950/80 border border-blue-900 flex items-center justify-center text-blue-400 font-bold text-xl group-hover:scale-105 transition">
                     🏢
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white">{branch.name}</h3>
+                    <h3 className="text-sm font-bold text-white group-hover:text-blue-400 transition flex items-center gap-1.5">
+                      {branch.name}
+                    </h3>
                     <p className="text-xs text-slate-400">{branch.address || 'Zamboanga City'}</p>
                   </div>
                 </div>
 
                 <button
-                  onClick={() => handleOpenEdit(branch)}
+                  onClick={(e) => handleOpenEdit(e, branch)}
                   className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition"
-                  title="Edit Branch"
+                  title="Edit Branch Information"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              {/* Highlighted Branch Import Code Box for Sunmi */}
-              <div className="bg-slate-950 border-2 border-dashed border-blue-500/40 rounded-xl p-4 text-center space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  📱 Sunmi Mobile Import Code
-                </span>
-                <div className="flex items-center justify-center gap-3">
-                  <span className="text-xl font-mono font-black text-blue-400 tracking-widest">
-                    {branch.import_code || `KV-BR0${branch.id}`}
+              {/* Sunmi Mobile Import Code Highlight */}
+              <div className="bg-slate-950 border border-slate-800 group-hover:border-blue-500/30 rounded-xl p-3 flex items-center justify-between">
+                <div>
+                  <span className="block text-[9px] uppercase font-bold text-slate-500 tracking-wider">
+                    Sunmi Import Code
                   </span>
-                  <button
-                    onClick={() => handleCopy(branch.import_code || `KV-BR0${branch.id}`)}
-                    className="p-1.5 rounded-md bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white transition flex items-center gap-1 text-xs"
-                    title="Copy Import Code"
-                  >
-                    {isCopied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                  </button>
+                  <span className="text-base font-mono font-black text-blue-400 tracking-wider">
+                    {branch.import_code || branch.code}
+                  </span>
                 </div>
-                <p className="text-[10px] text-slate-500">
-                  Enter this code on the Sunmi device to download this branch's menu & stock
-                </p>
+                <button
+                  onClick={(e) => handleCopy(e, branch.import_code || branch.code)}
+                  className="p-1.5 rounded-lg bg-slate-900 hover:bg-blue-600 text-slate-300 hover:text-white transition flex items-center gap-1 text-[11px] font-semibold"
+                  title="Copy Import Code"
+                >
+                  {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{isCopied ? 'Copied' : 'Copy'}</span>
+                </button>
               </div>
 
-              <div className="flex justify-between items-center text-[11px] text-slate-400 pt-1 border-t border-slate-800/80">
-                <span>Code: <strong className="text-slate-200">{branch.code}</strong></span>
-                <span>Contact: {branch.phone || 'N/A'}</span>
+              {/* Quick Card Metrics */}
+              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800/80 text-center">
+                <div className="bg-slate-950/60 p-2 rounded-lg border border-slate-800/60">
+                  <span className="text-[10px] text-slate-500 font-bold block">SALES</span>
+                  <span className="text-xs font-bold text-emerald-400">₱{totalSales.toFixed(0)}</span>
+                </div>
+                <div className="bg-slate-950/60 p-2 rounded-lg border border-slate-800/60">
+                  <span className="text-[10px] text-slate-500 font-bold block">ORDERS</span>
+                  <span className="text-xs font-bold text-white">{totalOrders}</span>
+                </div>
+                <div className="bg-slate-950/60 p-2 rounded-lg border border-slate-800/60">
+                  <span className="text-[10px] text-slate-500 font-bold block">ITEMS</span>
+                  <span className="text-xs font-bold text-blue-400">{branchItemsCount} Stocked</span>
+                </div>
+              </div>
+
+              {/* Drill-down action bar */}
+              <div className="flex items-center justify-between text-xs font-bold text-blue-400 pt-1 group-hover:translate-x-0.5 transition">
+                <span>Open Branch Dashboard & Stock</span>
+                <ChevronRight className="w-4 h-4" />
               </div>
             </div>
           );
@@ -134,7 +197,7 @@ export const BranchSetupManager: React.FC<Props> = ({ branches, onSaveBranch }) 
 
       {/* 3. Edit / Add Branch Modal */}
       {isEditModalOpen && editingBranch && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               🏢 {editingBranch.id ? 'Edit Branch Details' : 'Create New Branch'}
@@ -150,7 +213,7 @@ export const BranchSetupManager: React.FC<Props> = ({ branches, onSaveBranch }) 
                   value={editingBranch.name || ''}
                   onChange={(e) => setEditingBranch({ ...editingBranch, name: e.target.value })}
                   placeholder="e.g. KCC Mall de Zamboanga"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 font-medium"
                 />
               </div>
 
@@ -163,7 +226,7 @@ export const BranchSetupManager: React.FC<Props> = ({ branches, onSaveBranch }) 
                     value={editingBranch.code || ''}
                     onChange={(e) => setEditingBranch({ ...editingBranch, code: e.target.value })}
                     placeholder="e.g. BR-01"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 font-mono"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 font-mono"
                   />
                 </div>
                 <div>
@@ -174,7 +237,7 @@ export const BranchSetupManager: React.FC<Props> = ({ branches, onSaveBranch }) 
                     value={editingBranch.import_code || ''}
                     onChange={(e) => setEditingBranch({ ...editingBranch, import_code: e.target.value })}
                     placeholder="e.g. KV-BR01"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-sm text-blue-400 font-mono font-bold focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-blue-400 font-mono font-bold focus:outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -186,7 +249,7 @@ export const BranchSetupManager: React.FC<Props> = ({ branches, onSaveBranch }) 
                   value={editingBranch.address || ''}
                   onChange={(e) => setEditingBranch({ ...editingBranch, address: e.target.value })}
                   placeholder="e.g. Gov. Camins Ave, Zamboanga City"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -197,7 +260,7 @@ export const BranchSetupManager: React.FC<Props> = ({ branches, onSaveBranch }) 
                   value={editingBranch.phone || ''}
                   onChange={(e) => setEditingBranch({ ...editingBranch, phone: e.target.value })}
                   placeholder="e.g. +63 917 123 4567"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -205,14 +268,14 @@ export const BranchSetupManager: React.FC<Props> = ({ branches, onSaveBranch }) 
                 <button
                   type="button"
                   onClick={() => setIsEditModalOpen(false)}
-                  className="flex-1 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-lg transition"
+                  className="flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-lg transition disabled:opacity-50"
+                  className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition disabled:opacity-50"
                 >
                   {isSubmitting ? 'Saving...' : 'Save Branch'}
                 </button>
