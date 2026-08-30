@@ -27,6 +27,7 @@ import { BranchCashAuditCard } from "./BranchCashAuditCard";
 import { BranchStaffManager } from "./BranchStaffManager";
 import { BranchZReportModal } from "./BranchZReportModal";
 import { Branch, InventoryItem, Product, StaffRecord } from "../types";
+import { useLanguage } from "../context/LanguageContext";
 
 interface Props {
   branch: Branch;
@@ -55,6 +56,7 @@ export const BranchDetailView: React.FC<Props> = ({
   isZReportModalOpen = false,
   onCloseZReportModal
 }) => {
+  const { t } = useLanguage();
   const [innerTab, setInnerTab] = useState<"sales" | "inventory" | "staff" | "devices">("sales");
   const [dateRange, setDateRange] = useState<"today" | "week" | "month" | "custom">("today");
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
@@ -167,7 +169,7 @@ export const BranchDetailView: React.FC<Props> = ({
                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
             }`}
           >
-            <TrendingUp className="w-4 h-4" /> Sales & Cash Audit
+            <TrendingUp className="w-4 h-4" /> {t("cashBalancingTitle")}
           </button>
 
           <button
@@ -178,7 +180,7 @@ export const BranchDetailView: React.FC<Props> = ({
                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
             }`}
           >
-            <Package className="w-4 h-4" /> Stock at this Branch ({assignedItems.length})
+            <Package className="w-4 h-4" /> {t("stockAtBranch")} ({assignedItems.length})
           </button>
 
           <button
@@ -189,7 +191,7 @@ export const BranchDetailView: React.FC<Props> = ({
                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
             }`}
           >
-            <Users className="w-4 h-4" /> Cashier Roster & PINs
+            <Users className="w-4 h-4" /> {t("cashierRoster")}
           </button>
 
           <button
@@ -200,7 +202,7 @@ export const BranchDetailView: React.FC<Props> = ({
                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
             }`}
           >
-            <Smartphone className="w-4 h-4" /> Sunmi Terminal & Pairing
+            <Smartphone className="w-4 h-4" /> {t("sunmiTerminal")}
           </button>
         </div>
       </div>
@@ -212,7 +214,7 @@ export const BranchDetailView: React.FC<Props> = ({
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-blue-400" />
-              <span className="text-xs font-bold text-white uppercase tracking-wider">Branch Performance Period:</span>
+              <span className="text-xs font-bold text-white uppercase tracking-wider">{t("branchPerformancePeriod")}:</span>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -226,7 +228,7 @@ export const BranchDetailView: React.FC<Props> = ({
                       : "bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  {r === "today" ? "Today" : r === "week" ? "This Week" : r === "month" ? "This Month" : "This Year"}
+                  {r === "today" ? t("today") : r === "week" ? t("thisWeek") : r === "month" ? t("thisMonth") : t("thisYear")}
                 </button>
               ))}
 
@@ -254,7 +256,7 @@ export const BranchDetailView: React.FC<Props> = ({
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm">
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                Total Gross Revenue
+                {t("totalGrossRevenue")}
               </span>
               <p className="text-2xl font-black text-emerald-400 mt-1">₱{branchGrossSales.toFixed(2)}</p>
               <p className="text-[10px] text-slate-500 mt-0.5">{branch.name} only</p>
@@ -262,7 +264,7 @@ export const BranchDetailView: React.FC<Props> = ({
 
             <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm">
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                Total Orders Completed
+                {t("totalOrdersCompleted")}
               </span>
               <p className="text-2xl font-black text-white mt-1">{branchOrdersCount} Orders</p>
               <p className="text-[10px] text-slate-500 mt-0.5">Checked out on Sunmi</p>
@@ -270,7 +272,7 @@ export const BranchDetailView: React.FC<Props> = ({
 
             <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm">
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                Average Ticket Size
+                {t("avgTicketSize")}
               </span>
               <p className="text-2xl font-black text-white mt-1">
                 ₱{branchOrdersCount > 0 ? (branchGrossSales / branchOrdersCount).toFixed(2) : "0.00"}
@@ -280,7 +282,7 @@ export const BranchDetailView: React.FC<Props> = ({
 
             <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm">
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                Floor Inventory Stock
+                {t("floorInventoryStock")}
               </span>
               <p className="text-2xl font-black text-blue-400 mt-1">{totalStockOnFloor} Units</p>
               <p className="text-[10px] text-slate-500 mt-0.5">{assignedItems.length} menu items active</p>
@@ -302,7 +304,7 @@ export const BranchDetailView: React.FC<Props> = ({
           {/* Daily Batch Sync History for this Branch */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
             <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              📜 Daily Batch Upload History (Sunmi 1-Tap Logs)
+              📜 {t("batchHistory")}
             </h3>
 
             {branchBatches.length === 0 ? (

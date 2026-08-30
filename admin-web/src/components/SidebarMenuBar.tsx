@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Settings,
   Building2,
@@ -7,12 +7,13 @@ import {
   Users,
   Printer,
   LogOut,
-  Radio,
   ShieldCheck,
   ChevronLeft,
   ChevronRight,
-  Menu
+  Globe
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
+import { TranslationKey } from '../i18n/translations';
 
 export type TabKey = 'branches' | 'inventory' | 'sales' | 'payroll' | 'reports' | 'settings';
 
@@ -33,53 +34,55 @@ export const SidebarMenuBar: React.FC<Props> = ({
   isCollapsed,
   onToggleCollapse
 }) => {
+  const { t, language, setLanguage } = useLanguage();
+
   const menuSections = [
     {
-      title: 'STORE SETUP',
+      titleKey: 'storeSetup' as TranslationKey,
       items: [
         {
           key: 'branches' as TabKey,
-          label: 'Branches Hub',
+          labelKey: 'branchesHub' as TranslationKey,
           icon: Building2
         },
         {
           key: 'inventory' as TabKey,
-          label: 'Master Product Catalog',
+          labelKey: 'productCatalog' as TranslationKey,
           icon: Package
         }
       ]
     },
     {
-      title: 'CONSOLIDATED',
+      titleKey: 'consolidated' as TranslationKey,
       items: [
         {
           key: 'sales' as TabKey,
-          label: 'Centralized Sales',
+          labelKey: 'centralizedSales' as TranslationKey,
           icon: BarChart3
         },
         {
           key: 'payroll' as TabKey,
-          label: 'Staff & Payroll',
+          labelKey: 'staffPayroll' as TranslationKey,
           icon: Users
         }
       ]
     },
     {
-      title: 'AUDIT',
+      titleKey: 'audit' as TranslationKey,
       items: [
         {
           key: 'reports' as TabKey,
-          label: 'Exports & Reports',
+          labelKey: 'exportsReports' as TranslationKey,
           icon: Printer
         }
       ]
     },
     {
-      title: 'SYSTEM',
+      titleKey: 'system' as TranslationKey,
       items: [
         {
           key: 'settings' as TabKey,
-          label: 'Profile & Settings',
+          labelKey: 'profileSettings' as TranslationKey,
           icon: Settings
         }
       ]
@@ -102,7 +105,7 @@ export const SidebarMenuBar: React.FC<Props> = ({
               </div>
               <div className="truncate">
                 <h1 className="text-xs font-black text-white tracking-tight leading-tight truncate">KuyaVince POS</h1>
-                <span className="text-[9px] text-slate-400 font-medium">Multi-Branch Cloud</span>
+                <span className="text-[9px] text-slate-400 font-medium">{t('appSubtitle')}</span>
               </div>
             </div>
           ) : (
@@ -120,25 +123,70 @@ export const SidebarMenuBar: React.FC<Props> = ({
           </button>
         </div>
 
+        {/* Quick Language Toggle Bar */}
+        <div className="px-3 pt-3">
+          {!isCollapsed ? (
+            <div className="flex items-center justify-between p-1.5 bg-slate-950/70 border border-slate-800/80 rounded-xl text-[11px]">
+              <div className="flex items-center gap-1.5 text-slate-400 pl-1.5 font-medium">
+                <Globe className="w-3.5 h-3.5 text-blue-400" />
+                <span>{language === 'tl' ? 'Wika:' : 'Language:'}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setLanguage('en')}
+                  className={`px-2 py-1 rounded-lg font-bold transition flex items-center gap-1 ${
+                    language === 'en'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                  title="Switch to English"
+                >
+                  <span>🇺🇸</span> EN
+                </button>
+                <button
+                  onClick={() => setLanguage('tl')}
+                  className={`px-2 py-1 rounded-lg font-bold transition flex items-center gap-1 ${
+                    language === 'tl'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                  title="Lumipat sa Tagalog"
+                >
+                  <span>🇵🇭</span> TL
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setLanguage(language === 'en' ? 'tl' : 'en')}
+              className="w-full py-1.5 flex items-center justify-center bg-slate-950/70 border border-slate-800/80 rounded-xl text-[11px] font-bold text-slate-300 hover:text-white transition"
+              title={`Switch Language (Current: ${language.toUpperCase()})`}
+            >
+              {language === 'en' ? '🇺🇸' : '🇵🇭'}
+            </button>
+          )}
+        </div>
+
         {/* 2. Menu Navigation Sections */}
-        <nav className="p-3 space-y-5 overflow-y-auto max-h-[calc(100vh-140px)]">
+        <nav className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-210px)]">
           {menuSections.map((section) => (
-            <div key={section.title} className="space-y-1">
+            <div key={section.titleKey} className="space-y-1">
               {!isCollapsed && (
                 <h2 className="px-3 text-[9px] font-bold text-slate-500 tracking-wider uppercase truncate">
-                  {section.title}
+                  {t(section.titleKey)}
                 </h2>
               )}
               <div className="space-y-1 pt-1">
                 {section.items.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeTab === item.key;
+                  const label = t(item.labelKey);
 
                   return (
                     <button
                       key={item.key}
                       onClick={() => onSelectTab(item.key)}
-                      title={isCollapsed ? item.label : undefined}
+                      title={isCollapsed ? label : undefined}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all group ${
                         isCollapsed ? 'justify-center' : 'justify-start'
                       } ${
@@ -148,7 +196,7 @@ export const SidebarMenuBar: React.FC<Props> = ({
                       }`}
                     >
                       <Icon className={`w-4 h-4 flex-shrink-0 transition-colors ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-blue-400'}`} />
-                      {!isCollapsed && <span className="truncate">{item.label}</span>}
+                      {!isCollapsed && <span className="truncate">{label}</span>}
                     </button>
                   );
                 })}
@@ -169,7 +217,7 @@ export const SidebarMenuBar: React.FC<Props> = ({
               <div className="truncate">
                 <p className="text-xs font-bold text-white truncate">{currentUser.email}</p>
                 <p className="text-[9px] text-slate-400 flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3 text-emerald-400" /> Role: {currentUser.role} · {currentUser.role === 'Super Admin' ? 'Full access' : 'Read + Edit access'}
+                  <ShieldCheck className="w-3 h-3 text-emerald-400" /> {t('role')}: {currentUser.role} · {currentUser.role === 'Super Admin' ? t('fullAccess') : t('readEditAccess')}
                 </p>
               </div>
             </div>
@@ -177,7 +225,7 @@ export const SidebarMenuBar: React.FC<Props> = ({
             <button
               onClick={onLogout}
               className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-950 hover:text-rose-400 text-slate-400 transition"
-              title="Sign Out"
+              title={t('signOut')}
             >
               <LogOut className="w-3.5 h-3.5" />
             </button>
@@ -186,7 +234,7 @@ export const SidebarMenuBar: React.FC<Props> = ({
           <button
             onClick={onLogout}
             className="w-full py-2 flex items-center justify-center rounded-xl bg-slate-900 border border-slate-800 hover:bg-rose-950 hover:text-rose-400 text-slate-400 transition"
-            title={`Sign Out (${currentUser.email})`}
+            title={`${t('signOut')} (${currentUser.email})`}
           >
             <LogOut className="w-4 h-4" />
           </button>
