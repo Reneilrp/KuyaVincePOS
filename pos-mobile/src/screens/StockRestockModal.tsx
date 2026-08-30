@@ -6,6 +6,7 @@ import { Product } from '../types';
 
 export const StockRestockModal: React.FC<{ visible: boolean; onClose: () => void }> = ({ visible, onClose }) => {
   const branch = usePosStore((s) => s.branch);
+  const addStockAdjustment = usePosStore((s) => s.addStockAdjustment);
   const products = usePosStore((s) => s.products);
   const [selectedProductId, setSelectedProductId] = useState<number | null>(products[0]?.id || null);
   const [restockQty, setRestockQty] = useState('20');
@@ -20,13 +21,19 @@ export const StockRestockModal: React.FC<{ visible: boolean; onClose: () => void
 
     setLoading(true);
     try {
-      const res = await ApiService.restock(
-        branch ? branch.id : 1,
-        selectedProductId,
-        parseFloat(restockQty),
-        notes
-      );
-      Alert.alert('Restock Successful', res.message || 'Inventory updated.');
+      const selectedProd = products.find(p => p.id === selectedProductId);
+      addStockAdjustment({
+        product_id: selectedProductId,
+        product_name: selectedProd?.name || 'Product #' + selectedProductId,
+        qty_added: parseFloat(restockQty),
+        notes: notes || 'Floor delivery restock',
+        timestamp: new Date().toISOString()
+      });
+
+      // Update local product stock count immediately
+      selectedProd && (selectedProd.stock = (selectedProd.stock || 0) + parseFloat(restockQty));
+
+      Alert.alert('Restock Logged', `Added +${restockQty} units to local floor stock. This will sync with cloud inventory at End-of-Day.`);
       onClose();
     } catch (e: any) {
       Alert.alert('Restock Failed', e.message || 'Could not update inventory.');

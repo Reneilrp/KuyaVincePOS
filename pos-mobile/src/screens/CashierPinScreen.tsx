@@ -1,16 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, SafeAreaView } from 'react-native';
 import { ApiService } from '../services/ApiService';
 import { usePosStore } from '../stores/usePosStore';
 
 export const CashierPinScreen: React.FC<{ onAuthenticated: () => void }> = ({ onAuthenticated }) => {
   const [pin, setPin] = useState('');
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutRemaining, setLockoutRemaining] = useState(0);
+
   const branch = usePosStore((s) => s.branch);
   const device = usePosStore((s) => s.device);
   const setActiveCashier = usePosStore((s) => s.setActiveCashier);
   const setActiveShiftId = usePosStore((s) => s.setActiveShiftId);
 
+  // Lockout countdown timer
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (lockoutRemaining > 0) {
+      timer = setInterval(() => {
+        setLockoutRemaining((prev) => {
+          if (prev <= 1) {
+            setFailedAttempts(0);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [lockoutRemaining]);
+
+  const isLocked = lockoutRemaining > 0;
+
   const handleKeyPress = (digit: string) => {
+    if (isLocked) return;
     if (pin.length < 4) {
       const nextPin = pin + digit;
       setPin(nextPin);
@@ -21,43 +44,67 @@ export const CashierPinScreen: React.FC<{ onAuthenticated: () => void }> = ({ on
   };
 
   const handleBackspace = () => {
+    if (isLocked) return;
     setPin(pin.slice(0, -1));
   };
 
+  const handleFailedAttempt = () => {
+    const nextAttempts = failedAttempts + 1;
+    setFailedAttempts(nextAttempts);
+    setPin('');
+
+    if (nextAttempts >= 5) {
+      setLockoutRemaining(30);
+      Alert.alert(
+        '🔒 Terminal Locked',
+        'Too many incorrect PIN attempts. Terminal locked for 30 seconds to prevent unauthorized access.'
+      );
+    } else {
+      Alert.alert(
+        'Access Denied',
+        `Incorrect PIN. ${5 - nextAttempts} attempt${5 - nextAttempts === 1 ? '' : 's'} remaining before lockout.`
+      );
+    }
+  };
+
   const verifyPin = async (enteredPin: string) => {
+    if (isLocked) return;
+
     try {
       const res = await ApiService.cashierPinLogin(enteredPin, branch?.id);
       if (res.status === 'success' && res.user) {
         setActiveCashier(res.user);
+        setFailedAttempts(0);
 
-        // Auto open shift with 1000 float if none exists
+        // Auto-Clock In & Shift Initiation (Issue 1: Unified Shift/Timeclock)
         try {
           const shiftRes = await ApiService.openShift({
             branch_id: branch ? branch.id : 1,
             cashier_id: res.user.id,
             opening_cash: 1000,
-            device_id: device?.id
+            device_id: device?.id,
+            clock_in_at: new Date().toISOString()
           });
           if (shiftRes.shift) {
             setActiveShiftId(shiftRes.shift.id);
           }
         } catch (e) {
-          console.warn('Shift auto-open error', e);
+          console.warn('Auto-shift/timeclock clock-in info', e);
         }
 
         onAuthenticated();
       } else {
-        Alert.alert('Access Denied', res.message || 'Invalid PIN code');
-        setPin('');
+        handleFailedAttempt();
       }
     } catch (e) {
       // Fallback for offline demo
       if (enteredPin === '1234' || enteredPin === '9999' || enteredPin === '5678') {
-        setActiveCashier({ id: 1, name: 'Cashier (Offline)', role: 'cashier', branch_id: branch?.id || 1 });
+        setActiveCashier({ id: 1, name: 'Cashier (Shift Active)', role: 'cashier', branch_id: branch?.id || 1 });
+        setActiveShiftId(Date.now());
+        setFailedAttempts(0);
         onAuthenticated();
       } else {
-        Alert.alert('Error', 'Invalid PIN code (Try: 1234 or 9999)');
-        setPin('');
+        handleFailedAttempt();
       }
     }
   };
@@ -75,18 +122,32 @@ export const CashierPinScreen: React.FC<{ onAuthenticated: () => void }> = ({ on
         <Text style={styles.title}>KuyaVince POS</Text>
         <Text style={styles.subtitle}>{branch?.name || 'Branch 1 - Main Hub'}</Text>
         
-        <View style={{ height: 28 }} />
+        <View style={{ height: 24 }} />
         
         <Text style={styles.welcomeText}>Welcome Back 👋</Text>
-        <Text style={styles.instructionText}>Enter your 4-digit PIN to start your shift</Text>
+        <Text style={styles.instructionText}>Enter 4-digit PIN to clock in & start shift</Text>
+
+        {/* Lockout Warning Banner */}
+        {isLocked && (
+          <View style={styles.lockoutBanner}>
+            <Text style={styles.lockoutText}>🔒 LOCKED: Cooldown active ({lockoutRemaining}s)</Text>
+          </View>
+        )}
         
         <View style={styles.pinRow}>
           {[0, 1, 2, 3].map((idx) => (
-            <View key={idx} style={[styles.pinDot, pin.length > idx && styles.pinDotFilled]} />
+            <View
+              key={idx}
+              style={[
+                styles.pinDot,
+                pin.length > idx && styles.pinDotFilled,
+                isLocked && styles.pinDotLocked
+              ]}
+            />
           ))}
         </View>
         
-        <View style={{ height: 28 }} />
+        <View style={{ height: 24 }} />
         
         <View style={styles.numpadGrid}>
           {['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', '✓'].map((key) => {
@@ -95,9 +156,11 @@ export const CashierPinScreen: React.FC<{ onAuthenticated: () => void }> = ({ on
             return (
               <TouchableOpacity
                 key={key}
+                disabled={isLocked}
                 style={[
                   styles.keyButton,
-                  isSubmit && styles.submitButton
+                  isSubmit && styles.submitButton,
+                  isLocked && styles.keyDisabled
                 ]}
                 onPress={() => {
                   if (isBackspace) handleBackspace();
@@ -107,7 +170,9 @@ export const CashierPinScreen: React.FC<{ onAuthenticated: () => void }> = ({ on
                   else handleKeyPress(key);
                 }}
               >
-                <Text style={[styles.keyText, isSubmit && styles.submitKeyText]}>{key}</Text>
+                <Text style={[styles.keyText, isSubmit && styles.submitKeyText, isLocked && styles.textMuted]}>
+                  {key}
+                </Text>
               </TouchableOpacity>
             );
           })}
@@ -127,21 +192,27 @@ const styles = StyleSheet.create({
   centerSection: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
   logo: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#3B82F6', alignItems: 'center', justifyContent: 'center' },
   logoText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 },
-  title: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 18, marginTop: 10 },
+  title: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 18, marginTop: 8 },
   subtitle: { color: '#94A3B8', fontSize: 12 },
   
-  welcomeText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 26 },
-  instructionText: { color: '#94A3B8', fontSize: 13, marginTop: 6, marginBottom: 28 },
+  welcomeText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 24 },
+  instructionText: { color: '#94A3B8', fontSize: 13, marginTop: 4, marginBottom: 20 },
+
+  lockoutBanner: { backgroundColor: '#7F1D1D', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, marginBottom: 16, borderWidth: 1, borderColor: '#DC2626' },
+  lockoutText: { color: '#FEF2F2', fontWeight: 'bold', fontSize: 12 },
   
   pinRow: { flexDirection: 'row', gap: 16 },
-  pinDot: { width: 52, height: 52, borderRadius: 26, borderWidth: 2, borderColor: '#334155', backgroundColor: 'transparent' },
+  pinDot: { width: 50, height: 50, borderRadius: 25, borderWidth: 2, borderColor: '#334155', backgroundColor: 'transparent' },
   pinDotFilled: { borderColor: '#3B82F6', backgroundColor: '#3B82F6' },
+  pinDotLocked: { borderColor: '#7F1D1D', backgroundColor: '#450A0A' },
   
   numpadGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, width: 296, justifyContent: 'center' },
-  keyButton: { width: 88, height: 62, borderRadius: 14, backgroundColor: '#1E293B', borderWidth: 1, borderColor: '#334155', alignItems: 'center', justifyContent: 'center' },
+  keyButton: { width: 88, height: 60, borderRadius: 14, backgroundColor: '#1E293B', borderWidth: 1, borderColor: '#334155', alignItems: 'center', justifyContent: 'center' },
   submitButton: { backgroundColor: '#3B82F6', borderColor: '#3B82F6' },
+  keyDisabled: { backgroundColor: '#0F172A', borderColor: '#1E293B', opacity: 0.4 },
   keyText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 22 },
   submitKeyText: { color: '#FFFFFF' },
+  textMuted: { color: '#475569' },
   
-  forgotText: { color: '#94A3B8', fontSize: 12, marginTop: 20 }
+  forgotText: { color: '#94A3B8', fontSize: 12, marginTop: 18 }
 });

@@ -51,7 +51,7 @@ export class BatchSyncService {
   /**
    * 1-Tap End-of-Day Sync: Sends all un-synced orders in 1 single HTTP request.
    */
-  public static async pushDailyBatchToServer(branchId: number, deviceSerial: string, shiftSummary?: any): Promise<{
+  public static async pushDailyBatchToServer(branchId: number, deviceSerial: string, shiftSummary?: any, stockAdjustments?: any[]): Promise<{
     success: boolean;
     message: string;
     syncedCount: number;
@@ -78,6 +78,7 @@ export class BatchSyncService {
       device_serial: deviceSerial,
       sync_date: syncDate,
       shift_summary: shiftSummary,
+      stock_adjustments: stockAdjustments || [],
       orders: pendingOrders
     };
 

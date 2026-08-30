@@ -1,6 +1,15 @@
 import { create } from 'zustand';
 import { Branch, CartItem, Category, Device, Product, User } from '../types';
 
+export interface StockAdjustment {
+  product_id: number;
+  product_name: string;
+  qty_added: number;
+  notes: string;
+  timestamp: string;
+}
+
+
 interface PosState {
   // Device & Branch
   device: Device | null;
@@ -31,6 +40,11 @@ interface PosState {
   discountAmount: number;
   setDiscountAmount: (val: number) => void;
 
+  // Stock Adjustments audit queue
+  stockAdjustments: StockAdjustment[];
+  addStockAdjustment: (adj: StockAdjustment) => void;
+  clearStockAdjustments: () => void;
+
   // Computed Math
   getSubtotal: () => number;
   getTotal: () => number;
@@ -57,6 +71,10 @@ export const usePosStore = create<PosState>((set, get) => ({
   cart: [],
   discountAmount: 0,
   setDiscountAmount: (discountAmount) => set({ discountAmount }),
+
+  stockAdjustments: [],
+  addStockAdjustment: (adj) => set((s) => ({ stockAdjustments: [...s.stockAdjustments, adj] })),
+  clearStockAdjustments: () => set({ stockAdjustments: [] }),
 
   addToCart: (product) => {
     const { cart } = get();
