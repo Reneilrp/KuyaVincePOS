@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Building2, Copy, Check, Plus, Edit2, ChevronRight } from 'lucide-react';
-import { BranchDetailView } from './BranchDetailView';
-import { AnalyticsData, Branch, InventoryItem, Product, StaffRecord } from '../types';
+import React, { useState } from "react";
+import { Building2, Copy, Check, Plus, Edit2, ChevronRight } from "lucide-react";
+import { BranchDetailView } from "./BranchDetailView";
+import { AnalyticsData, Branch, InventoryItem, Product, StaffRecord } from "../types";
 
 interface Props {
   branches: Branch[];
@@ -14,6 +14,10 @@ interface Props {
   batches: any[];
   staffList: StaffRecord[];
   onRefreshStaff: () => Promise<void>;
+  selectedBranch: Branch | null;
+  onSelectBranch: (branch: Branch | null) => void;
+  isZReportOpen: boolean;
+  onCloseZReport: () => void;
 }
 
 export const BranchSetupManager: React.FC<Props> = ({
@@ -26,9 +30,12 @@ export const BranchSetupManager: React.FC<Props> = ({
   onRestock,
   batches,
   staffList,
-  onRefreshStaff
+  onRefreshStaff,
+  selectedBranch,
+  onSelectBranch,
+  isZReportOpen,
+  onCloseZReport
 }) => {
-  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingBranch, setEditingBranch] = useState<Partial<Branch> | null>(null);
@@ -47,8 +54,8 @@ export const BranchSetupManager: React.FC<Props> = ({
       name: `Branch ${nextNum} - Zamboanga`,
       code: `BR-0${nextNum}`,
       import_code: `KV-BR0${nextNum}`,
-      address: 'Zamboanga City',
-      phone: '+63 917 000 0000',
+      address: "Zamboanga City",
+      phone: "+63 917 000 0000",
       is_active: true
     });
     setIsEditModalOpen(true);
@@ -73,12 +80,12 @@ export const BranchSetupManager: React.FC<Props> = ({
     }
   };
 
-  // If a branch is clicked, drill down to its dedicated Branch Detail View (AccommoTrack-M style)
+  // If a branch is selected, drill down to its dedicated Branch Detail View (AccommoTrack-M style)
   if (selectedBranch) {
     return (
       <BranchDetailView
         branch={selectedBranch}
-        onBack={() => setSelectedBranch(null)}
+        onBack={() => onSelectBranch(null)}
         masterProducts={masterProducts}
         branchInventory={branchInventory}
         onAssignProduct={onAssignProduct}
@@ -86,6 +93,8 @@ export const BranchSetupManager: React.FC<Props> = ({
         batches={batches}
         staffList={staffList}
         onRefreshStaff={onRefreshStaff}
+        isZReportModalOpen={isZReportOpen}
+        onCloseZReportModal={onCloseZReport}
       />
     );
   }
@@ -127,7 +136,7 @@ export const BranchSetupManager: React.FC<Props> = ({
           return (
             <div
               key={branch.id}
-              onClick={() => setSelectedBranch(branch)}
+              onClick={() => onSelectBranch(branch)}
               className="bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-blue-500/60 rounded-2xl p-6 shadow-sm space-y-4 cursor-pointer transition-all hover:scale-[1.01] group relative overflow-hidden"
             >
               <div className="flex justify-between items-start">
@@ -139,7 +148,7 @@ export const BranchSetupManager: React.FC<Props> = ({
                     <h3 className="text-sm font-bold text-white group-hover:text-blue-400 transition flex items-center gap-1.5">
                       {branch.name}
                     </h3>
-                    <p className="text-xs text-slate-400">{branch.address || 'Zamboanga City'}</p>
+                    <p className="text-xs text-slate-400">{branch.address || "Zamboanga City"}</p>
                   </div>
                 </div>
 
@@ -167,8 +176,8 @@ export const BranchSetupManager: React.FC<Props> = ({
                   className="p-1.5 rounded-lg bg-slate-900 hover:bg-blue-600 text-slate-300 hover:text-white transition flex items-center gap-1 text-[11px] font-semibold"
                   title="Copy Import Code"
                 >
-                  {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{isCopied ? 'Copied' : 'Copy'}</span>
+                  {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
+                  <span>{isCopied ? "Copied" : "Copy"}</span>
                 </button>
               </div>
 
@@ -203,7 +212,7 @@ export const BranchSetupManager: React.FC<Props> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              🏢 {editingBranch.id ? 'Edit Branch Details' : 'Create New Branch'}
+              🏢 {editingBranch.id ? "Edit Branch Details" : "Create New Branch"}
             </h3>
             <p className="text-xs text-slate-400 mt-1">Configure branch location and its Sunmi mobile pairing code</p>
 
@@ -213,7 +222,7 @@ export const BranchSetupManager: React.FC<Props> = ({
                 <input
                   type="text"
                   required
-                  value={editingBranch.name || ''}
+                  value={editingBranch.name || ""}
                   onChange={(e) => setEditingBranch({ ...editingBranch, name: e.target.value })}
                   placeholder="e.g. KCC Mall de Zamboanga"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 font-medium"
@@ -226,7 +235,7 @@ export const BranchSetupManager: React.FC<Props> = ({
                   <input
                     type="text"
                     required
-                    value={editingBranch.code || ''}
+                    value={editingBranch.code || ""}
                     onChange={(e) => setEditingBranch({ ...editingBranch, code: e.target.value })}
                     placeholder="e.g. BR-01"
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 font-mono"
@@ -237,7 +246,7 @@ export const BranchSetupManager: React.FC<Props> = ({
                   <input
                     type="text"
                     required
-                    value={editingBranch.import_code || ''}
+                    value={editingBranch.import_code || ""}
                     onChange={(e) => setEditingBranch({ ...editingBranch, import_code: e.target.value })}
                     placeholder="e.g. KV-BR01"
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-blue-400 font-mono font-bold focus:outline-none focus:border-blue-500"
@@ -249,7 +258,7 @@ export const BranchSetupManager: React.FC<Props> = ({
                 <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Address / Location</label>
                 <input
                   type="text"
-                  value={editingBranch.address || ''}
+                  value={editingBranch.address || ""}
                   onChange={(e) => setEditingBranch({ ...editingBranch, address: e.target.value })}
                   placeholder="e.g. Gov. Camins Ave, Zamboanga City"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
@@ -260,7 +269,7 @@ export const BranchSetupManager: React.FC<Props> = ({
                 <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Phone Number</label>
                 <input
                   type="text"
-                  value={editingBranch.phone || ''}
+                  value={editingBranch.phone || ""}
                   onChange={(e) => setEditingBranch({ ...editingBranch, phone: e.target.value })}
                   placeholder="e.g. +63 917 123 4567"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
@@ -280,7 +289,7 @@ export const BranchSetupManager: React.FC<Props> = ({
                   disabled={isSubmitting}
                   className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Saving...' : 'Save Branch'}
+                  {isSubmitting ? "Saving..." : "Save Branch"}
                 </button>
               </div>
             </form>

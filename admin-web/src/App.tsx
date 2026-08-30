@@ -1,37 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import { SidebarMenuBar, TabKey } from './components/SidebarMenuBar';
-import { BranchFilterHeader } from './components/BranchFilterHeader';
-import { BranchSetupManager } from './components/BranchSetupManager';
-import { InventoryMatrixTab } from './components/InventoryMatrixTab';
-import { SalesOverviewTab } from './components/SalesOverviewTab';
-import { PayrollManagerTab } from './components/PayrollManagerTab';
-import { ReportsPrintTab } from './components/ReportsPrintTab';
-import { AdminLoginScreen } from './components/AdminLoginScreen';
-import { supabase } from './services/supabaseClient';
-import { AnalyticsData, Branch, InventoryItem, PayrollItem, Product } from './types';
+import React, { useState, useEffect } from "react";
+import { SidebarMenuBar, TabKey } from "./components/SidebarMenuBar";
+import { BranchFilterHeader } from "./components/BranchFilterHeader";
+import { BranchSetupManager } from "./components/BranchSetupManager";
+import { InventoryMatrixTab } from "./components/InventoryMatrixTab";
+import { SalesOverviewTab } from "./components/SalesOverviewTab";
+import { PayrollManagerTab } from "./components/PayrollManagerTab";
+import { ReportsPrintTab } from "./components/ReportsPrintTab";
+import { AdminLoginScreen } from "./components/AdminLoginScreen";
+import { supabase } from "./services/supabaseClient";
+import { AnalyticsData, Branch, InventoryItem, PayrollItem, Product, StaffRecord } from "./types";
 
 export default function App() {
   // Authentication State
   const [currentUser, setCurrentUser] = useState<{ email: string; role: string } | null>(() => {
-    const saved = localStorage.getItem('kv_pos_admin_user');
+    const saved = localStorage.getItem("kv_pos_admin_user");
     return saved ? JSON.parse(saved) : null;
   });
 
   // Navigation & Filter State
-  const [activeTab, setActiveTab] = useState<TabKey>('branches');
-  const [selectedBranchId, setSelectedBranchId] = useState<string>('all');
-  const [selectedRange, setSelectedRange] = useState<string>('today');
+  const [activeTab, setActiveTab] = useState<TabKey>("branches");
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("all");
+  const [selectedRange, setSelectedRange] = useState<string>("today");
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // 100% Real Live State from Supabase
   const [branches, setBranches] = useState<Branch[]>([]);
   const [inventoryMatrix, setInventoryMatrix] = useState<InventoryItem[]>([]);
   const [payrollData, setPayrollData] = useState<PayrollItem[]>([]);
-  const [staffRecords, setStaffRecords] = useState<any[]>([]);
+  const [staffRecords, setStaffRecords] = useState<StaffRecord[]>([]);
   const [rawBatches, setRawBatches] = useState<any[]>([]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+
+  // Deep Branch View Drilldown & Z-Report modal state
+  const [selectedBranchDetail, setSelectedBranchDetail] = useState<Branch | null>(null);
+  const [isZReportOpen, setIsZReportOpen] = useState<boolean>(false);
+
   const [analytics, setAnalytics] = useState<AnalyticsData>({
-    filters: { branch_id: 'all', range: 'today', start_date: '', end_date: '' },
+    filters: { branch_id: "all", range: "today", start_date: "", end_date: "" },
     kpis: {
       total_gross_revenue: 0,
       total_sales_count: 0,
@@ -44,12 +49,12 @@ export default function App() {
 
   const handleLoginSuccess = (user: { email: string; role: string }) => {
     setCurrentUser(user);
-    localStorage.setItem('kv_pos_admin_user', JSON.stringify(user));
+    localStorage.setItem("kv_pos_admin_user", JSON.stringify(user));
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
-    localStorage.removeItem('kv_pos_admin_user');
+    localStorage.removeItem("kv_pos_admin_user");
   };
 
   useEffect(() => {
@@ -63,16 +68,22 @@ export default function App() {
     try {
       // 1. Fetch Branches
       const { data: branchData } = await supabase
-        .from('branches')
-        .select('*')
-        .order('id');
+        .from("branches")
+        .select("*")
+        .order("id");
 
       const liveBranches: Branch[] = branchData || [];
       setBranches(liveBranches);
 
+      // Keep selected branch detail reference in sync with latest data
+      if (selectedBranchDetail) {
+        const updated = liveBranches.find((b) => b.id === selectedBranchDetail.id);
+        if (updated) setSelectedBranchDetail(updated);
+      }
+
       // 2. Fetch Master Products & Branch Inventories
-      const { data: prodData } = await supabase.from('products').select('*').order('id');
-      const { data: invData } = await supabase.from('branch_inventory').select('*');
+      const { data: prodData } = await supabase.from("products").select("*").order("id");
+      const { data: invData } = await supabase.from("branch_inventory").select("*");
 
       if (prodData) {
         const matrix: InventoryItem[] = prodData.map((p) => {
@@ -102,13 +113,13 @@ export default function App() {
       }
 
       // 3. Fetch Staff Records
-      const { data: staffData } = await supabase.from('staff_records').select('*').order('id');
+      const { data: staffData } = await supabase.from("staff_records").select("*").order("id");
       setStaffRecords(staffData || []);
 
       // 4. Fetch Real Daily Batches
-      let batchQuery = supabase.from('daily_batches').select('*').order('sync_date', { ascending: false });
-      if (selectedBranchId !== 'all') {
-        batchQuery = batchQuery.eq('branch_id', Number(selectedBranchId));
+      let batchQuery = supabase.from("daily_batches").select("*").order("sync_date", { ascending: false });
+      if (selectedBranchId !== "all") {
+        batchQuery = batchQuery.eq("branch_id", Number(selectedBranchId));
       }
       const { data: batches } = await batchQuery;
       setRawBatches(batches || []);
@@ -141,7 +152,7 @@ export default function App() {
             for (const ord of b.orders_payload) {
               if (Array.isArray(ord.items)) {
                 for (const it of ord.items) {
-                  const pName = it.name || 'Custom Item';
+                  const pName = it.name || "Custom Item";
                   if (!productMap[pName]) productMap[pName] = { qty: 0, revenue: 0 };
                   productMap[pName].qty += Number(it.qty || 1);
                   productMap[pName].revenue += Number(it.total_price || (it.qty * it.unit_price) || 0);
@@ -167,7 +178,7 @@ export default function App() {
         }));
 
         setAnalytics({
-          filters: { branch_id: selectedBranchId, range: selectedRange, start_date: '', end_date: '' },
+          filters: { branch_id: selectedBranchId, range: selectedRange, start_date: "", end_date: "" },
           kpis: {
             total_gross_revenue: totalGross,
             total_sales_count: totalOrders,
@@ -189,7 +200,7 @@ export default function App() {
         }));
 
         setAnalytics({
-          filters: { branch_id: selectedBranchId, range: selectedRange, start_date: '', end_date: '' },
+          filters: { branch_id: selectedBranchId, range: selectedRange, start_date: "", end_date: "" },
           kpis: {
             total_gross_revenue: 0,
             total_sales_count: 0,
@@ -201,7 +212,7 @@ export default function App() {
         });
       }
     } catch (e) {
-      console.warn('Supabase fetch:', e);
+      console.warn("Supabase fetch:", e);
     } finally {
       setIsLoading(false);
     }
@@ -210,11 +221,11 @@ export default function App() {
   // Branch Save / Create
   const handleSaveBranch = async (branchData: Partial<Branch>) => {
     try {
-      const { error } = await supabase.from('branches').upsert(branchData);
+      const { error } = await supabase.from("branches").upsert(branchData);
       if (error) throw error;
       await fetchLiveSupabaseData();
     } catch (e: any) {
-      alert('Failed to save branch: ' + e.message);
+      alert("Failed to save branch: " + e.message);
     }
   };
 
@@ -222,7 +233,7 @@ export default function App() {
   const handleSaveProduct = async (data: { product: Partial<Product>; branchStocks: Record<number, number> }) => {
     try {
       const { data: savedProd, error: prodErr } = await supabase
-        .from('products')
+        .from("products")
         .upsert({
           id: data.product.id,
           name: data.product.name,
@@ -239,41 +250,41 @@ export default function App() {
 
       // Upsert stock per branch
       for (const [branchId, stockQty] of Object.entries(data.branchStocks)) {
-        await supabase.from('branch_inventory').upsert(
+        await supabase.from("branch_inventory").upsert(
           {
             branch_id: Number(branchId),
             product_id: savedProd.id,
             stock_quantity: Number(stockQty || 0),
             updated_at: new Date().toISOString()
           },
-          { onConflict: 'branch_id,product_id' }
+          { onConflict: "branch_id,product_id" }
         );
       }
 
       await fetchLiveSupabaseData();
-      alert('Product saved and stock allocated successfully in Supabase!');
+      alert("Product saved and stock allocated successfully in Supabase!");
     } catch (e: any) {
-      alert('Failed to save product: ' + e.message);
+      alert("Failed to save product: " + e.message);
     }
   };
 
   // Assign product from master catalog directly into a specific branch
   const handleAssignProductToBranch = async (branchId: number, productId: number, stockQty: number) => {
     try {
-      await supabase.from('branch_inventory').upsert(
+      await supabase.from("branch_inventory").upsert(
         {
           branch_id: branchId,
           product_id: productId,
           stock_quantity: stockQty,
           updated_at: new Date().toISOString()
         },
-        { onConflict: 'branch_id,product_id' }
+        { onConflict: "branch_id,product_id" }
       );
 
       await fetchLiveSupabaseData();
-      alert('Product successfully assigned to branch with stock!');
+      alert("Product successfully assigned to branch with stock!");
     } catch (e: any) {
-      alert('Assignment failed: ' + e.message);
+      alert("Assignment failed: " + e.message);
     }
   };
 
@@ -281,27 +292,27 @@ export default function App() {
   const handleRestock = async (branchId: number, productId: number, qty: number, notes: string) => {
     try {
       const { data: existing } = await supabase
-        .from('branch_inventory')
-        .select('*')
-        .eq('branch_id', branchId)
-        .eq('product_id', productId)
+        .from("branch_inventory")
+        .select("*")
+        .eq("branch_id", branchId)
+        .eq("product_id", productId)
         .single();
 
       const newQty = existing ? Number(existing.stock_quantity) + qty : qty;
 
-      await supabase.from('branch_inventory').upsert(
+      await supabase.from("branch_inventory").upsert(
         {
           branch_id: branchId,
           product_id: productId,
           stock_quantity: newQty,
           updated_at: new Date().toISOString()
         },
-        { onConflict: 'branch_id,product_id' }
+        { onConflict: "branch_id,product_id" }
       );
 
       await fetchLiveSupabaseData();
     } catch (e: any) {
-      alert('Restock failed: ' + e.message);
+      alert("Restock failed: " + e.message);
     }
   };
 
@@ -310,16 +321,16 @@ export default function App() {
   }
 
   const tabTitles: Record<TabKey, string> = {
-    branches: '🏢 Store Branches Hub',
-    inventory: '📦 Centralized Master Product Catalog & Stocks',
-    sales: '📊 Real-Time Multi-Branch Sales & Revenue Overview',
-    payroll: '👥 Staff Timeclocks & Hourly Payroll Manager',
-    reports: '📥 Client Data Retrieval, 1-Click Exports & Prints'
+    branches: "🏢 Store Branches Hub",
+    inventory: "📦 Centralized Master Product Catalog & Stocks",
+    sales: "📊 Real-Time Multi-Branch Sales & Revenue Overview",
+    payroll: "👥 Staff Timeclocks & Hourly Payroll Manager",
+    reports: "📥 Client Data Retrieval, 1-Click Exports & Prints"
   };
 
-  const selectedBranchName = selectedBranchId === 'all'
-    ? 'All Branches (Consolidated)'
-    : (branches.find((b) => String(b.id) === selectedBranchId)?.name || 'Selected Branch');
+  const selectedBranchName = selectedBranchId === "all"
+    ? "All Branches (Consolidated)"
+    : (branches.find((b) => String(b.id) === selectedBranchId)?.name || "Selected Branch");
 
   // Master products list for branch assignment dropdowns
   const masterProducts: Product[] = inventoryMatrix.map((i) => ({
@@ -337,7 +348,10 @@ export default function App() {
       {/* 1. Sleek Left Menu Bar */}
       <SidebarMenuBar
         activeTab={activeTab}
-        onSelectTab={setActiveTab}
+        onSelectTab={(tab) => {
+          setActiveTab(tab);
+          if (tab !== "branches") setSelectedBranchDetail(null);
+        }}
         currentUser={currentUser}
         onLogout={handleLogout}
         isCollapsed={isSidebarCollapsed}
@@ -357,11 +371,14 @@ export default function App() {
           isLoading={isLoading}
           pageTitle={tabTitles[activeTab]}
           activeTab={activeTab}
+          activeBranchDetail={activeTab === "branches" ? selectedBranchDetail : null}
+          onBackFromBranch={() => setSelectedBranchDetail(null)}
+          onOpenZReport={() => setIsZReportOpen(true)}
         />
 
         {/* Dynamic Container Feature View */}
         <main className="flex-1 p-6 max-w-7xl w-full mx-auto">
-          {activeTab === 'branches' && (
+          {activeTab === "branches" && (
             <BranchSetupManager
               branches={branches}
               onSaveBranch={handleSaveBranch}
@@ -373,9 +390,13 @@ export default function App() {
               batches={rawBatches}
               staffList={staffRecords}
               onRefreshStaff={fetchLiveSupabaseData}
+              selectedBranch={selectedBranchDetail}
+              onSelectBranch={setSelectedBranchDetail}
+              isZReportOpen={isZReportOpen}
+              onCloseZReport={() => setIsZReportOpen(false)}
             />
           )}
-          {activeTab === 'inventory' && (
+          {activeTab === "inventory" && (
             <InventoryMatrixTab
               branches={branches}
               items={inventoryMatrix}
@@ -383,10 +404,10 @@ export default function App() {
               onSaveProduct={handleSaveProduct}
             />
           )}
-          {activeTab === 'sales' && (
+          {activeTab === "sales" && (
             <SalesOverviewTab data={analytics} branches={branches} />
           )}
-          {activeTab === 'payroll' && (
+          {activeTab === "payroll" && (
             <PayrollManagerTab
               branches={branches}
               payrollData={payrollData}
@@ -394,7 +415,7 @@ export default function App() {
               onApprove={async () => {}}
             />
           )}
-          {activeTab === 'reports' && (
+          {activeTab === "reports" && (
             <ReportsPrintTab
               branches={branches}
               analytics={analytics}

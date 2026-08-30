@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   ArrowLeft,
   Building2,
@@ -19,11 +19,11 @@ import {
   Wallet,
   Clock,
   Printer
-} from 'lucide-react';
-import { BranchCashAuditCard } from './BranchCashAuditCard';
-import { BranchStaffManager } from './BranchStaffManager';
-import { BranchZReportModal } from './BranchZReportModal';
-import { Branch, InventoryItem, Product, StaffRecord } from '../types';
+} from "lucide-react";
+import { BranchCashAuditCard } from "./BranchCashAuditCard";
+import { BranchStaffManager } from "./BranchStaffManager";
+import { BranchZReportModal } from "./BranchZReportModal";
+import { Branch, InventoryItem, Product, StaffRecord } from "../types";
 
 interface Props {
   branch: Branch;
@@ -35,6 +35,8 @@ interface Props {
   batches: any[];
   staffList: StaffRecord[];
   onRefreshStaff: () => Promise<void>;
+  isZReportModalOpen?: boolean;
+  onCloseZReportModal?: () => void;
 }
 
 export const BranchDetailView: React.FC<Props> = ({
@@ -46,25 +48,27 @@ export const BranchDetailView: React.FC<Props> = ({
   onRestock,
   batches,
   staffList,
-  onRefreshStaff
+  onRefreshStaff,
+  isZReportModalOpen = false,
+  onCloseZReportModal
 }) => {
-  const [innerTab, setInnerTab] = useState<'sales' | 'inventory' | 'staff' | 'devices'>('sales');
-  const [dateRange, setDateRange] = useState<'today' | 'week' | 'month' | 'custom'>('today');
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
-  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [innerTab, setInnerTab] = useState<"sales" | "inventory" | "staff" | "devices">("sales");
+  const [dateRange, setDateRange] = useState<"today" | "week" | "month" | "custom">("today");
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
+  const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
   const [copied, setCopied] = useState(false);
-  const [isZReportOpen, setIsZReportOpen] = useState(false);
+  const [localZReportOpen, setLocalZReportOpen] = useState(false);
 
   // Assign product modal
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState<number>(masterProducts[0]?.id || 1);
-  const [assignStockQty, setAssignStockQty] = useState('50');
+  const [assignStockQty, setAssignStockQty] = useState("50");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Restock modal
   const [restockProduct, setRestockProduct] = useState<InventoryItem | null>(null);
-  const [restockQty, setRestockQty] = useState('20');
-  const [restockNotes, setRestockNotes] = useState('Store delivery');
+  const [restockQty, setRestockQty] = useState("20");
+  const [restockNotes, setRestockNotes] = useState("Store delivery");
 
   // Cash audit counted cash
   const [countedCash, setCountedCash] = useState<number | undefined>(undefined);
@@ -73,6 +77,12 @@ export const BranchDetailView: React.FC<Props> = ({
     navigator.clipboard.writeText(branch.import_code || branch.code);
     setCopied(true);
     setTimeout(() => setCopied(false), 3000);
+  };
+
+  const showZReport = isZReportModalOpen || localZReportOpen;
+  const closeZReport = () => {
+    if (onCloseZReportModal) onCloseZReportModal();
+    setLocalZReportOpen(false);
   };
 
   // Filter batches for this specific branch
@@ -97,7 +107,7 @@ export const BranchDetailView: React.FC<Props> = ({
       for (const ord of b.orders_payload) {
         if (Array.isArray(ord.items)) {
           for (const it of ord.items) {
-            const pName = it.name || 'Custom Product';
+            const pName = it.name || "Custom Product";
             if (!itemSalesMap[pName]) itemSalesMap[pName] = { qty: 0, revenue: 0 };
             itemSalesMap[pName].qty += Number(it.qty || 1);
             itemSalesMap[pName].revenue += Number(it.total_price || (it.qty * it.unit_price) || 0);
@@ -138,8 +148,8 @@ export const BranchDetailView: React.FC<Props> = ({
 
   return (
     <div className="space-y-6">
-      {/* 1. Top Breadcrumb & Actions Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      {/* 1. Top Breadcrumb Header */}
+      <div className="flex items-center justify-between">
         <button
           onClick={onBack}
           className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold transition shadow-sm"
@@ -147,14 +157,9 @@ export const BranchDetailView: React.FC<Props> = ({
           <ArrowLeft className="w-4 h-4" /> Back to All Branches
         </button>
 
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => setIsZReportOpen(true)}
-            className="flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-emerald-600/20"
-          >
-            <Printer className="w-4 h-4" /> Print 58mm Daily Z-Report
-          </button>
-        </div>
+        <span className="text-xs text-slate-400 font-medium">
+          Branch #{branch.id} • Zamboanga City Network
+        </span>
       </div>
 
       {/* 2. Branch Hero Banner with Sunmi Code */}
@@ -172,7 +177,7 @@ export const BranchDetailView: React.FC<Props> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-1">
-                📍 {branch.address || 'Zamboanga City'} • 📞 {branch.phone || 'No phone set'}
+                📍 {branch.address || "Zamboanga City"} • 📞 {branch.phone || "No phone set"}
               </p>
             </div>
           </div>
@@ -193,7 +198,7 @@ export const BranchDetailView: React.FC<Props> = ({
               title="Copy Code"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-              <span>{copied ? 'Copied' : 'Copy'}</span>
+              <span>{copied ? "Copied" : "Copy"}</span>
             </button>
           </div>
         </div>
@@ -201,44 +206,44 @@ export const BranchDetailView: React.FC<Props> = ({
         {/* 3. Branch Inner Tabs */}
         <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-800/80">
           <button
-            onClick={() => setInnerTab('sales')}
+            onClick={() => setInnerTab("sales")}
             className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition ${
-              innerTab === 'sales'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              innerTab === "sales"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
+                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
             }`}
           >
             <TrendingUp className="w-4 h-4" /> Sales & Cash Audit
           </button>
 
           <button
-            onClick={() => setInnerTab('inventory')}
+            onClick={() => setInnerTab("inventory")}
             className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition ${
-              innerTab === 'inventory'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              innerTab === "inventory"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
+                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
             }`}
           >
             <Package className="w-4 h-4" /> Stock at this Branch ({assignedItems.length})
           </button>
 
           <button
-            onClick={() => setInnerTab('staff')}
+            onClick={() => setInnerTab("staff")}
             className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition ${
-              innerTab === 'staff'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              innerTab === "staff"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
+                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
             }`}
           >
             <Users className="w-4 h-4" /> Cashier Roster & PINs
           </button>
 
           <button
-            onClick={() => setInnerTab('devices')}
+            onClick={() => setInnerTab("devices")}
             className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition ${
-              innerTab === 'devices'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              innerTab === "devices"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
+                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
             }`}
           >
             <Smartphone className="w-4 h-4" /> Sunmi Terminal & Pairing
@@ -247,7 +252,7 @@ export const BranchDetailView: React.FC<Props> = ({
       </div>
 
       {/* 4. Branch Tab 1: Sales & Financial Overview + Cash Drawer Reconciliation */}
-      {innerTab === 'sales' && (
+      {innerTab === "sales" && (
         <div className="space-y-6">
           {/* Time & Specific Date Filter Bar */}
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -257,21 +262,21 @@ export const BranchDetailView: React.FC<Props> = ({
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              {(['today', 'week', 'month', 'custom'] as const).map((r) => (
+              {(["today", "week", "month", "custom"] as const).map((r) => (
                 <button
                   key={r}
                   onClick={() => setDateRange(r)}
                   className={`px-3 py-1 text-xs font-semibold rounded-lg capitalize transition ${
                     dateRange === r
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  {r === 'today' ? 'Today' : r === 'week' ? 'This Week' : r === 'month' ? 'This Month' : 'Specific Date Range'}
+                  {r === "today" ? "Today" : r === "week" ? "This Week" : r === "month" ? "This Month" : "Specific Date Range"}
                 </button>
               ))}
 
-              {dateRange === 'custom' && (
+              {dateRange === "custom" && (
                 <div className="flex items-center gap-2 pl-2">
                   <input
                     type="date"
@@ -314,7 +319,7 @@ export const BranchDetailView: React.FC<Props> = ({
                 Average Ticket Size
               </span>
               <p className="text-2xl font-black text-white mt-1">
-                ₱{branchOrdersCount > 0 ? (branchGrossSales / branchOrdersCount).toFixed(2) : '0.00'}
+                ₱{branchOrdersCount > 0 ? (branchGrossSales / branchOrdersCount).toFixed(2) : "0.00"}
               </p>
               <p className="text-[10px] text-slate-500 mt-0.5">Per customer order</p>
             </div>
@@ -328,7 +333,7 @@ export const BranchDetailView: React.FC<Props> = ({
             </div>
           </div>
 
-          {/* FEATURE 2: Cash Drawer Variance Card */}
+          {/* Cash Drawer Variance Card */}
           <BranchCashAuditCard
             branchName={branch.name}
             cashSales={cashSales}
@@ -413,7 +418,7 @@ export const BranchDetailView: React.FC<Props> = ({
                       <tr key={batch.id} className="hover:bg-slate-800/40">
                         <td className="p-3 font-semibold text-white">{batch.sync_date}</td>
                         <td className="p-3 font-mono text-blue-400">{batch.batch_id}</td>
-                        <td className="p-3 text-slate-400">{batch.device_serial || 'SUNMI-V2S'}</td>
+                        <td className="p-3 text-slate-400">{batch.device_serial || "SUNMI-V2S"}</td>
                         <td className="p-3 text-center font-bold">{batch.orders_count}</td>
                         <td className="p-3 text-right font-bold text-emerald-400">₱{Number(batch.gross_sales).toFixed(2)}</td>
                         <td className="p-3 text-right">
@@ -432,7 +437,7 @@ export const BranchDetailView: React.FC<Props> = ({
       )}
 
       {/* 5. Branch Tab 2: Stock & Commissary at this Branch */}
-      {innerTab === 'inventory' && (
+      {innerTab === "inventory" && (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
@@ -511,19 +516,19 @@ export const BranchDetailView: React.FC<Props> = ({
                           <span
                             className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
                               isLow
-                                ? 'bg-rose-950/80 text-rose-400 border border-rose-800'
-                                : 'bg-emerald-950/80 text-emerald-400 border border-emerald-800'
+                                ? "bg-rose-950/80 text-rose-400 border border-rose-800"
+                                : "bg-emerald-950/80 text-emerald-400 border border-emerald-800"
                             }`}
                           >
                             {isLow ? <AlertTriangle className="w-3 h-3" /> : <CheckCircle2 className="w-3 h-3" />}
-                            {isLow ? 'Low Stock' : 'In Stock'}
+                            {isLow ? "Low Stock" : "In Stock"}
                           </span>
                         </td>
                         <td className="p-3.5 text-right">
                           <button
                             onClick={() => {
                               setRestockProduct(item);
-                              setRestockQty('20');
+                              setRestockQty("20");
                             }}
                             className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition text-xs"
                           >
@@ -540,8 +545,8 @@ export const BranchDetailView: React.FC<Props> = ({
         </div>
       )}
 
-      {/* 6. FEATURE 3: Branch Staff Roster & PIN Reset */}
-      {innerTab === 'staff' && (
+      {/* 6. Branch Tab 3: Staff Roster & PIN Access */}
+      {innerTab === "staff" && (
         <BranchStaffManager
           branchId={branch.id}
           branchName={branch.name}
@@ -551,7 +556,7 @@ export const BranchDetailView: React.FC<Props> = ({
       )}
 
       {/* 7. Branch Tab 4: Sunmi Terminal & Pairing */}
-      {innerTab === 'devices' && (
+      {innerTab === "devices" && (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-6">
           <div>
             <h2 className="text-base font-bold text-white flex items-center gap-2">
@@ -608,10 +613,10 @@ export const BranchDetailView: React.FC<Props> = ({
         </div>
       )}
 
-      {/* 8. FEATURE 4: 58mm Thermal Z-Report Modal */}
+      {/* 8. 58mm Thermal Z-Report Modal */}
       <BranchZReportModal
-        visible={isZReportOpen}
-        onClose={() => setIsZReportOpen(false)}
+        visible={showZReport}
+        onClose={closeZReport}
         branch={branch}
         grossSales={branchGrossSales}
         ordersCount={branchOrdersCount}
@@ -675,7 +680,7 @@ export const BranchDetailView: React.FC<Props> = ({
                   disabled={isSubmitting}
                   className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Assigning...' : 'Assign to Branch'}
+                  {isSubmitting ? "Assigning..." : "Assign to Branch"}
                 </button>
               </div>
             </form>
@@ -730,7 +735,7 @@ export const BranchDetailView: React.FC<Props> = ({
                   disabled={isSubmitting}
                   className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Updating...' : 'Add Stock'}
+                  {isSubmitting ? "Updating..." : "Add Stock"}
                 </button>
               </div>
             </form>
