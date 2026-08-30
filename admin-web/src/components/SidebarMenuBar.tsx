@@ -7,7 +7,6 @@ import {
   Printer,
   LogOut,
   Radio,
-  ChevronRight,
   ShieldCheck
 } from 'lucide-react';
 
@@ -18,17 +17,13 @@ interface Props {
   onSelectTab: (tab: TabKey) => void;
   currentUser: { email: string; role: string };
   onLogout: () => void;
-  branchesCount: number;
-  productsCount: number;
 }
 
 export const SidebarMenuBar: React.FC<Props> = ({
   activeTab,
   onSelectTab,
   currentUser,
-  onLogout,
-  branchesCount,
-  productsCount
+  onLogout
 }) => {
   const menuSections = [
     {
@@ -37,16 +32,12 @@ export const SidebarMenuBar: React.FC<Props> = ({
         {
           key: 'branches' as TabKey,
           label: 'Branches & Import Codes',
-          icon: Building2,
-          badge: `${branchesCount} Branches`,
-          badgeColor: 'bg-blue-950 text-blue-400 border-blue-800'
+          icon: Building2
         },
         {
           key: 'inventory' as TabKey,
           label: 'Products & Stock Matrix',
-          icon: Package,
-          badge: `${productsCount} Items`,
-          badgeColor: 'bg-emerald-950 text-emerald-400 border-emerald-800'
+          icon: Package
         }
       ]
     },
@@ -56,16 +47,12 @@ export const SidebarMenuBar: React.FC<Props> = ({
         {
           key: 'sales' as TabKey,
           label: 'Live Sales & Analytics',
-          icon: BarChart3,
-          badge: 'Cloud Sync',
-          badgeColor: 'bg-indigo-950 text-indigo-400 border-indigo-800'
+          icon: BarChart3
         },
         {
           key: 'payroll' as TabKey,
           label: 'Staff Timeclock & Payroll',
-          icon: Users,
-          badge: 'Wage Calc',
-          badgeColor: 'bg-purple-950 text-purple-400 border-purple-800'
+          icon: Users
         }
       ]
     },
@@ -75,9 +62,7 @@ export const SidebarMenuBar: React.FC<Props> = ({
         {
           key: 'reports' as TabKey,
           label: 'Exports & Print Center',
-          icon: Printer,
-          badge: 'CSV / PDF',
-          badgeColor: 'bg-amber-950 text-amber-400 border-amber-800'
+          icon: Printer
         }
       ]
     }
@@ -89,7 +74,7 @@ export const SidebarMenuBar: React.FC<Props> = ({
       <div>
         <div className="p-5 border-b border-slate-800/80 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 text-white font-black text-lg">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 text-white font-black text-base">
               ⚡
             </div>
             <div>
@@ -103,7 +88,7 @@ export const SidebarMenuBar: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* 2. Menu Navigation Containers */}
+        {/* 2. Clean Minimalist Menu Items (No Cluttered Badges) */}
         <nav className="p-3 space-y-6 overflow-y-auto max-h-[calc(100vh-160px)]">
           {menuSections.map((section) => (
             <div key={section.title} className="space-y-1">
@@ -119,22 +104,14 @@ export const SidebarMenuBar: React.FC<Props> = ({
                     <button
                       key={item.key}
                       onClick={() => onSelectTab(item.key)}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all group ${
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group ${
                         isActive
                           ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
                           : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                       }`}
                     >
-                      <div className="flex items-center gap-2.5 truncate">
-                        <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-blue-400'}`} />
-                        <span className="truncate">{item.label}</span>
-                      </div>
-
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${
-                        isActive ? 'bg-blue-700/80 text-white border-blue-500' : item.badgeColor
-                      }`}>
-                        {item.badge}
-                      </span>
+                      <Icon className={`w-4 h-4 flex-shrink-0 transition-colors ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-blue-400'}`} />
+                      <span className="truncate">{item.label}</span>
                     </button>
                   );
                 })}

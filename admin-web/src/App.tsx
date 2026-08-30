@@ -303,8 +303,6 @@ export default function App() {
         onSelectTab={setActiveTab}
         currentUser={currentUser}
         onLogout={handleLogout}
-        branchesCount={branches.length}
-        productsCount={inventoryMatrix.length}
       />
 
       {/* 2. Main Content Container */}
@@ -319,6 +317,7 @@ export default function App() {
           onRefresh={fetchLiveSupabaseData}
           isLoading={isLoading}
           pageTitle={tabTitles[activeTab]}
+          activeTab={activeTab}
         />
 
         {/* Dynamic Container Feature View */}
