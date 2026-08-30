@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Settings,
   Building2,
   Package,
   BarChart3,
@@ -13,7 +14,7 @@ import {
   Menu
 } from 'lucide-react';
 
-export type TabKey = 'branches' | 'inventory' | 'sales' | 'payroll' | 'reports';
+export type TabKey = 'branches' | 'inventory' | 'sales' | 'payroll' | 'reports' | 'settings';
 
 interface Props {
   activeTab: TabKey;
@@ -70,6 +71,16 @@ export const SidebarMenuBar: React.FC<Props> = ({
           key: 'reports' as TabKey,
           label: 'Exports & Reports',
           icon: Printer
+        }
+      ]
+    },
+    {
+      title: 'SYSTEM',
+      items: [
+        {
+          key: 'settings' as TabKey,
+          label: 'Profile & Settings',
+          icon: Settings
         }
       ]
     }

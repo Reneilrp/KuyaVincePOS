@@ -6,6 +6,7 @@ import { InventoryMatrixTab } from "./components/InventoryMatrixTab";
 import { SalesOverviewTab } from "./components/SalesOverviewTab";
 import { PayrollManagerTab } from "./components/PayrollManagerTab";
 import { ReportsPrintTab } from "./components/ReportsPrintTab";
+import { SettingsTab } from "./components/SettingsTab";
 import { AdminLoginScreen } from "./components/AdminLoginScreen";
 import { supabase } from "./services/supabaseClient";
 import { AnalyticsData, Branch, InventoryItem, PayrollItem, Product, StaffRecord } from "./types";
@@ -383,7 +384,8 @@ export default function App() {
     inventory: "📦 Centralized Master Product Catalog & Stocks",
     sales: "📊 Real-Time Multi-Branch Sales & Revenue Overview",
     payroll: "👥 Staff Timeclocks & Hourly Payroll Manager",
-    reports: "📥 Client Data Retrieval, 1-Click Exports & Prints"
+    reports: "📥 Client Data Retrieval, 1-Click Exports & Prints",
+    settings: "⚙️ System Profile & Preferences"
   };
 
   const selectedBranchName = selectedBranchId === "all"
@@ -483,6 +485,12 @@ export default function App() {
               payroll={payrollData}
               selectedBranchName={selectedBranchName}
               onImportOfflineBatch={() => fetchLiveSupabaseData()}
+            />
+          )}
+          {activeTab === "settings" && (
+            <SettingsTab
+              currentUser={currentUser}
+              onLogout={handleLogout}
             />
           )}
         </main>
