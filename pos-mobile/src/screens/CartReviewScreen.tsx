@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Switch } from 'react-native';
 import { usePosStore } from '../stores/usePosStore';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -15,9 +15,14 @@ export const CartReviewScreen: React.FC<Props> = ({ onBack, onProceed }) => {
   const cart = usePosStore((s) => s.cart);
   const updateQuantity = usePosStore((s) => s.updateQuantity);
   const clearCart = usePosStore((s) => s.clearCart);
+  const getSubtotal = usePosStore((s) => s.getSubtotal);
   const getTotal = usePosStore((s) => s.getTotal);
+  const seniorDiscount = usePosStore((s) => s.seniorDiscount);
+  const setSeniorDiscount = usePosStore((s) => s.setSeniorDiscount);
 
+  const subtotal = getSubtotal();
   const total = getTotal();
+  const discountDeduction = subtotal - total;
 
   return (
     <View style={{ flex: 1, backgroundColor: '#0F172A' }}>
@@ -54,7 +59,7 @@ export const CartReviewScreen: React.FC<Props> = ({ onBack, onProceed }) => {
                 {item.quantity}
               </Text>
               <TouchableOpacity
-                style={{ width: 32, height: 32, backgroundColor: '#1E293B', borderColor: '#334155', borderWidth: 1, borderRadius: 8, alignItems: 'center', justifyContent: 'center' }}
+                style={{ width: 32, height: 32, backgroundColor: '#3B82F6', borderWidth: 1, borderRadius: 8, alignItems: 'center', justifyContent: 'center' }}
                 onPress={() => updateQuantity(item.product.id, item.quantity + 1)}
               >
                 <Text style={{ color: '#3B82F6', fontWeight: 'bold', fontSize: 18 }}>+</Text>
@@ -66,8 +71,53 @@ export const CartReviewScreen: React.FC<Props> = ({ onBack, onProceed }) => {
           </View>
         ))}
 
+        {/* Philippine Statutory Senior / PWD 20% Discount */}
+        <View style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: '#1E293B', borderRadius: 16, padding: 14, borderWidth: 1, borderColor: '#334155' }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View>
+              <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 13 }}>Senior Citizen / PWD (20%)</Text>
+              <Text style={{ color: '#94A3B8', fontSize: 10, marginTop: 2 }}>Statutory 20% discount on 1 individual meal</Text>
+            </View>
+            <Switch
+              value={seniorDiscount.enabled}
+              onValueChange={(val) => setSeniorDiscount({ ...seniorDiscount, enabled: val })}
+              trackColor={{ false: '#334155', true: '#10B981' }}
+              thumbColor={seniorDiscount.enabled ? '#FFFFFF' : '#94A3B8'}
+            />
+          </View>
+
+          {seniorDiscount.enabled && (
+            <View style={{ marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#334155' }}>
+              <Text style={{ color: '#94A3B8', fontSize: 10, fontWeight: 'bold', letterSpacing: 1, marginBottom: 4 }}>
+                SENIOR / PWD OSCA BOOKLET ID NUMBER
+              </Text>
+              <TextInput
+                style={{ backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#3B82F6', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, color: 'white', fontSize: 13 }}
+                placeholder="e.g. OSCA-ZAM-2026-0912"
+                placeholderTextColor="#64748B"
+                value={seniorDiscount.idNumber}
+                onChangeText={(text) => setSeniorDiscount({ ...seniorDiscount, idNumber: text })}
+              />
+            </View>
+          )}
+        </View>
+
         {/* Total Summary Card */}
-        <View style={{ marginHorizontal: 16, marginVertical: 16, backgroundColor: '#1E293B', borderRadius: 20, padding: 18, borderWidth: 1, borderColor: '#334155' }}>
+        <View style={{ marginHorizontal: 16, marginVertical: 14, backgroundColor: '#1E293B', borderRadius: 20, padding: 18, borderWidth: 1, borderColor: '#334155' }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+            <Text style={{ color: '#94A3B8', fontSize: 13 }}>Subtotal</Text>
+            <Text style={{ color: 'white', fontSize: 13 }}>₱{subtotal.toFixed(2)}</Text>
+          </View>
+
+          {discountDeduction > 0 && (
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+              <Text style={{ color: '#34D399', fontSize: 13 }}>Senior/PWD Discount (20%)</Text>
+              <Text style={{ color: '#34D399', fontSize: 13, fontWeight: 'bold' }}>— ₱{discountDeduction.toFixed(2)}</Text>
+            </View>
+          )}
+
+          <View style={{ height: 1, backgroundColor: '#334155', marginVertical: 8 }} />
+
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 }}>{t('totalAmountDue')}</Text>

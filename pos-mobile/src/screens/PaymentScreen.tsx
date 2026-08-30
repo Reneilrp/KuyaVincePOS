@@ -24,6 +24,8 @@ export const PaymentScreen: React.FC<Props> = ({ onBack, onSuccess }) => {
   const cart = usePosStore((s) => s.cart);
   const clearCart = usePosStore((s) => s.clearCart);
   const getTotal = usePosStore((s) => s.getTotal);
+  const seniorDiscount = usePosStore((s) => s.seniorDiscount);
+  const getSubtotal = usePosStore((s) => s.getSubtotal);
 
   const total = getTotal();
   const tenderedAmount = parseFloat(tenderedInput || '0');
@@ -52,6 +54,9 @@ export const PaymentScreen: React.FC<Props> = ({ onBack, onSuccess }) => {
         cashier_id: cashier?.id,
         shift_id: activeShiftId,
         payment_method: 'cash',
+        subtotal: getSubtotal(),
+        discount_amount: getSubtotal() - total,
+        senior_pwd_id: seniorDiscount.enabled ? seniorDiscount.idNumber : null,
         total_amount: total,
         amount_tendered: tenderedAmount,
         change_amount: changeAmount,
@@ -87,7 +92,7 @@ export const PaymentScreen: React.FC<Props> = ({ onBack, onSuccess }) => {
           })),
           totals: {
             subtotal: total.toFixed(2),
-            discount: '0.00',
+            discount: (getSubtotal() - total).toFixed(2),
             total: total.toFixed(2),
             amount_tendered: tenderedAmount.toFixed(2),
             change: changeAmount.toFixed(2),

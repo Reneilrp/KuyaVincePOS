@@ -19,6 +19,10 @@ interface PosState {
   // Cashier Session & Shift
   activeCashier: User | null;
   activeShiftId: number | null;
+  openingFloat: number;
+  setOpeningFloat: (val: number) => void;
+  seniorDiscount: { enabled: boolean; idNumber: string };
+  setSeniorDiscount: (val: { enabled: boolean; idNumber: string }) => void;
   setActiveCashier: (user: User | null) => void;
   setActiveShiftId: (shiftId: number | null) => void;
 
@@ -57,6 +61,10 @@ export const usePosStore = create<PosState>((set, get) => ({
 
   activeCashier: null,
   activeShiftId: null,
+  openingFloat: 1000.0,
+  setOpeningFloat: (openingFloat) => set({ openingFloat }),
+  seniorDiscount: { enabled: false, idNumber: '' },
+  setSeniorDiscount: (seniorDiscount) => set({ seniorDiscount }),
   setActiveCashier: (activeCashier) => set({ activeCashier }),
   setActiveShiftId: (activeShiftId) => set({ activeShiftId }),
 
@@ -125,7 +133,7 @@ export const usePosStore = create<PosState>((set, get) => ({
     set((state) => ({ cart: state.cart.filter((item) => item.product.id !== productId) }));
   },
 
-  clearCart: () => set({ cart: [], discountAmount: 0 }),
+  clearCart: () => set({ cart: [], discountAmount: 0, seniorDiscount: { enabled: false, idNumber: '' } }),
 
   getSubtotal: () => {
     const { cart } = get();
@@ -133,7 +141,14 @@ export const usePosStore = create<PosState>((set, get) => ({
   },
 
   getTotal: () => {
-    const { getSubtotal, discountAmount } = get();
-    return Math.max(0, Math.round((getSubtotal() - discountAmount) * 100) / 100);
+    const { getSubtotal, seniorDiscount, cart } = get();
+    const subtotal = getSubtotal();
+    if (seniorDiscount.enabled && cart.length > 0) {
+      // 20% statutory discount applies to 1 meal portion (highest priced single item)
+      const maxItemPrice = Math.max(...cart.map(i => i.unit_price));
+      const discount = Math.round(maxItemPrice * 0.20 * 100) / 100;
+      return Math.max(0, Math.round((subtotal - discount) * 100) / 100);
+    }
+    return subtotal;
   }
 }));
