@@ -7,7 +7,6 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 export const DeviceActivationScreen: React.FC<{ onActivated: () => void }> = ({ onActivated }) => {
   const [importCode, setImportCode] = useState('KV-BR01');
-  const [terminalName, setTerminalName] = useState('Counter 01');
   const [isLoading, setIsLoading] = useState(false);
 
   const setBranch = usePosStore((s) => s.setBranch);
@@ -66,13 +65,15 @@ export const DeviceActivationScreen: React.FC<{ onActivated: () => void }> = ({ 
         setCatalog(catalogItems);
       }
 
+      const generatedTerminalName = 'Counter-' + Date.now();
+
       // 3. Save Active Device & Branch State
       setBranch(matchedBranch);
       setDevice({
         id: 1,
         branch_id: matchedBranch.id,
         device_serial: 'SUNMI-V2S-' + importCode.toUpperCase(),
-        terminal_name: terminalName,
+        terminal_name: generatedTerminalName,
         device_token: 'TOKEN_' + Date.now(),
         status: 'online'
       });
@@ -84,6 +85,7 @@ export const DeviceActivationScreen: React.FC<{ onActivated: () => void }> = ({ 
       onActivated();
     } catch (err: any) {
       Alert.alert('Connection Notice', 'Connecting with local branch offline cache.');
+      const generatedTerminalName = 'Counter-' + Date.now();
       setBranch({
         id: 1,
         name: 'Branch 1 - Zamboanga Hub',
@@ -94,7 +96,7 @@ export const DeviceActivationScreen: React.FC<{ onActivated: () => void }> = ({ 
         id: 1,
         branch_id: 1,
         device_serial: 'SUNMI-OFFLINE-01',
-        terminal_name: terminalName,
+        terminal_name: generatedTerminalName,
         device_token: 'OFFLINE_TOKEN',
         status: 'online'
       });
@@ -106,51 +108,33 @@ export const DeviceActivationScreen: React.FC<{ onActivated: () => void }> = ({ 
 
   return (
     <View style={styles.container}>
+      <View style={styles.topSection}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>KV</Text>
+        </View>
+        <Text style={styles.title}>KuyaVince POS</Text>
+        <Text style={styles.subtitle}>v1.0 • First Time Setup</Text>
+      </View>
+
       <View style={styles.card}>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>📱 SUNMI HANDHELD SETUP</Text>
+        <View style={styles.scannerIcon}>
+          <Text style={styles.scannerText}>▦</Text>
         </View>
 
-        <Text style={styles.title}>KuyaVince POS</Text>
-        <Text style={styles.subtitle}>Enter the Branch Import Code generated on your Admin Laptop</Text>
+        <Text style={styles.cardTitle}>Activate Your Terminal</Text>
+        <Text style={styles.cardSubtitle}>Enter the 6-character Branch Import Code provided by your store manager</Text>
 
-        <View style={styles.formGroup}>
+        <View style={styles.inputContainer}>
           <Text style={styles.label}>BRANCH IMPORT CODE</Text>
           <TextInput
             style={styles.codeInput}
             value={importCode}
             onChangeText={setImportCode}
-            placeholder="e.g. KV-BR01"
+            placeholder="KV-BR01"
             placeholderTextColor="#64748B"
             autoCapitalize="characters"
             maxLength={10}
           />
-        </View>
-
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>TERMINAL / COUNTER NAME</Text>
-          <TextInput
-            style={styles.input}
-            value={terminalName}
-            onChangeText={setTerminalName}
-            placeholder="e.g. Counter 01, Cashier A"
-            placeholderTextColor="#64748B"
-          />
-        </View>
-
-        {/* Quick Branch Code Presets for Fast Testing */}
-        <View style={styles.presetRow}>
-          {(['KV-BR01', 'KV-BR02', 'KV-BR03'] as const).map((code, idx) => (
-            <TouchableOpacity
-              key={code}
-              style={[styles.presetBtn, importCode === code && styles.presetBtnActive]}
-              onPress={() => setImportCode(code)}
-            >
-              <Text style={[styles.presetText, importCode === code && styles.presetTextActive]}>
-                Branch {idx + 1}
-              </Text>
-            </TouchableOpacity>
-          ))}
         </View>
 
         <TouchableOpacity
@@ -161,31 +145,148 @@ export const DeviceActivationScreen: React.FC<{ onActivated: () => void }> = ({ 
           {isLoading ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text style={styles.actionBtnText}>⚡ IMPORT BRANCH & START SELLING</Text>
+            <Text style={styles.actionBtnText}>✓ Activate & Download Menu</Text>
           )}
         </TouchableOpacity>
+
+        <Text style={styles.hintText}>This will sync your branch's products and prices</Text>
+      </View>
+
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>KuyaVince POS • Powered by Supabase</Text>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F172A', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  card: { backgroundColor: '#1E293B', width: '100%', maxWidth: 380, padding: 24, borderRadius: 20, borderWidth: 1, borderColor: '#334155', shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 10 },
-  badge: { alignSelf: 'center', backgroundColor: '#0284C7', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, marginBottom: 12 },
-  badgeText: { color: '#FFFFFF', fontSize: 10, fontWeight: 'bold', letterSpacing: 0.5 },
-  title: { fontSize: 22, fontWeight: '900', color: '#F8FAFC', textAlign: 'center' },
-  subtitle: { fontSize: 12, color: '#94A3B8', textAlign: 'center', marginTop: 4, marginBottom: 20, lineHeight: 18 },
-  formGroup: { marginBottom: 14 },
-  label: { fontSize: 10, fontWeight: 'bold', color: '#64748B', letterSpacing: 0.8, marginBottom: 6 },
-  codeInput: { backgroundColor: '#0F172A', borderWidth: 2, borderColor: '#38BDF8', borderRadius: 12, color: '#38BDF8', fontSize: 18, fontWeight: 'bold', textAlign: 'center', padding: 12, letterSpacing: 2, fontFamily: 'monospace' },
-  input: { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155', borderRadius: 10, color: '#F8FAFC', fontSize: 14, padding: 12 },
-  presetRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
-  presetBtn: { flex: 1, backgroundColor: '#0F172A', paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#334155', alignItems: 'center' },
-  presetBtnActive: { borderColor: '#38BDF8', backgroundColor: '#0284C7' },
-  presetText: { color: '#94A3B8', fontSize: 11, fontWeight: '600' },
-  presetTextActive: { color: '#FFFFFF', fontWeight: 'bold' },
-  actionBtn: { backgroundColor: '#10B981', paddingVertical: 14, borderRadius: 12, alignItems: 'center' },
-  btnDisabled: { opacity: 0.6 },
-  actionBtnText: { color: '#FFFFFF', fontSize: 13, fontWeight: 'bold', letterSpacing: 0.5 }
+  container: {
+    flex: 1,
+    backgroundColor: '#0F172A',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 24
+  },
+  topSection: {
+    alignItems: 'center',
+    marginTop: 40
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#3B82F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8
+  },
+  avatarText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16
+  },
+  title: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 22
+  },
+  subtitle: {
+    color: '#94A3B8',
+    fontSize: 12,
+    marginTop: 4
+  },
+  card: {
+    backgroundColor: '#1E293B',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#334155',
+    padding: 28,
+    width: '100%',
+    maxWidth: 360,
+    gap: 20,
+    alignItems: 'center'
+  },
+  scannerIcon: {
+    width: 72,
+    height: 72,
+    backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: '#334155',
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  scannerText: {
+    color: '#64748B',
+    fontSize: 36
+  },
+  cardTitle: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 22,
+    textAlign: 'center'
+  },
+  cardSubtitle: {
+    color: '#94A3B8',
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 18
+  },
+  inputContainer: {
+    width: '100%',
+    alignItems: 'center',
+    gap: 8
+  },
+  label: {
+    color: '#64748B',
+    fontSize: 10,
+    fontWeight: 'bold',
+    letterSpacing: 1.2
+  },
+  codeInput: {
+    width: '100%',
+    backgroundColor: '#0F172A',
+    borderWidth: 2,
+    borderColor: '#3B82F6',
+    borderRadius: 14,
+    color: '#3B82F6',
+    fontSize: 22,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    padding: 14,
+    letterSpacing: 4,
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8
+  },
+  actionBtn: {
+    width: '100%',
+    backgroundColor: '#3B82F6',
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: 'center'
+  },
+  btnDisabled: {
+    opacity: 0.6
+  },
+  actionBtnText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 15
+  },
+  hintText: {
+    color: '#64748B',
+    fontSize: 11,
+    textAlign: 'center'
+  },
+  footer: {
+    marginBottom: 20
+  },
+  footerText: {
+    color: '#475569',
+    fontSize: 10,
+    textAlign: 'center'
+  }
 });

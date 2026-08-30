@@ -1,17 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ActivityIndicator, Alert } from 'react-native';
-import { BatchSyncService, LocalOrderRecord } from '../services/BatchSyncService';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Alert, Modal, StyleSheet } from 'react-native';
+import { BatchSyncService } from '../services/BatchSyncService';
 import { SunmiPrinterDriver } from '../services/SunmiPrinterDriver';
 import { usePosStore } from '../stores/usePosStore';
+import C from '../theme/colors';
 
-export const EndOfDaySyncScreen: React.FC<{ visible: boolean; onClose: () => void }> = ({ visible, onClose }) => {
+type SyncStatus = 'idle' | 'syncing' | 'success' | 'error';
+
+interface Props {
+  visible: boolean;
+  onClose: () => void;
+}
+
+export const EndOfDaySyncScreen: React.FC<Props> = ({ visible, onClose }) => {
   const branch = usePosStore((s) => s.branch);
   const device = usePosStore((s) => s.device);
   const cashier = usePosStore((s) => s.activeCashier);
 
-  const [orders, setOrders] = useState<LocalOrderRecord[]>([]);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncResult, setSyncResult] = useState<string | null>(null);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
+  const [countedCash, setCountedCash] = useState('');
 
   useEffect(() => {
     if (visible) {
@@ -25,11 +33,16 @@ export const EndOfDaySyncScreen: React.FC<{ visible: boolean; onClose: () => voi
   };
 
   const totalOrdersCount = orders.length;
-  const pendingOrdersCount = orders.filter((o) => !o.synced).length;
   const totalGrossRevenue = orders.reduce((sum, o) => sum + o.total_amount, 0);
   const cashSales = orders.filter((o) => o.payment_method === 'cash').reduce((sum, o) => sum + o.total_amount, 0);
   const ewalletSales = orders.filter((o) => o.payment_method === 'gcash' || o.payment_method === 'maya').reduce((sum, o) => sum + o.total_amount, 0);
   const cardSales = orders.filter((o) => o.payment_method === 'card').reduce((sum, o) => sum + o.total_amount, 0);
+
+  const openingFloat = 1000;
+  const expectedDrawer = openingFloat + cashSales;
+  const counted = parseFloat(countedCash || '0');
+  const variance = counted - expectedDrawer;
+  const isBalanced = Math.abs(variance) < 0.01;
 
   const handlePrintZReport = async () => {
     const zReportData = {
@@ -40,146 +53,166 @@ export const EndOfDaySyncScreen: React.FC<{ visible: boolean; onClose: () => voi
       opened_at: new Date().toISOString().split('T')[0] + ' 08:00:00',
       closed_at: new Date().toISOString().split('T')[0] + ' ' + new Date().toLocaleTimeString(),
       financials: {
-        opening_float: '1,000.00',
+        opening_float: openingFloat.toFixed(2),
         cash_sales: cashSales.toFixed(2),
         ewallet_sales: ewalletSales.toFixed(2),
         card_sales: cardSales.toFixed(2),
         total_gross_sales: totalGrossRevenue.toFixed(2),
-        expected_cash_in_drawer: (1000 + cashSales).toFixed(2),
-        actual_counted_cash: (1000 + cashSales).toFixed(2),
-        cash_over_short: '0.00',
+        expected_cash_in_drawer: expectedDrawer.toFixed(2),
+        actual_counted_cash: counted.toFixed(2),
+        cash_over_short: variance.toFixed(2),
         transactions_count: totalOrdersCount
       }
     };
-
     await SunmiPrinterDriver.printZReport(zReportData);
     Alert.alert('Z-Report Printed', 'Physical 58mm daily audit slip printed via Sunmi thermal printer.');
   };
 
   const handle1TapBatchSync = async () => {
-    setIsSyncing(true);
+    setSyncStatus('syncing');
     try {
       const res = await BatchSyncService.pushDailyBatchToServer(
         branch?.id || 1,
         device?.device_serial || 'SUNMI-V2S-BR01-01',
-        {
-          cashier_id: cashier?.id || 1,
-          opening_float: 1000,
-          closing_cash: 1000 + cashSales,
-          total_gross_sales: totalGrossRevenue,
-          orders_count: totalOrdersCount
-        }
+        { cashier_id: cashier?.id || 1, opening_float: 1000, closing_cash: expectedDrawer, total_gross_sales: totalGrossRevenue, orders_count: totalOrdersCount }
       );
-
-      setSyncResult(res.message);
+      setSyncStatus('success');
       await loadDayStats();
-      Alert.alert('✅ Cloud Sync Complete', res.message);
     } catch (e: any) {
+      setSyncStatus('error');
       Alert.alert('Sync Failed', e.message || 'Could not upload daily batch.');
-    } finally {
-      setIsSyncing(false);
     }
-  };
-
-  const handleExportJsonFile = () => {
-    const exportData = {
-      branch_id: branch?.id || 1,
-      branch_name: branch?.name || 'Main Branch',
-      device_serial: device?.device_serial || 'SUNMI-V2S-01',
-      date: new Date().toISOString().split('T')[0],
-      total_sales_count: totalOrdersCount,
-      gross_revenue: totalGrossRevenue,
-      orders
-    };
-
-    console.log('Exported JSON Package:', JSON.stringify(exportData, null, 2));
-    Alert.alert(
-      '💾 File Exported',
-      `Saved daily_sales_${new Date().toISOString().split('T')[0]}.json to device storage. You can drag and drop this file on the Admin Laptop Dashboard.`
-    );
   };
 
   return (
     <Modal visible={visible} transparent animationType="fade">
-      <View style={styles.modalBackdrop}>
-        <View style={styles.modalCard}>
-          <Text style={styles.modalTitle}>🌙 End of Day & Cloud Sync</Text>
-          <Text style={styles.modalSub}>🏢 {branch?.name || 'Main Branch'} • [{branch?.code}]</Text>
+      <View style={styles.modalBg}>
+        <ScrollView contentContainerStyle={styles.container}>
+          <Text style={styles.headerTitle}>End of Day</Text>
+          <Text style={styles.headerSub}>{branch?.name || 'Main Branch'}</Text>
 
           <View style={styles.summaryCard}>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Total Sales Completed Today:</Text>
-              <Text style={styles.summaryValue}>{totalOrdersCount} Orders</Text>
+            <Text style={styles.summaryTitle}>📊 Today's Performance</Text>
+            
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>Total Orders</Text>
+              <Text style={styles.rowValueWhite}>{totalOrdersCount} orders</Text>
             </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Gross Revenue:</Text>
-              <Text style={styles.summaryHighlight}>₱{totalGrossRevenue.toFixed(2)}</Text>
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>Gross Sales</Text>
+              <Text style={styles.rowValueHighlight}>₱{totalGrossRevenue.toFixed(2)}</Text>
             </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Pending Cloud Upload:</Text>
-              <Text style={[styles.summaryValue, pendingOrdersCount > 0 ? styles.textAmber : styles.textEmerald]}>
-                {pendingOrdersCount > 0 ? `⏳ ${pendingOrdersCount} orders waiting` : '✅ All Uploaded'}
-              </Text>
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>Cash Collected</Text>
+              <Text style={styles.rowValueRegular}>₱{cashSales.toFixed(2)}</Text>
+            </View>
+            <View style={styles.rowNoBorder}>
+              <Text style={styles.rowLabel}>GCash / Maya</Text>
+              <Text style={styles.rowValueRegular}>₱{ewalletSales.toFixed(2)}</Text>
+            </View>
+            
+            <View style={styles.divider} />
+            
+            <View style={styles.simpleRow}>
+              <Text style={styles.rowLabel}>Opening Float</Text>
+              <Text style={styles.rowLabel}>₱{openingFloat.toFixed(2)}</Text>
+            </View>
+            <View style={styles.simpleRow}>
+              <Text style={styles.rowLabel}>Expected Drawer</Text>
+              <Text style={styles.rowValueWhite}>₱{expectedDrawer.toFixed(2)}</Text>
+            </View>
+
+            <View style={styles.countedRow}>
+              <Text style={styles.rowLabel}>Counted Cash</Text>
+              <TextInput
+                style={styles.input}
+                value={countedCash}
+                onChangeText={setCountedCash}
+                keyboardType="numeric"
+                placeholder="₱ 0.00"
+                placeholderTextColor="#475569"
+              />
             </View>
           </View>
 
-          {/* Action Buttons */}
-          <View style={styles.actionBlock}>
-            <TouchableOpacity style={styles.printBtn} onPress={handlePrintZReport}>
-              <Text style={styles.printBtnText}>🖨️ PRINT 58mm DAILY Z-READING</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.syncBtn, isSyncing && styles.btnDisabled]}
-              disabled={isSyncing}
-              onPress={handle1TapBatchSync}
-            >
-              {isSyncing ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.syncBtnText}>⚡ 1-TAP SEND TO SUPABASE CLOUD</Text>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.exportFileBtn} onPress={handleExportJsonFile}>
-              <Text style={styles.exportFileBtnText}>💾 EXPORT .JSON FILE (OFFLINE BACKUP)</Text>
-            </TouchableOpacity>
+          <View style={styles.statusBadgeContainer}>
+            {isBalanced ? (
+              <View style={styles.badgeBalanced}><Text style={styles.badgeBalancedText}>✓ BALANCED</Text></View>
+            ) : variance < 0 ? (
+              <View style={styles.badgeShort}><Text style={styles.badgeShortText}>⚠ SHORT ₱{Math.abs(variance).toFixed(2)}</Text></View>
+            ) : (
+              <View style={styles.badgeOver}><Text style={styles.badgeOverText}>▲ OVER ₱{variance.toFixed(2)}</Text></View>
+            )}
           </View>
 
-          {syncResult && (
-            <Text style={styles.syncNotice}>✅ {syncResult}</Text>
+          {(syncStatus === 'idle' || syncStatus === 'error') && (
+            <>
+              <TouchableOpacity style={styles.uploadBtn} onPress={handle1TapBatchSync}>
+                <Text style={styles.uploadBtnText}>📤 Upload Today's Sales to Cloud</Text>
+              </TouchableOpacity>
+              <Text style={styles.uploadHelper}>This will sync {totalOrdersCount} orders to your admin dashboard</Text>
+            </>
           )}
 
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <Text style={styles.closeBtnText}>Close</Text>
+          {syncStatus === 'syncing' && (
+            <View style={styles.syncingContainer}>
+              <ActivityIndicator color="#3B82F6" size="large" />
+              <Text style={styles.syncingText}>Uploading {totalOrdersCount} orders...</Text>
+            </View>
+          )}
+
+          {syncStatus === 'success' && (
+            <View style={styles.successContainer}>
+              <Text style={styles.successText}>✅ Synced Successfully! {totalOrdersCount} orders uploaded.</Text>
+            </View>
+          )}
+
+          <TouchableOpacity style={styles.printBtn} onPress={handlePrintZReport}>
+            <Text style={styles.printBtnText}>🖸️ Print 58mm Z-Reading Slip</Text>
           </TouchableOpacity>
-        </View>
+
+          <TouchableOpacity style={styles.signOutBtn} onPress={onClose}>
+            <Text style={styles.signOutBtnText}>Sign Out / End Shift</Text>
+          </TouchableOpacity>
+        </ScrollView>
       </View>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.75)', justifyContent: 'center', alignItems: 'center', padding: 16 },
-  modalCard: { backgroundColor: '#1E293B', width: '100%', maxWidth: 440, borderRadius: 16, padding: 22, borderWidth: 1, borderColor: '#334155' },
-  modalTitle: { color: '#F8FAFC', fontSize: 18, fontWeight: 'bold', textAlign: 'center' },
-  modalSub: { color: '#38BDF8', fontSize: 12, textAlign: 'center', marginBottom: 16 },
-  summaryCard: { backgroundColor: '#0F172A', padding: 14, borderRadius: 10, borderWidth: 1, borderColor: '#334155', marginBottom: 18 },
-  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
-  summaryLabel: { color: '#94A3B8', fontSize: 12 },
-  summaryValue: { color: '#F8FAFC', fontSize: 12, fontWeight: 'bold' },
-  summaryHighlight: { color: '#34D399', fontSize: 15, fontWeight: 'bold' },
-  textAmber: { color: '#FBBF24' },
-  textEmerald: { color: '#34D399' },
-  actionBlock: { gap: 10, marginBottom: 14 },
-  printBtn: { backgroundColor: '#334155', paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
-  printBtnText: { color: '#F8FAFC', fontWeight: 'bold', fontSize: 12 },
-  syncBtn: { backgroundColor: '#10B981', paddingVertical: 14, borderRadius: 8, alignItems: 'center' },
-  syncBtnText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 13, letterSpacing: 0.5 },
-  exportFileBtn: { backgroundColor: '#1E3A8A', paddingVertical: 12, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: '#3B82F6' },
-  exportFileBtnText: { color: '#93C5FD', fontWeight: 'bold', fontSize: 11 },
-  btnDisabled: { opacity: 0.5 },
-  syncNotice: { color: '#34D399', fontSize: 11, textAlign: 'center', marginBottom: 10 },
-  closeBtn: { backgroundColor: '#0F172A', padding: 12, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: '#334155' },
-  closeBtnText: { color: '#94A3B8', fontSize: 12, fontWeight: '600' }
+  modalBg: { flex: 1, backgroundColor: '#0F172A' },
+  container: { padding: 20 },
+  headerTitle: { color: 'white', fontWeight: 'bold', fontSize: 20, textAlign: 'center' },
+  headerSub: { color: '#94A3B8', fontSize: 12, textAlign: 'center', marginBottom: 20 },
+  summaryCard: { backgroundColor: '#1E293B', borderRadius: 20, padding: 20, marginBottom: 16 },
+  summaryTitle: { color: 'white', fontWeight: 'bold', fontSize: 15, marginBottom: 12 },
+  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderColor: '#334155' },
+  rowNoBorder: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8 },
+  rowLabel: { color: '#94A3B8', fontSize: 13 },
+  rowValueWhite: { color: 'white', fontWeight: 'bold', fontSize: 13 },
+  rowValueHighlight: { color: '#34D399', fontWeight: 'bold', fontSize: 15 },
+  rowValueRegular: { color: 'white', fontSize: 13 },
+  divider: { height: 1, backgroundColor: '#334155', marginVertical: 10 },
+  simpleRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
+  countedRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 },
+  input: { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, color: 'white', fontWeight: 'bold', fontSize: 14, width: 110 },
+  statusBadgeContainer: { alignItems: 'center', marginVertical: 12 },
+  badgeBalanced: { backgroundColor: '#022C22', borderWidth: 1, borderColor: '#065F46', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8 },
+  badgeBalancedText: { color: '#34D399', fontWeight: 'bold', fontSize: 12 },
+  badgeShort: { backgroundColor: '#1A0A0A', borderWidth: 1, borderColor: '#7F1D1D', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8 },
+  badgeShortText: { color: '#FB7185', fontWeight: 'bold', fontSize: 12 },
+  badgeOver: { backgroundColor: '#1A1200', borderWidth: 1, borderColor: '#78350F', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8 },
+  badgeOverText: { color: '#FBBF24', fontWeight: 'bold', fontSize: 12 },
+  uploadBtn: { backgroundColor: '#3B82F6', borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginBottom: 8 },
+  uploadBtnText: { color: 'white', fontWeight: 'bold', fontSize: 15 },
+  uploadHelper: { color: '#94A3B8', fontSize: 11, textAlign: 'center', marginBottom: 16 },
+  syncingContainer: { alignItems: 'center', paddingVertical: 20, marginBottom: 16 },
+  syncingText: { color: '#3B82F6', fontSize: 13, marginTop: 10 },
+  successContainer: { backgroundColor: '#022C22', borderWidth: 1, borderColor: '#065F46', borderRadius: 12, padding: 14, marginBottom: 16 },
+  successText: { color: '#34D399', fontWeight: 'bold', fontSize: 13, textAlign: 'center' },
+  printBtn: { borderWidth: 1, borderColor: '#3B82F6', backgroundColor: 'transparent', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginBottom: 12 },
+  printBtnText: { color: '#3B82F6', fontWeight: 'bold', fontSize: 13 },
+  signOutBtn: { paddingVertical: 12 },
+  signOutBtnText: { color: '#FB7185', fontSize: 12, textAlign: 'center' }
 });

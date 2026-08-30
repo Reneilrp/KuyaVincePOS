@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, SafeAreaView } from 'react-native';
 import { ApiService } from '../services/ApiService';
 import { usePosStore } from '../stores/usePosStore';
 
@@ -22,10 +22,6 @@ export const CashierPinScreen: React.FC<{ onAuthenticated: () => void }> = ({ on
 
   const handleBackspace = () => {
     setPin(pin.slice(0, -1));
-  };
-
-  const handleClear = () => {
-    setPin('');
   };
 
   const verifyPin = async (enteredPin: string) => {
@@ -67,51 +63,85 @@ export const CashierPinScreen: React.FC<{ onAuthenticated: () => void }> = ({ on
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.branchName}>{branch?.name || 'POS Terminal'}</Text>
-        <Text style={styles.terminalLabel}>{device?.terminal_name || 'Handheld 01'}</Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.onlineBadge}>
+        <Text style={styles.onlineBadgeText}>● Online</Text>
       </View>
-
-      <Text style={styles.title}>Enter Cashier PIN</Text>
-      <View style={styles.pinIndicator}>
-        {[0, 1, 2, 3].map((idx) => (
-          <View key={idx} style={[styles.dot, pin.length > idx && styles.dotFilled]} />
-        ))}
+      
+      <View style={styles.centerSection}>
+        <View style={styles.logo}>
+          <Text style={styles.logoText}>KV</Text>
+        </View>
+        <Text style={styles.title}>KuyaVince POS</Text>
+        <Text style={styles.subtitle}>{branch?.name || 'Branch 1 - Main Hub'}</Text>
+        
+        <View style={{ height: 28 }} />
+        
+        <Text style={styles.welcomeText}>Welcome Back 👋</Text>
+        <Text style={styles.instructionText}>Enter your 4-digit PIN to start your shift</Text>
+        
+        <View style={styles.pinRow}>
+          {[0, 1, 2, 3].map((idx) => (
+            <View key={idx} style={[styles.pinDot, pin.length > idx && styles.pinDotFilled]} />
+          ))}
+        </View>
+        
+        <View style={{ height: 28 }} />
+        
+        <View style={styles.numpadGrid}>
+          {['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', '✓'].map((key) => {
+            const isBackspace = key === '⌫';
+            const isSubmit = key === '✓';
+            return (
+              <TouchableOpacity
+                key={key}
+                style={[
+                  styles.keyButton,
+                  isSubmit && styles.submitButton
+                ]}
+                onPress={() => {
+                  if (isBackspace) handleBackspace();
+                  else if (isSubmit) {
+                    if (pin.length === 4) verifyPin(pin);
+                  }
+                  else handleKeyPress(key);
+                }}
+              >
+                <Text style={[styles.keyText, isSubmit && styles.submitKeyText]}>{key}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        
+        <Text style={styles.forgotText}>Forgot PIN? Ask your store manager</Text>
       </View>
-
-      {/* Keypad Grid */}
-      <View style={styles.keypad}>
-        {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '⌫'].map((key) => (
-          <TouchableOpacity
-            key={key}
-            style={[styles.keyButton, key === 'C' && styles.clearBtn, key === '⌫' && styles.backBtn]}
-            onPress={() => {
-              if (key === 'C') handleClear();
-              else if (key === '⌫') handleBackspace();
-              else handleKeyPress(key);
-            }}
-          >
-            <Text style={styles.keyText}>{key}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F172A', alignItems: 'center', justifyContent: 'center', padding: 20 },
-  header: { position: 'absolute', top: 40, alignItems: 'center' },
-  branchName: { color: '#38BDF8', fontSize: 16, fontWeight: 'bold' },
-  terminalLabel: { color: '#94A3B8', fontSize: 12 },
-  title: { color: '#F8FAFC', fontSize: 20, fontWeight: '600', marginBottom: 24 },
-  pinIndicator: { flexDirection: 'row', gap: 16, marginBottom: 36 },
-  dot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: '#475569', backgroundColor: 'transparent' },
-  dotFilled: { backgroundColor: '#38BDF8', borderColor: '#38BDF8' },
-  keypad: { width: 280, flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center' },
-  keyButton: { width: 75, height: 75, borderRadius: 38, backgroundColor: '#1E293B', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#334155' },
-  clearBtn: { backgroundColor: '#7F1D1D', borderColor: '#991B1B' },
-  backBtn: { backgroundColor: '#334155' },
-  keyText: { color: '#F8FAFC', fontSize: 24, fontWeight: 'bold' }
+  container: { flex: 1, backgroundColor: '#0F172A' },
+  onlineBadge: { position: 'absolute', top: 16, right: 16, backgroundColor: '#022C22', borderWidth: 1, borderColor: '#065F46', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 },
+  onlineBadgeText: { color: '#34D399', fontSize: 10, fontWeight: 'bold' },
+  
+  centerSection: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
+  logo: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#3B82F6', alignItems: 'center', justifyContent: 'center' },
+  logoText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 },
+  title: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 18, marginTop: 10 },
+  subtitle: { color: '#94A3B8', fontSize: 12 },
+  
+  welcomeText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 26 },
+  instructionText: { color: '#94A3B8', fontSize: 13, marginTop: 6, marginBottom: 28 },
+  
+  pinRow: { flexDirection: 'row', gap: 16 },
+  pinDot: { width: 52, height: 52, borderRadius: 26, borderWidth: 2, borderColor: '#334155', backgroundColor: 'transparent' },
+  pinDotFilled: { borderColor: '#3B82F6', backgroundColor: '#3B82F6' },
+  
+  numpadGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, width: 296, justifyContent: 'center' },
+  keyButton: { width: 88, height: 62, borderRadius: 14, backgroundColor: '#1E293B', borderWidth: 1, borderColor: '#334155', alignItems: 'center', justifyContent: 'center' },
+  submitButton: { backgroundColor: '#3B82F6', borderColor: '#3B82F6' },
+  keyText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 22 },
+  submitKeyText: { color: '#FFFFFF' },
+  
+  forgotText: { color: '#94A3B8', fontSize: 12, marginTop: 20 }
 });
