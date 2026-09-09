@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import {
   ArrowLeft,
   Building2,
-  Copy,
-  Check,
   Package,
   Plus,
   TrendingUp,
@@ -15,13 +13,8 @@ import {
   Calendar,
   Users,
   Smartphone,
-  CreditCard,
-  Wallet,
-  Clock,
-  Printer,
   MapPin,
-  Phone,
-  Tag
+  Phone
 } from "lucide-react";
 import { BranchCashAuditCard } from "./BranchCashAuditCard";
 import { BranchStaffManager } from "./BranchStaffManager";
@@ -61,7 +54,6 @@ export const BranchDetailView: React.FC<Props> = ({
   const [dateRange, setDateRange] = useState<"today" | "week" | "month" | "custom">("today");
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
-  const [copied, setCopied] = useState(false);
 
   // Assign product modal
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -77,12 +69,6 @@ export const BranchDetailView: React.FC<Props> = ({
   // Cash audit counted cash
   const [countedCash, setCountedCash] = useState<number | undefined>(undefined);
   const [isAdminOverride, setIsAdminOverride] = useState(false);
-
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(branch.import_code || branch.code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 3000);
-  };
 
   // Filter batches for this specific branch
   const branchBatches = batches.filter((b) => Number(b.branch_id) === Number(branch.id));
@@ -150,11 +136,11 @@ export const BranchDetailView: React.FC<Props> = ({
 
   return (
     <div className="space-y-6">
-      {/* 1. Clean Top Header: Back Button & Sub-Tabs Navigation */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-sm">
+      {/* 1. Header: Back Button & Sub-Tabs Navigation */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 border border-slate-800 p-4 rounded-xl">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold transition shadow-sm"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Back to All Branches
         </button>
@@ -163,10 +149,10 @@ export const BranchDetailView: React.FC<Props> = ({
         <div className="flex flex-wrap gap-1.5">
           <button
             onClick={() => setInnerTab("sales")}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition ${
+            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
               innerTab === "sales"
-                ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
+                ? "bg-blue-600 text-white"
+                : "text-slate-400 hover:text-white hover:bg-slate-800"
             }`}
           >
             <TrendingUp className="w-4 h-4" /> {t("cashBalancingTitle")}
@@ -174,10 +160,10 @@ export const BranchDetailView: React.FC<Props> = ({
 
           <button
             onClick={() => setInnerTab("inventory")}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition ${
+            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
               innerTab === "inventory"
-                ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
+                ? "bg-blue-600 text-white"
+                : "text-slate-400 hover:text-white hover:bg-slate-800"
             }`}
           >
             <Package className="w-4 h-4" /> {t("stockAtBranch")} ({assignedItems.length})
@@ -185,10 +171,10 @@ export const BranchDetailView: React.FC<Props> = ({
 
           <button
             onClick={() => setInnerTab("staff")}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition ${
+            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
               innerTab === "staff"
-                ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
+                ? "bg-blue-600 text-white"
+                : "text-slate-400 hover:text-white hover:bg-slate-800"
             }`}
           >
             <Users className="w-4 h-4" /> {t("cashierRoster")}
@@ -196,10 +182,10 @@ export const BranchDetailView: React.FC<Props> = ({
 
           <button
             onClick={() => setInnerTab("devices")}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition ${
+            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
               innerTab === "devices"
-                ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
+                ? "bg-blue-600 text-white"
+                : "text-slate-400 hover:text-white hover:bg-slate-800"
             }`}
           >
             <Smartphone className="w-4 h-4" /> {t("sunmiTerminal")}
@@ -211,10 +197,11 @@ export const BranchDetailView: React.FC<Props> = ({
       {innerTab === "sales" && (
         <div className="space-y-6">
           {/* Time & Specific Date Filter Bar */}
+          {/* Time & Specific Date Filter Bar */}
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-blue-400" />
-              <span className="text-xs font-bold text-white uppercase tracking-wider">{t("branchPerformancePeriod")}:</span>
+              <span className="text-xs font-semibold text-white">{t("branchPerformancePeriod")}:</span>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -222,10 +209,10 @@ export const BranchDetailView: React.FC<Props> = ({
                 <button
                   key={r}
                   onClick={() => setDateRange(r)}
-                  className={`px-3 py-1 text-xs font-semibold rounded-lg capitalize transition ${
+                  className={`px-3 py-1 text-xs font-semibold rounded-lg capitalize transition-colors ${
                     dateRange === r
-                      ? "bg-blue-600 text-white shadow-sm"
-                      : "bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200"
+                      ? "bg-blue-600 text-white"
+                      : "bg-slate-950 border border-slate-800 text-slate-400 hover:text-white"
                   }`}
                 >
                   {r === "today" ? t("today") : r === "week" ? t("thisWeek") : r === "month" ? t("thisMonth") : t("thisYear")}
@@ -238,14 +225,14 @@ export const BranchDetailView: React.FC<Props> = ({
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-lg p-1"
+                    className="bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-lg p-1.5"
                   />
                   <span className="text-slate-500 text-xs">to</span>
                   <input
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-lg p-1"
+                    className="bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-lg p-1.5"
                   />
                 </div>
               )}
@@ -254,38 +241,30 @@ export const BranchDetailView: React.FC<Props> = ({
 
           {/* Quick KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                {t("totalGrossRevenue")}
-              </span>
-              <p className="text-2xl font-black text-emerald-400 mt-1">₱{branchGrossSales.toFixed(2)}</p>
-              <p className="text-[10px] text-slate-500 mt-0.5">{branch.name} only</p>
+            <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+              <span className="text-xs text-slate-400 block">{t("totalGrossRevenue")}</span>
+              <p className="text-xl font-semibold font-mono text-white mt-1">₱{branchGrossSales.toFixed(2)}</p>
+              <p className="text-xs text-slate-500 mt-0.5">{branch.name} only</p>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                {t("totalOrdersCompleted")}
-              </span>
-              <p className="text-2xl font-black text-white mt-1">{branchOrdersCount} Orders</p>
-              <p className="text-[10px] text-slate-500 mt-0.5">Checked out on Sunmi</p>
+            <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+              <span className="text-xs text-slate-400 block">{t("totalOrdersCompleted")}</span>
+              <p className="text-xl font-semibold font-mono text-white mt-1">{branchOrdersCount} Orders</p>
+              <p className="text-xs text-slate-500 mt-0.5">Checked out on Sunmi</p>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                {t("avgTicketSize")}
-              </span>
-              <p className="text-2xl font-black text-white mt-1">
+            <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+              <span className="text-xs text-slate-400 block">{t("avgTicketSize")}</span>
+              <p className="text-xl font-semibold font-mono text-white mt-1">
                 ₱{branchOrdersCount > 0 ? (branchGrossSales / branchOrdersCount).toFixed(2) : "0.00"}
               </p>
-              <p className="text-[10px] text-slate-500 mt-0.5">Per customer order</p>
+              <p className="text-xs text-slate-500 mt-0.5">Per customer order</p>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                {t("floorInventoryStock")}
-              </span>
-              <p className="text-2xl font-black text-blue-400 mt-1">{totalStockOnFloor} Units</p>
-              <p className="text-[10px] text-slate-500 mt-0.5">{assignedItems.length} menu items active</p>
+            <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+              <span className="text-xs text-slate-400 block">{t("floorInventoryStock")}</span>
+              <p className="text-xl font-semibold font-mono text-blue-400 mt-1">{totalStockOnFloor} Units</p>
+              <p className="text-xs text-slate-500 mt-0.5">{assignedItems.length} menu items active</p>
             </div>
           </div>
 
@@ -302,19 +281,19 @@ export const BranchDetailView: React.FC<Props> = ({
           />
 
           {/* Daily Batch Sync History for this Branch */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
               📜 {t("batchHistory")}
             </h3>
 
             {branchBatches.length === 0 ? (
-              <div className="p-8 text-center bg-slate-950/60 rounded-xl border border-slate-800 text-xs text-slate-400">
-                No batches synchronized from this branch yet. When the cashier taps "📤 Send Today's Sales" on the Sunmi terminal, the audit record will appear here.
+              <div className="p-6 text-center bg-slate-950 rounded-lg border border-slate-800 text-xs text-slate-400">
+                No batches synchronized from this branch yet. When the cashier sends sales on the Sunmi terminal, the audit record will appear here.
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs text-slate-300">
-                  <thead className="bg-slate-950 text-[11px] uppercase font-bold text-slate-400 border-b border-slate-800">
+                  <thead className="bg-slate-950 text-xs font-semibold text-slate-400 border-b border-slate-800">
                     <tr>
                       <th className="p-3">Sync Date</th>
                       <th className="p-3">Batch ID</th>
@@ -326,14 +305,14 @@ export const BranchDetailView: React.FC<Props> = ({
                   </thead>
                   <tbody className="divide-y divide-slate-800">
                     {branchBatches.map((batch) => (
-                      <tr key={batch.id} className="hover:bg-slate-800/40">
-                        <td className="p-3 font-semibold text-white">{batch.sync_date}</td>
-                        <td className="p-3 font-mono text-blue-400">{batch.batch_id}</td>
-                        <td className="p-3 text-slate-400">{batch.device_serial || "SUNMI-V2S"}</td>
-                        <td className="p-3 text-center font-bold">{batch.orders_count}</td>
-                        <td className="p-3 text-right font-bold text-emerald-400">₱{Number(batch.gross_sales).toFixed(2)}</td>
+                      <tr key={batch.id} className="hover:bg-slate-800/50 transition-colors">
+                        <td className="p-3 font-medium text-white">{batch.sync_date}</td>
+                        <td className="p-3 font-mono text-slate-300">{batch.batch_id}</td>
+                        <td className="p-3 text-slate-400 font-mono">{batch.device_serial || "SUNMI-V2S"}</td>
+                        <td className="p-3 text-center font-mono">{batch.orders_count}</td>
+                        <td className="p-3 text-right font-mono font-medium text-white">₱{Number(batch.gross_sales).toFixed(2)}</td>
                         <td className="p-3 text-right">
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-bold">
+                          <span className="text-xs text-emerald-400 font-medium">
                             Ingested
                           </span>
                         </td>
@@ -349,11 +328,11 @@ export const BranchDetailView: React.FC<Props> = ({
 
       {/* 3. Branch Tab 2: Stock & Commissary at this Branch */}
       {innerTab === "inventory" && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                📦 Products & Stock at {branch.name}
+              <h2 className="text-base font-semibold text-white">
+                Products & Stock at {branch.name}
               </h2>
               <p className="text-xs text-slate-400">
                 Select items from your centralized Master Catalog to stock this branch
@@ -362,24 +341,24 @@ export const BranchDetailView: React.FC<Props> = ({
 
             <button
               onClick={() => setIsAssignModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition shadow-sm"
+              className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors"
             >
               <Plus className="w-4 h-4" /> Assign Product from Master Catalog
             </button>
           </div>
 
           {assignedItems.length === 0 ? (
-            <div className="p-10 text-center space-y-3 bg-slate-950/50 rounded-xl border border-slate-800">
-              <div className="w-10 h-10 rounded-full bg-slate-800 mx-auto flex items-center justify-center text-slate-400">
+            <div className="p-8 text-center space-y-3 bg-slate-950 rounded-lg border border-slate-800">
+              <div className="w-10 h-10 rounded-lg bg-slate-900 border border-slate-800 mx-auto flex items-center justify-center text-slate-400">
                 <Layers className="w-5 h-5" />
               </div>
-              <h3 className="text-sm font-bold text-slate-200">No Products Assigned to this Branch</h3>
+              <h3 className="text-sm font-semibold text-slate-200">No Products Assigned to this Branch</h3>
               <p className="text-xs text-slate-400 max-w-sm mx-auto">
                 Select an item from the centralized Master Catalog to allocate inventory to this location.
               </p>
               <button
                 onClick={() => setIsAssignModalOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition"
+                className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors"
               >
                 <Plus className="w-4 h-4" /> Select First Item
               </button>
@@ -387,61 +366,52 @@ export const BranchDetailView: React.FC<Props> = ({
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-950/80 text-[11px] uppercase font-bold text-slate-400 tracking-wider border-b border-slate-800">
+                <thead className="bg-slate-950 text-xs font-semibold text-slate-400 border-b border-slate-800">
                   <tr>
-                    <th className="p-3.5">Item Name</th>
-                    <th className="p-3.5">Category</th>
-                    <th className="p-3.5">Selling Price</th>
-                    <th className="p-3.5 text-center">Stock at this Branch</th>
-                    <th className="p-3.5 text-center">Status</th>
-                    <th className="p-3.5 text-right">Actions</th>
+                    <th className="p-3">Item Name</th>
+                    <th className="p-3">Category</th>
+                    <th className="p-3">Selling Price</th>
+                    <th className="p-3 text-center">Stock at Branch</th>
+                    <th className="p-3 text-center">Status</th>
+                    <th className="p-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-slate-800">
                   {assignedItems.map((item) => {
                     const stock = item.branch_stocks[branch.id] || 0;
                     const isLow = stock <= 10;
 
                     return (
-                      <tr key={item.product_id} className="hover:bg-slate-800/40 transition">
-                        <td className="p-3.5">
-                          <div className="flex items-center gap-3">
+                      <tr key={item.product_id} className="hover:bg-slate-800/50 transition-colors">
+                        <td className="p-3">
+                          <div className="flex items-center gap-2.5">
                             {item.image_url ? (
-                              <img src={item.image_url} alt="" className="w-7 h-7 rounded-lg object-cover bg-slate-800" />
+                              <img src={item.image_url} alt="" className="w-7 h-7 rounded object-cover bg-slate-800" />
                             ) : (
-                              <div className="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-xs">
+                              <div className="w-7 h-7 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-xs">
                                 ☕
                               </div>
                             )}
-                            <span className="font-bold text-white text-sm">{item.name}</span>
+                            <span className="font-semibold text-white text-sm">{item.name}</span>
                           </div>
                         </td>
-                        <td className="p-3.5 text-slate-400">{item.category}</td>
-                        <td className="p-3.5 font-bold text-emerald-400">₱{item.base_price.toFixed(2)}</td>
-                        <td className="p-3.5 text-center">
-                          <span className="font-mono font-bold text-sm text-white px-3 py-1 bg-slate-950 rounded-lg border border-slate-800">
-                            {stock}
-                          </span>
+                        <td className="p-3 text-slate-400">{item.category}</td>
+                        <td className="p-3 font-mono font-medium text-white">₱{item.base_price.toFixed(2)}</td>
+                        <td className="p-3 text-center font-mono font-semibold text-sm text-white">
+                          {stock}
                         </td>
-                        <td className="p-3.5 text-center">
-                          <span
-                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
-                              isLow
-                                ? "bg-rose-950/80 text-rose-400 border border-rose-800"
-                                : "bg-emerald-950/80 text-emerald-400 border border-emerald-800"
-                            }`}
-                          >
-                            {isLow ? <AlertTriangle className="w-3 h-3" /> : <CheckCircle2 className="w-3 h-3" />}
+                        <td className="p-3 text-center">
+                          <span className={`text-xs font-medium ${isLow ? "text-rose-400" : "text-emerald-400"}`}>
                             {isLow ? "Low Stock" : "In Stock"}
                           </span>
                         </td>
-                        <td className="p-3.5 text-right">
+                        <td className="p-3 text-right">
                           <button
                             onClick={() => {
                               setRestockProduct(item);
                               setRestockQty("20");
                             }}
-                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition text-xs"
+                            className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded text-xs transition-colors"
                           >
                             + Restock
                           </button>
@@ -467,24 +437,24 @@ export const BranchDetailView: React.FC<Props> = ({
         />
       )}
 
-      {/* 5. Branch Tab 4: Sunmi Terminal & Pairing + Integrated Branch Profile */}
+      {/* 5. Branch Tab 4: Sunmi Terminal & Pairing */}
       {innerTab === "devices" && (
         <div className="space-y-6">
           {/* Branch Profile Card Header */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-5">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-blue-500/20 flex-shrink-0">
-                  🏢
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-blue-400 flex-shrink-0">
+                  <Building2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <h2 className="text-lg font-black text-white">{branch.name}</h2>
-                    <span className="px-2.5 py-0.5 rounded-full bg-blue-950 text-blue-400 border border-blue-800 font-mono text-xs font-bold">
-                      {branch.code}
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-semibold text-white">{branch.name}</h2>
+                    <span className="font-mono text-xs text-slate-400">
+                      ({branch.code})
                     </span>
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-slate-400 mt-1 flex-wrap">
+                  <div className="flex items-center gap-4 text-xs text-slate-400 mt-0.5">
                     <span className="flex items-center gap-1">
                       <MapPin className="w-3.5 h-3.5 text-slate-500" /> {branch.address || "Zamboanga City"}
                     </span>
@@ -495,58 +465,53 @@ export const BranchDetailView: React.FC<Props> = ({
                 </div>
               </div>
 
-              {/* Device Status — unique context only on the pairing screen */}
-              <div className="flex flex-col gap-1.5 text-right">
-                <div className="flex items-center gap-1.5 justify-end">
-                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0"></span>
-                  <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wide">Awaiting First Sync</span>
-                </div>
-                <span className="text-[10px] text-slate-500 font-mono">Last Sync: —</span>
-                <span className="text-[10px] text-slate-500">Device: Sunmi V2s (not yet paired)</span>
+              <div className="text-right text-xs text-slate-400">
+                <p className="font-medium text-slate-300">Device: Sunmi V2s</p>
+                <p className="text-slate-500">Status: Awaiting First Sync</p>
               </div>
             </div>
           </div>
 
-          {/* Pairing Instructions & Terminal Capabilities Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
-              <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">
+          {/* Pairing Instructions & Terminal Capabilities */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-3">
+              <span className="text-xs font-semibold text-blue-400">
                 Step-by-Step Device Setup
               </span>
-              <ol className="space-y-3 text-xs text-slate-300 list-decimal list-inside">
+              <ol className="space-y-2 text-xs text-slate-300 list-decimal list-inside">
                 <li>Turn on the Sunmi Handheld terminal.</li>
-                <li>Open the <strong>KuyaVince POS</strong> application.</li>
+                <li>Open the <strong className="text-white">KuyaVince POS</strong> application.</li>
                 <li>When prompted for the Branch Import Code, enter:</li>
               </ol>
 
-              <div className="p-4 bg-slate-950 border-2 border-dashed border-blue-500 rounded-xl text-center">
-                <span className="block text-[10px] text-slate-400 font-bold uppercase">Import Code</span>
-                <span className="text-2xl font-mono font-black text-blue-400 tracking-widest">
+              <div className="p-4 bg-slate-950 border border-slate-800 rounded-lg text-center">
+                <span className="block text-xs text-slate-400 font-semibold mb-1">Import Code</span>
+                <span className="text-xl font-mono font-semibold text-blue-400 tracking-wider">
                   {branch.import_code || branch.code}
                 </span>
               </div>
 
-              <p className="text-[11px] text-slate-400">
-                The Sunmi device will instantly download this branch's assigned menu items and prices in ~1 second.
+              <p className="text-xs text-slate-400">
+                The Sunmi device will download this branch's assigned menu items and prices in ~1 second.
               </p>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
-              <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
+            <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-3">
+              <span className="text-xs font-semibold text-slate-200">
                 Terminal Capabilities on Store Floor
               </span>
               <ul className="space-y-2 text-xs text-slate-300">
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" /> 100% Offline Daytime Tap-to-Order
+                  <CheckCircle2 className="w-4 h-4 text-slate-400" /> 100% Offline Daytime Tap-to-Order
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Automatic 58mm Thermal Receipt Printing
+                  <CheckCircle2 className="w-4 h-4 text-slate-400" /> Automatic 58mm Thermal Receipt Printing
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" /> 1-Tap Closing Cloud Sync
+                  <CheckCircle2 className="w-4 h-4 text-slate-400" /> 1-Tap Closing Cloud Sync
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Physical 58mm Z-Reading Audit Slip
+                  <CheckCircle2 className="w-4 h-4 text-slate-400" /> Physical 58mm Z-Reading Audit Slip
                 </li>
               </ul>
             </div>
@@ -568,22 +533,22 @@ export const BranchDetailView: React.FC<Props> = ({
 
       {/* 7. Assign Product Modal */}
       {isAssignModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              📦 Select Product from Master Catalog
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6">
+            <h3 className="text-base font-semibold text-white">
+              Select Product from Master Catalog
             </h3>
             <p className="text-xs text-slate-400 mt-1">
-              Choose an existing item and set the stock units for <strong>{branch.name}</strong>
+              Choose an existing item and set the stock units for <span className="text-slate-200 font-semibold">{branch.name}</span>
             </p>
 
-            <form onSubmit={handleAssignSubmit} className="mt-5 space-y-4">
+            <form onSubmit={handleAssignSubmit} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Select Master Product</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Select Master Product</label>
                 <select
                   value={selectedProductId}
                   onChange={(e) => setSelectedProductId(Number(e.target.value))}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
                 >
                   {masterProducts.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -594,7 +559,7 @@ export const BranchDetailView: React.FC<Props> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Stock Quantity to Assign</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Stock Quantity to Assign</label>
                 <input
                   type="number"
                   min="1"
@@ -602,7 +567,7 @@ export const BranchDetailView: React.FC<Props> = ({
                   value={assignStockQty}
                   onChange={(e) => setAssignStockQty(e.target.value)}
                   placeholder="e.g. 50"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-bold text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -610,14 +575,14 @@ export const BranchDetailView: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => setIsAssignModalOpen(false)}
-                  className="flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl transition"
+                  className="flex-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition disabled:opacity-50"
+                  className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50"
                 >
                   {isSubmitting ? "Assigning..." : "Assign to Branch"}
                 </button>
@@ -629,16 +594,16 @@ export const BranchDetailView: React.FC<Props> = ({
 
       {/* 8. Restock Modal */}
       {restockProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              📦 Restock: <span className="text-blue-400">{restockProduct.name}</span>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6">
+            <h3 className="text-base font-semibold text-white">
+              Restock: <span className="text-blue-400">{restockProduct.name}</span>
             </h3>
             <p className="text-xs text-slate-400 mt-1">Delivering inventory to {branch.name}</p>
 
             <form onSubmit={handleRestockSubmit} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Quantity to Add</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Quantity to Add</label>
                 <input
                   type="number"
                   min="1"
@@ -646,18 +611,18 @@ export const BranchDetailView: React.FC<Props> = ({
                   value={restockQty}
                   onChange={(e) => setRestockQty(e.target.value)}
                   placeholder="e.g. 50"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-bold text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Delivery Notes</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Delivery Notes</label>
                 <input
                   type="text"
                   value={restockNotes}
                   onChange={(e) => setRestockNotes(e.target.value)}
                   placeholder="e.g. Weekly commissary replenishment"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-300 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -665,14 +630,14 @@ export const BranchDetailView: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => setRestockProduct(null)}
-                  className="flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl transition"
+                  className="flex-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition disabled:opacity-50"
+                  className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50"
                 >
                   {isSubmitting ? "Updating..." : "Add Stock"}
                 </button>

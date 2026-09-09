@@ -219,34 +219,34 @@ export const PayrollManagerTab: React.FC<Props> = ({
   return (
     <div className="space-y-6">
       {/* 1. Header with Tab Switcher */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
+          <h2 className="text-base font-semibold text-white flex items-center gap-2">
             👥 Staff Timeclocks & Hourly Payroll Manager
           </h2>
-          <p className="text-xs text-slate-400">
-            Centralized company-wide staff directory (CRUD) and automated payroll wage calculations
+          <p className="text-xs text-slate-400 mt-0.5">
+            Centralized company-wide staff directory and automated payroll wage calculations
           </p>
         </div>
 
         {/* Tab Toggle */}
-        <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800">
+        <div className="flex bg-slate-950 p-0.5 rounded-lg border border-slate-800">
           <button
             onClick={() => setActiveSubTab("directory")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
+            className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors ${
               activeSubTab === "directory"
-                ? "bg-blue-600 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-blue-600 text-white"
+                : "text-slate-400 hover:text-white"
             }`}
           >
             👥 Staff Directory ({staffList.length})
           </button>
           <button
             onClick={() => setActiveSubTab("payroll")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
+            className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors ${
               activeSubTab === "payroll"
-                ? "bg-blue-600 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-blue-600 text-white"
+                : "text-slate-400 hover:text-white"
             }`}
           >
             ⏰ Wage Calculations & Slips
@@ -255,36 +255,36 @@ export const PayrollManagerTab: React.FC<Props> = ({
       </div>
 
       {notice && (
-        <div className="p-3 rounded-xl bg-emerald-950 border border-emerald-800 text-emerald-400 text-xs flex items-center gap-2 animate-fadeIn">
-          <Check className="w-4 h-4" />
+        <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 text-xs flex items-center gap-2">
+          <Check className="w-4 h-4 text-emerald-400" />
           <span>{notice}</span>
         </div>
       )}
 
-      {/* 2. SUB-TAB 1: CENTRALIZED STAFF MASTER DIRECTORY (CRUD) */}
+      {/* 2. SUB-TAB 1: CENTRALIZED STAFF MASTER DIRECTORY */}
       {activeSubTab === "directory" && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-5">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
               {/* Search Bar */}
               <div className="relative flex-1 sm:w-64">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400" />
+                <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Search staff name or role..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               {/* Branch Filter */}
-              <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300">
+              <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-300">
                 <Building2 className="w-3.5 h-3.5 text-blue-400" />
                 <select
                   value={filterBranch}
                   onChange={(e) => setFilterBranch(e.target.value)}
-                  className="bg-transparent focus:outline-none cursor-pointer"
+                  className="bg-transparent focus:outline-none cursor-pointer text-xs text-slate-200"
                 >
                   <option value="all" className="bg-slate-900 text-white">All Branches</option>
                   {branches.map((b) => (
@@ -301,24 +301,24 @@ export const PayrollManagerTab: React.FC<Props> = ({
                 setBranchId(branches[0]?.id || 1);
                 setIsCreateModalOpen(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition shadow-sm flex-shrink-0"
+              className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors flex-shrink-0"
             >
               <Plus className="w-4 h-4" /> Add New Staff Member
             </button>
           </div>
 
           {filteredStaff.length === 0 ? (
-            <div className="p-10 text-center bg-slate-950/60 rounded-xl border border-slate-800 space-y-3">
-              <div className="w-10 h-10 rounded-full bg-slate-800 mx-auto flex items-center justify-center text-slate-400">
+            <div className="p-8 text-center bg-slate-950 rounded-lg border border-slate-800 space-y-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-900 border border-slate-800 mx-auto flex items-center justify-center text-slate-400">
                 <Users className="w-5 h-5" />
               </div>
-              <h4 className="text-sm font-bold text-slate-200">No Staff Members Found</h4>
+              <h4 className="text-sm font-semibold text-slate-200">No Staff Members Found</h4>
               <p className="text-xs text-slate-400 max-w-sm mx-auto">
                 Add staff members here so they can be assigned to branches and log into Sunmi terminals with their PIN.
               </p>
               <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition"
+                className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors"
               >
                 <Plus className="w-4 h-4" /> Add First Staff Member
               </button>
@@ -326,78 +326,68 @@ export const PayrollManagerTab: React.FC<Props> = ({
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-950/80 text-[11px] uppercase font-bold text-slate-400 tracking-wider border-b border-slate-800">
+                <thead className="bg-slate-950 text-xs font-semibold text-slate-400 border-b border-slate-800">
                   <tr>
-                    <th className="p-3.5">Staff Name</th>
-                    <th className="p-3.5">Assigned Branch</th>
-                    <th className="p-3.5">Role</th>
-                    <th className="p-3.5">Hourly Wage</th>
-                    <th className="p-3.5 text-center">4-Digit Login PIN</th>
-                    <th className="p-3.5 text-center">Status</th>
-                    <th className="p-3.5 text-right">Actions</th>
+                    <th className="p-3">Staff Name</th>
+                    <th className="p-3">Assigned Branch</th>
+                    <th className="p-3">Role</th>
+                    <th className="p-3">Hourly Wage</th>
+                    <th className="p-3 text-center">Login PIN</th>
+                    <th className="p-3 text-center">Status</th>
+                    <th className="p-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-slate-800">
                   {filteredStaff.map((staff) => {
                     const assignedBr = branches.find((b) => b.id === staff.branch_id);
 
                     return (
-                      <tr key={staff.id} className="hover:bg-slate-800/40 transition">
-                        <td className="p-3.5 font-bold text-white flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-full bg-blue-950 border border-blue-800 flex items-center justify-center text-blue-400 font-bold text-xs">
+                      <tr key={staff.id} className="hover:bg-slate-800/50 transition-colors">
+                        <td className="p-3 font-medium text-white flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 font-semibold text-xs">
                             {staff.name.charAt(0)}
                           </div>
                           <span>{staff.name}</span>
                         </td>
-                        <td className="p-3.5 text-slate-300">
+                        <td className="p-3 text-slate-300">
                           {assignedBr ? `🏢 ${assignedBr.name}` : "Unassigned"}
                         </td>
-                        <td className="p-3.5 text-slate-400 capitalize">{staff.role}</td>
-                        <td className="p-3.5 font-bold text-slate-200">
+                        <td className="p-3 text-slate-400 capitalize">{staff.role}</td>
+                        <td className="p-3 font-mono font-medium text-white">
                           ₱{Number(staff.hourly_rate || 85).toFixed(2)}/hr
                         </td>
-                        <td className="p-3.5 text-center">
-                          <span className="font-mono font-bold text-xs px-2 py-0.5 rounded bg-slate-950 text-blue-400 border border-slate-800 tracking-widest">
+                        <td className="p-3 text-center">
+                          <span className="font-mono text-xs px-2 py-0.5 rounded bg-slate-950 text-slate-400 border border-slate-800 tracking-widest">
                             {staff.pin_code ? "••••" : "1234"}
                           </span>
                         </td>
-                        <td className="p-3.5 text-center">
-                          <span
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              staff.is_active
-                                ? "bg-emerald-950 text-emerald-400 border border-emerald-800"
-                                : "bg-rose-950 text-rose-400 border border-rose-800"
-                            }`}
-                          >
+                        <td className="p-3 text-center">
+                          <span className={`text-xs font-medium ${staff.is_active ? "text-emerald-400" : "text-slate-500"}`}>
                             {staff.is_active ? "Active" : "Disabled"}
                           </span>
                         </td>
-                        <td className="p-3.5 text-right">
+                        <td className="p-3 text-right">
                           <div className="flex items-center justify-end gap-1.5">
                             <button
                               onClick={() => {
                                 setResetPinStaff(staff);
                                 setNewPin("1234");
                               }}
-                              className="p-1.5 bg-slate-800 hover:bg-slate-700 text-blue-400 rounded-lg transition"
+                              className="p-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-blue-400 rounded transition-colors"
                               title="Reset 4-Digit PIN"
                             >
                               <Key className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => setEditingStaff({ ...staff })}
-                              className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition"
+                              className="p-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded transition-colors"
                               title="Edit Staff Member"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleToggleStatus(staff)}
-                              className={`p-1.5 rounded-lg transition ${
-                                staff.is_active
-                                  ? "bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-400"
-                                  : "bg-emerald-950 text-emerald-400 border border-emerald-800"
-                              }`}
+                              className="p-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white rounded transition-colors"
                               title={staff.is_active ? "Deactivate" : "Activate"}
                             >
                               {staff.is_active ? <UserX className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
@@ -406,7 +396,7 @@ export const PayrollManagerTab: React.FC<Props> = ({
                               onClick={() => handleDeleteStaff(staff)}
                               disabled={!isSuperAdmin}
                               title={!isSuperAdmin ? 'Super Admin access required' : 'Delete Permanently'}
-                              className="p-1.5 bg-slate-800 hover:bg-rose-900 text-rose-400 rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
+                              className="p-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-rose-400 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -426,17 +416,17 @@ export const PayrollManagerTab: React.FC<Props> = ({
       {activeSubTab === "payroll" && (
         <div className="space-y-6">
           {/* Date Range & Branch Filters */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
             <div>
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
                 ⏰ Automated Shift Wage Calculator
               </h3>
-              <p className="text-xs text-slate-400">Calculate staff wages automatically from logged Sunmi timeclocks</p>
+              <p className="text-xs text-slate-400 mt-0.5">Calculate staff wages automatically from logged Sunmi timeclocks</p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5">
-                <span className="text-xs text-slate-400 font-medium">Branch:</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5">
+                <span className="text-xs text-slate-400">Branch:</span>
                 <select
                   value={selectedCalcBranch}
                   onChange={(e) => setSelectedCalcBranch(e.target.value)}
@@ -451,8 +441,8 @@ export const PayrollManagerTab: React.FC<Props> = ({
                 </select>
               </div>
 
-              <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5">
-                <Calendar className="w-4 h-4 text-slate-400" />
+              <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5">
+                <Calendar className="w-3.5 h-3.5 text-slate-400" />
                 <input
                   type="date"
                   value={startDate}
@@ -471,7 +461,7 @@ export const PayrollManagerTab: React.FC<Props> = ({
               <button
                 onClick={handleRunCalculation}
                 disabled={isCalculating}
-                className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50"
               >
                 <Calculator className="w-3.5 h-3.5" />
                 {isCalculating ? "Calculating..." : "Compute Hours"}
@@ -482,42 +472,42 @@ export const PayrollManagerTab: React.FC<Props> = ({
           {/* Payroll KPI Summary */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-              <span className="text-xs font-semibold text-slate-400 uppercase">Total Payroll Cost</span>
-              <p className="text-2xl font-bold text-emerald-400 mt-2">
+              <span className="text-xs text-slate-400 block">Total Payroll Cost</span>
+              <p className="text-xl font-semibold font-mono text-white mt-1">
                 ₱{totalGrossPayroll.toLocaleString("en-US", { minimumFractionDigits: 2 })}
               </p>
-              <p className="text-xs text-slate-400 mt-1">For selected date cycle</p>
+              <p className="text-xs text-slate-500 mt-0.5">For selected date cycle</p>
             </div>
 
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-              <span className="text-xs font-semibold text-slate-400 uppercase">Accumulated Shift Hours</span>
-              <p className="text-2xl font-bold text-blue-400 mt-2">{totalHoursWorked.toFixed(1)} hrs</p>
-              <p className="text-xs text-slate-400 mt-1">Logged across all 3 branches</p>
+              <span className="text-xs text-slate-400 block">Accumulated Shift Hours</span>
+              <p className="text-xl font-semibold font-mono text-white mt-1">{totalHoursWorked.toFixed(1)} hrs</p>
+              <p className="text-xs text-slate-500 mt-0.5">Logged across all branches</p>
             </div>
 
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-              <span className="text-xs font-semibold text-slate-400 uppercase">Staff on Payroll</span>
-              <p className="text-2xl font-bold text-purple-400 mt-2">{payrollData.length} Staff</p>
-              <p className="text-xs text-slate-400 mt-1">Cashiers & branch operators</p>
+              <span className="text-xs text-slate-400 block">Staff on Payroll</span>
+              <p className="text-xl font-semibold font-mono text-blue-400 mt-1">{payrollData.length} Staff</p>
+              <p className="text-xs text-slate-500 mt-0.5">Cashiers & branch operators</p>
             </div>
           </div>
 
           {/* Payroll Table */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-950 text-xs uppercase text-slate-400 border-b border-slate-800">
+                <thead className="bg-slate-950 text-xs font-semibold text-slate-400 border-b border-slate-800">
                   <tr>
-                    <th className="py-3.5 px-4">Staff Member</th>
-                    <th className="py-3.5 px-4">Branch</th>
-                    <th className="py-3.5 px-4 text-center">Hourly Rate</th>
-                    <th className="py-3.5 px-4 text-center">Hours Logged</th>
-                    <th className="py-3.5 px-4 text-right">Gross Wages</th>
-                    <th className="py-3.5 px-4 text-right">Net Payable</th>
-                    <th className="py-3.5 px-4 text-right">Payslip</th>
+                    <th className="p-3">Staff Member</th>
+                    <th className="p-3">Branch</th>
+                    <th className="p-3 text-center">Hourly Rate</th>
+                    <th className="p-3 text-center">Hours Logged</th>
+                    <th className="p-3 text-right">Gross Wages</th>
+                    <th className="p-3 text-right">Net Payable</th>
+                    <th className="p-3 text-right">Payslip</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-slate-800">
                   {payrollData.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="py-6 text-center text-slate-500">
@@ -526,25 +516,25 @@ export const PayrollManagerTab: React.FC<Props> = ({
                     </tr>
                   ) : (
                     payrollData.map((staff) => (
-                      <tr key={staff.user_id} className="hover:bg-slate-800/30">
-                        <td className="py-3 px-4 font-semibold text-white flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-blue-400">
+                      <tr key={staff.user_id} className="hover:bg-slate-800/50 transition-colors">
+                        <td className="p-3 font-medium text-white flex items-center gap-2">
+                          <div className="w-7 h-7 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-semibold text-slate-300">
                             {staff.staff_name.charAt(0)}
                           </div>
                           <div>
                             <p>{staff.staff_name}</p>
-                            <span className="text-[10px] text-slate-400 uppercase font-mono">{staff.role}</span>
+                            <span className="text-xs text-slate-400 capitalize">{staff.role}</span>
                           </div>
                         </td>
-                        <td className="py-3 px-4 text-slate-300">🏢 {staff.branch_name}</td>
-                        <td className="py-3 px-4 text-center font-mono">₱{staff.hourly_rate.toFixed(2)}/hr</td>
-                        <td className="py-3 px-4 text-center font-bold text-blue-400">{staff.total_hours.toFixed(1)} hrs</td>
-                        <td className="py-3 px-4 text-right font-medium">₱{staff.gross_pay.toFixed(2)}</td>
-                        <td className="py-3 px-4 text-right font-bold text-emerald-400">₱{staff.net_pay.toFixed(2)}</td>
-                        <td className="py-3 px-4 text-right">
+                        <td className="p-3 text-slate-300">🏢 {staff.branch_name}</td>
+                        <td className="p-3 text-center font-mono">₱{staff.hourly_rate.toFixed(2)}/hr</td>
+                        <td className="p-3 text-center font-mono font-medium text-white">{staff.total_hours.toFixed(1)} hrs</td>
+                        <td className="p-3 text-right font-mono text-slate-300">₱{staff.gross_pay.toFixed(2)}</td>
+                        <td className="p-3 text-right font-mono font-medium text-white">₱{staff.net_pay.toFixed(2)}</td>
+                        <td className="p-3 text-right">
                           <button
                             onClick={() => setSelectedPayslip(staff)}
-                            className="inline-flex items-center gap-1 px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-md transition"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded transition-colors"
                           >
                             <Printer className="w-3.5 h-3.5" /> View Slip
                           </button>
@@ -556,13 +546,13 @@ export const PayrollManagerTab: React.FC<Props> = ({
               </table>
             </div>
 
-            <div className="p-4 bg-slate-950 border-t border-slate-800 flex justify-between items-center">
+            <div className="p-3 bg-slate-950 border-t border-slate-800 flex justify-between items-center">
               <p className="text-xs text-slate-400">Cycle: {startDate} to {endDate}</p>
               <button
                 onClick={handleApprovePayroll}
                 disabled={isApproving || payrollData.length === 0 || !isSuperAdmin}
                 title={!isSuperAdmin ? 'Super Admin access required' : undefined}
-                className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <CheckCircle className="w-4 h-4" />
                 {isApproving ? "Saving..." : "Approve & Finalize Payroll"}
@@ -574,33 +564,33 @@ export const PayrollManagerTab: React.FC<Props> = ({
 
       {/* Modal 1: Create New Staff */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <Users className="w-5 h-5 text-blue-400" /> Add New Staff Member
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6">
+            <h3 className="text-base font-semibold text-white flex items-center gap-2">
+              <Users className="w-4 h-4 text-blue-400" /> Add New Staff Member
             </h3>
-            <p className="text-xs text-slate-400 mt-1">Register employee for timeclocks and POS terminal access</p>
+            <p className="text-xs text-slate-400 mt-0.5">Register employee for timeclocks and POS terminal access</p>
 
             <form onSubmit={handleCreateStaff} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Full Name</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Full Name</label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Maria Santos"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Assigned Branch</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Assigned Branch</label>
                   <select
                     value={branchId}
                     onChange={(e) => setBranchId(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
                   >
                     {branches.map((b) => (
                       <option key={b.id} value={b.id}>
@@ -611,11 +601,11 @@ export const PayrollManagerTab: React.FC<Props> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Role</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Role</label>
                   <select
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
                   >
                     <option value="cashier">Cashier</option>
                     <option value="supervisor">Shift Supervisor</option>
@@ -627,19 +617,19 @@ export const PayrollManagerTab: React.FC<Props> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Hourly Wage (₱/hr)</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Hourly Wage (₱/hr)</label>
                   <input
                     type="number"
                     step="0.5"
                     value={hourlyRate}
                     onChange={(e) => setHourlyRate(e.target.value)}
                     placeholder="85.00"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs font-mono text-slate-200 focus:outline-none focus:border-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-blue-400 uppercase mb-1">4-Digit Terminal PIN</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">4-Digit Terminal PIN</label>
                   <input
                     type="text"
                     maxLength={4}
@@ -647,7 +637,7 @@ export const PayrollManagerTab: React.FC<Props> = ({
                     value={pinCode}
                     onChange={(e) => setPinCode(e.target.value.replace(/[^0-9]/g, ""))}
                     placeholder="1234"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-center text-sm font-mono font-bold text-blue-400 tracking-widest focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-center text-xs font-mono text-white tracking-widest focus:outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -656,14 +646,14 @@ export const PayrollManagerTab: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl transition"
+                  className="flex-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition disabled:opacity-50"
+                  className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50"
                 >
                   {isSubmitting ? "Registering..." : "Register Staff"}
                 </button>
@@ -675,32 +665,32 @@ export const PayrollManagerTab: React.FC<Props> = ({
 
       {/* Modal 2: Edit Staff */}
       {editingStaff && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <Edit2 className="w-5 h-5 text-blue-400" /> Edit Staff Details
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6">
+            <h3 className="text-base font-semibold text-white flex items-center gap-2">
+              <Edit2 className="w-4 h-4 text-blue-400" /> Edit Staff Details
             </h3>
-            <p className="text-xs text-slate-400 mt-1">Update employee information and branch transfer</p>
+            <p className="text-xs text-slate-400 mt-0.5">Update employee information and branch transfer</p>
 
             <form onSubmit={handleUpdateStaff} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Full Name</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Full Name</label>
                 <input
                   type="text"
                   required
                   value={editingStaff.name}
                   onChange={(e) => setEditingStaff({ ...editingStaff, name: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Assigned Branch</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Assigned Branch</label>
                   <select
                     value={editingStaff.branch_id || ""}
                     onChange={(e) => setEditingStaff({ ...editingStaff, branch_id: Number(e.target.value) })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
                   >
                     {branches.map((b) => (
                       <option key={b.id} value={b.id}>
@@ -711,11 +701,11 @@ export const PayrollManagerTab: React.FC<Props> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Role</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Role</label>
                   <select
                     value={editingStaff.role}
                     onChange={(e) => setEditingStaff({ ...editingStaff, role: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
                   >
                     <option value="cashier">Cashier</option>
                     <option value="supervisor">Shift Supervisor</option>
@@ -726,13 +716,13 @@ export const PayrollManagerTab: React.FC<Props> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Hourly Wage (₱/hr)</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Hourly Wage (₱/hr)</label>
                 <input
                   type="number"
                   step="0.5"
                   value={editingStaff.hourly_rate || 85}
                   onChange={(e) => setEditingStaff({ ...editingStaff, hourly_rate: parseFloat(e.target.value) })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs font-mono text-slate-200 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -740,14 +730,14 @@ export const PayrollManagerTab: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => setEditingStaff(null)}
-                  className="flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl transition"
+                  className="flex-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition disabled:opacity-50"
+                  className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50"
                 >
                   {isSubmitting ? "Saving..." : "Save Changes"}
                 </button>
@@ -759,16 +749,16 @@ export const PayrollManagerTab: React.FC<Props> = ({
 
       {/* Modal 3: Reset PIN */}
       {resetPinStaff && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <Key className="w-5 h-5 text-blue-400" /> Reset PIN for {resetPinStaff.name}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-sm w-full p-6">
+            <h3 className="text-base font-semibold text-white flex items-center gap-2">
+              <Key className="w-4 h-4 text-blue-400" /> Reset PIN for {resetPinStaff.name}
             </h3>
-            <p className="text-xs text-slate-400 mt-1">Enter a new 4-digit PIN for Sunmi terminal login</p>
+            <p className="text-xs text-slate-400 mt-0.5">Enter a new 4-digit PIN for Sunmi terminal login</p>
 
             <form onSubmit={handleResetPin} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">New 4-Digit PIN</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">New 4-Digit PIN</label>
                 <input
                   type="text"
                   maxLength={4}
@@ -777,7 +767,7 @@ export const PayrollManagerTab: React.FC<Props> = ({
                   value={newPin}
                   onChange={(e) => setNewPin(e.target.value.replace(/[^0-9]/g, ""))}
                   placeholder="e.g. 5678"
-                  className="w-full bg-slate-950 border-2 border-blue-500 rounded-xl p-3 text-center text-2xl font-mono font-bold text-blue-400 tracking-widest focus:outline-none"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-center text-xl font-mono font-semibold text-blue-400 tracking-widest focus:outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -785,14 +775,14 @@ export const PayrollManagerTab: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => setResetPinStaff(null)}
-                  className="flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl transition"
+                  className="flex-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting || newPin.length !== 4}
-                  className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition disabled:opacity-50"
+                  className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50"
                 >
                   {isSubmitting ? "Updating..." : "Update PIN"}
                 </button>
@@ -804,59 +794,59 @@ export const PayrollManagerTab: React.FC<Props> = ({
 
       {/* Payslip Modal */}
       {selectedPayslip && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <div className="border-b border-slate-800 pb-4 mb-4 text-center">
-              <h3 className="text-base font-bold text-white uppercase">Official Employee Payslip</h3>
-              <p className="text-xs text-blue-400 font-semibold">{selectedPayslip.branch_name}</p>
-              <p className="text-[11px] text-slate-400">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6">
+            <div className="border-b border-slate-800 pb-3 mb-4 text-center">
+              <h3 className="text-base font-semibold text-white uppercase">Official Employee Payslip</h3>
+              <p className="text-xs text-slate-400 mt-0.5">{selectedPayslip.branch_name}</p>
+              <p className="text-xs text-slate-500">
                 Period: {selectedPayslip.period_start} to {selectedPayslip.period_end}
               </p>
             </div>
 
-            <div className="space-y-2 text-sm text-slate-300">
-              <div className="flex justify-between py-1 border-b border-slate-800/60">
+            <div className="space-y-2 text-xs text-slate-300">
+              <div className="flex justify-between py-1 border-b border-slate-800">
                 <span className="text-slate-400">Employee Name:</span>
-                <span className="font-semibold text-white">{selectedPayslip.staff_name}</span>
+                <span className="font-medium text-white">{selectedPayslip.staff_name}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-800/60">
+              <div className="flex justify-between py-1 border-b border-slate-800">
                 <span className="text-slate-400">Role:</span>
-                <span className="uppercase text-xs font-mono">{selectedPayslip.role}</span>
+                <span className="capitalize text-slate-300">{selectedPayslip.role}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-800/60">
+              <div className="flex justify-between py-1 border-b border-slate-800">
                 <span className="text-slate-400">Hourly Pay Rate:</span>
-                <span>₱{selectedPayslip.hourly_rate.toFixed(2)}/hr</span>
+                <span className="font-mono">₱{selectedPayslip.hourly_rate.toFixed(2)}/hr</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-800/60">
+              <div className="flex justify-between py-1 border-b border-slate-800">
                 <span className="text-slate-400">Logged Shift Hours:</span>
-                <span className="font-bold text-blue-400">{selectedPayslip.total_hours.toFixed(2)} hours</span>
+                <span className="font-mono font-medium text-white">{selectedPayslip.total_hours.toFixed(2)} hours</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-800/60">
+              <div className="flex justify-between py-1 border-b border-slate-800">
                 <span className="text-slate-400">Gross Wages:</span>
-                <span className="font-semibold text-white">₱{selectedPayslip.gross_pay.toFixed(2)}</span>
+                <span className="font-mono font-medium text-white">₱{selectedPayslip.gross_pay.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">Deductions / SSS / Tax:</span>
-                <span>-₱{selectedPayslip.deductions.toFixed(2)}</span>
+              <div className="flex justify-between py-1 border-b border-slate-800">
+                <span className="text-slate-400">Deductions:</span>
+                <span className="font-mono">-₱{selectedPayslip.deductions.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between py-2 border-t border-slate-700 text-base font-bold text-white">
+              <div className="flex justify-between py-2 border-t border-slate-800 text-sm font-semibold text-white">
                 <span>NET TAKE-HOME PAY:</span>
-                <span className="text-emerald-400">₱{selectedPayslip.net_pay.toFixed(2)}</span>
+                <span className="font-mono">₱{selectedPayslip.net_pay.toFixed(2)}</span>
               </div>
             </div>
 
-            <div className="flex gap-3 pt-6">
+            <div className="flex gap-3 pt-4">
               <button
                 type="button"
                 onClick={() => setSelectedPayslip(null)}
-                className="flex-1 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-lg transition"
+                className="flex-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition-colors"
               >
                 Close
               </button>
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-lg transition flex items-center justify-center gap-1.5"
+                className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5"
               >
                 <Printer className="w-4 h-4" /> Print Payslip
               </button>

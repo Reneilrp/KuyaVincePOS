@@ -80,7 +80,6 @@ export const BranchSetupManager: React.FC<Props> = ({
     }
   };
 
-  // If a branch is selected, drill down to its dedicated Branch Detail View (AccommoTrack-M style)
   if (selectedBranch) {
     return (
       <BranchDetailView
@@ -102,33 +101,32 @@ export const BranchSetupManager: React.FC<Props> = ({
   return (
     <div className="space-y-6">
       {/* 1. Header with Add Branch button */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            🏢 Store Branches Hub
+          <h2 className="text-base font-semibold text-white flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-slate-400" /> Store Branches Hub
           </h2>
           <p className="text-xs text-slate-400">
-            Click on any branch card to view its sales, cash drawer variance, cashier roster, live stock, and print 58mm Z-Reports
+            Manage physical branches, Sunmi terminal import codes, and branch audit logs
           </p>
         </div>
 
         <button
           onClick={handleOpenNew}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition shadow-sm"
+          className="flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg transition-colors"
         >
           <Plus className="w-4 h-4" /> Add New Branch
         </button>
       </div>
 
-      {/* 2. Interactive Clickable Branch Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      {/* 2. Interactive Branch Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {branches.map((branch) => {
           const isCopied = copiedCode === branch.import_code;
           const branchStat = analytics.branch_comparison.find((b) => b.branch_id === branch.id);
           const totalSales = branchStat?.total_sales || 0;
           const totalOrders = branchStat?.order_count || 0;
 
-          // Count products with stock at this branch
           const branchItemsCount = branchInventory.filter(
             (i) => (i.branch_stocks[branch.id] ?? 0) > 0
           ).length;
@@ -137,69 +135,64 @@ export const BranchSetupManager: React.FC<Props> = ({
             <div
               key={branch.id}
               onClick={() => onSelectBranch(branch)}
-              className="bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-blue-500/60 rounded-2xl p-6 shadow-sm space-y-4 cursor-pointer transition-all hover:scale-[1.01] group relative overflow-hidden"
+              className="bg-slate-900 hover:bg-slate-800/50 border border-slate-800 rounded-xl p-5 space-y-3 cursor-pointer transition-colors group"
             >
               <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-2xl bg-blue-950/80 border border-blue-900 flex items-center justify-center text-blue-400 font-bold text-xl group-hover:scale-105 transition">
-                    🏢
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-white group-hover:text-blue-400 transition flex items-center gap-1.5">
-                      {branch.name}
-                    </h3>
-                    <p className="text-xs text-slate-400">{branch.address || "Zamboanga City"}</p>
-                  </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white group-hover:text-blue-400 transition-colors">
+                    {branch.name}
+                  </h3>
+                  <p className="text-xs text-slate-400">{branch.address || "Zamboanga City"}</p>
                 </div>
 
                 <button
                   onClick={(e) => handleOpenEdit(e, branch)}
-                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition"
-                  title="Edit Branch Information"
+                  className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                  title="Edit Branch"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              {/* Sunmi Mobile Import Code Highlight */}
-              <div className="bg-slate-950 border border-slate-800 group-hover:border-blue-500/30 rounded-xl p-3 flex items-center justify-between">
+              {/* Sunmi Mobile Import Code */}
+              <div className="bg-slate-950 border border-slate-800 rounded-lg p-2.5 flex items-center justify-between">
                 <div>
-                  <span className="block text-[9px] uppercase font-bold text-slate-500 tracking-wider">
-                    Sunmi Import Code
+                  <span className="block text-xs text-slate-500">
+                    Import Code
                   </span>
-                  <span className="text-base font-mono font-black text-blue-400 tracking-wider">
+                  <span className="text-sm font-mono font-medium text-blue-400">
                     {branch.import_code || branch.code}
                   </span>
                 </div>
                 <button
                   onClick={(e) => handleCopy(e, branch.import_code || branch.code)}
-                  className="p-1.5 rounded-lg bg-slate-900 hover:bg-blue-600 text-slate-300 hover:text-white transition flex items-center gap-1 text-[11px] font-semibold"
+                  className="p-1 rounded text-slate-400 hover:text-white transition-colors flex items-center gap-1 text-xs"
                   title="Copy Import Code"
                 >
-                  {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
+                  {isCopied ? <Check className="w-3.5 h-3.5 text-blue-400" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{isCopied ? "Copied" : "Copy"}</span>
                 </button>
               </div>
 
               {/* Quick Card Metrics */}
-              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800/80 text-center">
-                <div className="bg-slate-950/60 p-2 rounded-lg border border-slate-800/60">
-                  <span className="text-[10px] text-slate-500 font-bold block">SALES</span>
-                  <span className="text-xs font-bold text-emerald-400">₱{totalSales.toFixed(0)}</span>
+              <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-800 text-center">
+                <div className="bg-slate-950 p-2 rounded border border-slate-800">
+                  <span className="text-xs text-slate-500 block">Sales</span>
+                  <span className="text-xs font-mono font-medium text-slate-200">₱{totalSales.toFixed(0)}</span>
                 </div>
-                <div className="bg-slate-950/60 p-2 rounded-lg border border-slate-800/60">
-                  <span className="text-[10px] text-slate-500 font-bold block">ORDERS</span>
-                  <span className="text-xs font-bold text-white">{totalOrders}</span>
+                <div className="bg-slate-950 p-2 rounded border border-slate-800">
+                  <span className="text-xs text-slate-500 block">Orders</span>
+                  <span className="text-xs font-mono font-medium text-white">{totalOrders}</span>
                 </div>
-                <div className="bg-slate-950/60 p-2 rounded-lg border border-slate-800/60">
-                  <span className="text-[10px] text-slate-500 font-bold block">ITEMS</span>
-                  <span className="text-xs font-bold text-blue-400">{branchItemsCount} Stocked</span>
+                <div className="bg-slate-950 p-2 rounded border border-slate-800">
+                  <span className="text-xs text-slate-500 block">Stocked</span>
+                  <span className="text-xs font-mono font-medium text-slate-300">{branchItemsCount} items</span>
                 </div>
               </div>
 
               {/* Drill-down action bar */}
-              <div className="flex items-center justify-between text-xs font-bold text-blue-400 pt-1 group-hover:translate-x-0.5 transition">
-                <span>Open Branch Dashboard & Audit</span>
+              <div className="flex items-center justify-between text-xs font-medium text-blue-400 pt-1">
+                <span>View Branch Dashboard</span>
                 <ChevronRight className="w-4 h-4" />
               </div>
             </div>
@@ -209,87 +202,89 @@ export const BranchSetupManager: React.FC<Props> = ({
 
       {/* 3. Edit / Add Branch Modal */}
       {isEditModalOpen && editingBranch && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              🏢 {editingBranch.id ? "Edit Branch Details" : "Create New Branch"}
-            </h3>
-            <p className="text-xs text-slate-400 mt-1">Configure branch location and its Sunmi mobile pairing code</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-sm w-full p-6 space-y-4">
+            <div>
+              <h3 className="text-base font-semibold text-white">
+                {editingBranch.id ? "Edit Branch" : "Add Branch"}
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">Configure location and terminal pairing code</p>
+            </div>
 
-            <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Branch Name</label>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Branch Name</label>
                 <input
                   type="text"
                   required
                   value={editingBranch.name || ""}
                   onChange={(e) => setEditingBranch({ ...editingBranch, name: e.target.value })}
                   placeholder="e.g. KCC Mall de Zamboanga"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 font-medium"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 font-normal"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Branch Code</label>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Branch Code</label>
                   <input
                     type="text"
                     required
                     value={editingBranch.code || ""}
                     onChange={(e) => setEditingBranch({ ...editingBranch, code: e.target.value })}
                     placeholder="e.g. BR-01"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 font-mono"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Sunmi Import Code</label>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Import Code</label>
                   <input
                     type="text"
                     required
                     value={editingBranch.import_code || ""}
                     onChange={(e) => setEditingBranch({ ...editingBranch, import_code: e.target.value })}
                     placeholder="e.g. KV-BR01"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-blue-400 font-mono font-bold focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-blue-400 font-mono font-medium focus:outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Address / Location</label>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Address</label>
                 <input
                   type="text"
                   value={editingBranch.address || ""}
                   onChange={(e) => setEditingBranch({ ...editingBranch, address: e.target.value })}
                   placeholder="e.g. Gov. Camins Ave, Zamboanga City"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Phone Number</label>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Phone</label>
                 <input
                   type="text"
                   value={editingBranch.phone || ""}
                   onChange={(e) => setEditingBranch({ ...editingBranch, phone: e.target.value })}
                   placeholder="e.g. +63 917 123 4567"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsEditModalOpen(false)}
-                  className="flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl transition"
+                  className="flex-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition disabled:opacity-50"
+                  className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
                 >
-                  {isSubmitting ? "Saving..." : "Save Branch"}
+                  {isSubmitting ? "Saving..." : "Save"}
                 </button>
               </div>
             </form>

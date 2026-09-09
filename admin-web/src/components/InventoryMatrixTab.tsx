@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Package, Plus, Edit2, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Package, Plus, Edit2 } from 'lucide-react';
 import { ProductFormModal } from './ProductFormModal';
 import { Branch, InventoryItem, Product } from '../types';
 
@@ -57,19 +57,19 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches, items, onRestock
   return (
     <div className="space-y-6">
       {/* 1. Header with Add Product & Stats */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <Package className="w-5 h-5 text-blue-400" /> Multi-Branch Stock Matrix & Products
+          <h2 className="text-base font-semibold text-white flex items-center gap-2">
+            <Package className="w-5 h-5 text-slate-400" /> Stock Matrix & Products
           </h2>
           <p className="text-xs text-slate-400">
-            Create items, adjust pricing, and balance stock across all branches from your laptop
+            Create items, adjust pricing, and manage stock allocations across all branches
           </p>
         </div>
 
         <button
           onClick={handleOpenNewProduct}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition shadow-sm"
+          className="flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg transition-colors"
         >
           <Plus className="w-4 h-4" /> Add New Product
         </button>
@@ -81,125 +81,108 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches, items, onRestock
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
-            className={`px-3 py-1 text-xs font-semibold rounded-lg capitalize transition ${
+            className={`px-3 py-1 text-xs font-medium rounded-lg capitalize transition-colors ${
               selectedCategory === cat
-                ? 'bg-blue-600 text-white shadow-sm'
+                ? 'bg-blue-600 text-white'
                 : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200'
             }`}
           >
-            {cat === 'all' ? '🏷️ All Products' : cat}
+            {cat === 'all' ? 'All Products' : cat}
           </button>
         ))}
       </div>
 
       {/* 3. Cross-Branch Stock Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
         {filteredItems.length === 0 ? (
           <div className="p-12 text-center space-y-3">
-            <div className="w-12 h-12 rounded-full bg-slate-800 mx-auto flex items-center justify-center text-slate-400">
-              <Package className="w-6 h-6" />
-            </div>
-            <h3 className="text-sm font-bold text-slate-200">No Products Added Yet</h3>
+            <Package className="w-8 h-8 mx-auto text-slate-500" />
+            <h3 className="text-sm font-medium text-slate-200">No Products Found</h3>
             <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              Click the "Add New Product" button above to create your first menu item and allocate stock to your branches.
+              Create your first product or adjust category filters to see items.
             </p>
             <button
               onClick={handleOpenNewProduct}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition"
+              className="inline-flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg transition-colors"
             >
-              <Plus className="w-4 h-4" /> Add First Product
+              <Plus className="w-4 h-4" /> Add Product
             </button>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-950/80 text-[11px] uppercase font-bold text-slate-400 tracking-wider border-b border-slate-800">
+              <thead className="bg-slate-950 text-xs font-medium text-slate-400 border-b border-slate-800">
                 <tr>
-                  <th className="p-4">Product Details</th>
-                  <th className="p-4">Category</th>
-                  <th className="p-4">Selling Price</th>
-                  <th className="p-4">Cost Price</th>
+                  <th className="p-3.5">Product Name</th>
+                  <th className="p-3.5">Category</th>
+                  <th className="p-3.5">Price</th>
+                  <th className="p-3.5">Cost</th>
                   {branches.map((b) => (
-                    <th key={b.id} className="p-4 text-center">
-                      🏢 {b.name}
-                      <span className="block text-[9px] text-blue-400 lowercase font-mono">[{b.code}]</span>
+                    <th key={b.id} className="p-3.5 text-center">
+                      {b.name}
+                      <span className="block text-xs font-mono text-slate-500">[{b.code}]</span>
                     </th>
                   ))}
-                  <th className="p-4 text-center font-bold text-white">Total Available</th>
-                  <th className="p-4 text-right">Actions</th>
+                  <th className="p-3.5 text-center">Total Stock</th>
+                  <th className="p-3.5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-slate-800">
                 {filteredItems.map((item) => {
                   const isLow = item.total_stock <= 20;
 
                   return (
-                    <tr key={item.product_id} className="hover:bg-slate-800/40 transition">
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
+                    <tr key={item.product_id} className="hover:bg-slate-800/40 transition-colors">
+                      <td className="p-3.5">
+                        <div className="flex items-center gap-2.5">
                           {item.image_url ? (
-                            <img src={item.image_url} alt="" className="w-8 h-8 rounded-lg object-cover bg-slate-800" />
+                            <img src={item.image_url} alt="" className="w-7 h-7 rounded object-cover bg-slate-800" />
                           ) : (
-                            <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-xs">
+                            <div className="w-7 h-7 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-xs">
                               ☕
                             </div>
                           )}
-                          <span className="font-bold text-white text-sm">{item.name}</span>
+                          <span className="text-sm font-normal text-white">{item.name}</span>
                         </div>
                       </td>
-                      <td className="p-4 text-slate-400">{item.category}</td>
-                      <td className="p-4 font-bold text-emerald-400">₱{item.base_price.toFixed(2)}</td>
-                      <td className="p-4 text-slate-400">₱{item.cost_price.toFixed(2)}</td>
+                      <td className="p-3.5 text-slate-400">{item.category}</td>
+                      <td className="p-3.5 font-mono text-slate-200">₱{item.base_price.toFixed(2)}</td>
+                      <td className="p-3.5 font-mono text-slate-400">₱{item.cost_price.toFixed(2)}</td>
                       {branches.map((b) => {
                         const isExcluded = item.excluded_branch_ids?.includes(b.id) ?? false;
                         const stock = item.branch_stocks[b.id] ?? 0;
                         const isBranchLow = stock <= 10;
                         return (
-                          <td key={b.id} className="p-4 text-center">
+                          <td key={b.id} className="p-3.5 text-center font-mono">
                             {!isExcluded ? (
-                              <span
-                                className={`inline-block px-2.5 py-1 rounded-md font-mono font-bold ${
-                                  isBranchLow
-                                    ? 'bg-amber-950/80 text-amber-400 border border-amber-800/60'
-                                    : 'bg-slate-950 text-slate-200'
-                                }`}
-                              >
+                              <span className={isBranchLow ? 'text-amber-400 font-medium' : 'text-slate-300'}>
                                 {stock}
                               </span>
                             ) : (
-                              <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-slate-500 bg-slate-950/40 border border-slate-800/60">
-                                — Excluded
-                              </span>
+                              <span className="text-slate-500">—</span>
                             )}
                           </td>
                         );
                       })}
-                      <td className="p-4 text-center">
-                        <span
-                          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full font-bold text-xs ${
-                            isLow
-                              ? 'bg-rose-950/80 text-rose-400 border border-rose-800'
-                              : 'bg-emerald-950/80 text-emerald-400 border border-emerald-800'
-                          }`}
-                        >
-                          {isLow ? <AlertTriangle className="w-3 h-3" /> : <CheckCircle2 className="w-3 h-3" />}
-                          {item.total_stock} Units
+                      <td className="p-3.5 text-center font-mono font-medium">
+                        <span className={isLow ? 'text-rose-400' : 'text-slate-200'}>
+                          {item.total_stock}
                         </span>
                       </td>
-                      <td className="p-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="p-3.5 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => handleOpenEditProduct(item)}
-                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+                            className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
                             title="Edit Product Info"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleOpenRestock(item)}
-                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition"
+                            className="px-2.5 py-1 bg-slate-800 hover:bg-blue-600 text-slate-200 hover:text-white font-medium rounded text-xs transition-colors"
                           >
-                            + Restock
+                            Restock
                           </button>
                         </div>
                       </td>
@@ -223,31 +206,33 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches, items, onRestock
 
       {/* 5. Restock Modal */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              📦 Restock Inventory: <span className="text-blue-400">{selectedProduct.name}</span>
-            </h3>
-            <p className="text-xs text-slate-400 mt-1">Deliver new stock units directly to a specific branch</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-sm w-full p-6 space-y-4">
+            <div>
+              <h3 className="text-base font-semibold text-white">
+                Restock: {selectedProduct.name}
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">Allocate stock to a specific branch</p>
+            </div>
 
-            <form onSubmit={handleRestockSubmit} className="mt-4 space-y-4">
+            <form onSubmit={handleRestockSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Destination Branch</label>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Destination Branch</label>
                 <select
                   value={restockBranchId}
                   onChange={(e) => setRestockBranchId(Number(e.target.value))}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
                 >
                   {branches.map((b) => (
                     <option key={b.id} value={b.id}>
-                      🏢 {b.name} [{b.code}] (Current: {selectedProduct.branch_stocks[b.id] ?? 0})
+                      {b.name} [{b.code}] (Current: {selectedProduct.branch_stocks[b.id] ?? 0})
                     </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Quantity to Add</label>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Quantity</label>
                 <input
                   type="number"
                   min="1"
@@ -255,35 +240,35 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches, items, onRestock
                   value={restockQty}
                   onChange={(e) => setRestockQty(e.target.value)}
                   placeholder="e.g. 50"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-sm text-white font-bold focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-sm font-mono text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Restock Notes</label>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Notes</label>
                 <input
                   type="text"
                   value={restockNotes}
                   onChange={(e) => setRestockNotes(e.target.value)}
                   placeholder="e.g. Supplier delivery invoice #491"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-sm text-slate-300 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setSelectedProduct(null)}
-                  className="flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-lg transition"
+                  className="flex-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-lg transition disabled:opacity-50"
+                  className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Updating...' : 'Confirm Restock'}
+                  {isSubmitting ? 'Updating...' : 'Confirm'}
                 </button>
               </div>
             </form>

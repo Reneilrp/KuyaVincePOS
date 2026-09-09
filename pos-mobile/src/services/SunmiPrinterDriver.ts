@@ -31,13 +31,15 @@ export class SunmiPrinterDriver {
     if (data.store_header.address) {
       lines.push(data.store_header.address);
     }
-    if (data.store_header.contact) {
-      lines.push('Tel: ' + data.store_header.contact);
+    const phoneOrContact = data.store_header.phone || data.store_header.contact;
+    if (phoneOrContact) {
+      lines.push('Tel: ' + phoneOrContact);
     }
     lines.push(DBL_DIVIDER);
 
     // 2. Order Metadata
-    lines.push(this.padLine('Order: ' + data.order_info.order_number, data.totals.payment_method || 'CASH'));
+    const payMethod = data.order_info.payment_method || data.totals.payment_method || 'CASH';
+    lines.push(this.padLine('Order: ' + data.order_info.order_number, payMethod));
     lines.push(this.padLine('Date: ' + data.order_info.date_time, ''));
     lines.push(this.padLine('Cashier: ' + data.order_info.cashier, ''));
     lines.push(DIVIDER);

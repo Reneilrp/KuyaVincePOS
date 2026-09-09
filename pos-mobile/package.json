@@ -9,13 +9,15 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "1.23.1",
+    "@shopify/flash-list": "^1.6.4",
     "expo": "~51.0.0",
+    "expo-dev-client": "~4.0.29",
+    "expo-updates": "~0.25.28",
+    "lucide-react-native": "^0.395.0",
     "react": "18.2.0",
     "react-native": "0.74.5",
-    "zustand": "^4.5.2",
-    "@shopify/flash-list": "^1.6.4",
-    "lucide-react-native": "^0.395.0",
-    "@react-native-async-storage/async-storage": "1.23.1"
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

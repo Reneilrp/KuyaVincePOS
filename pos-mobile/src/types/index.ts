@@ -4,6 +4,7 @@ export interface Branch {
   code: string;
   address?: string;
   phone?: string;
+  import_code?: string;
 }
 
 export interface Device {
@@ -12,6 +13,7 @@ export interface Device {
   device_serial: string;
   terminal_name: string;
   device_token: string;
+  status?: string;
 }
 
 export interface User {
@@ -53,15 +55,16 @@ export interface CartItem {
 export interface ThermalReceiptData {
   store_header: {
     name: string;
-    branch_code: string;
-    address: string;
-    phone: string;
+    branch_code?: string;
+    address?: string;
+    phone?: string;
+    contact?: string;
   };
   order_info: {
     order_number: string;
     date_time: string;
     cashier: string;
-    payment_method: string;
+    payment_method?: string;
   };
   items: Array<{
     name: string;
@@ -71,13 +74,15 @@ export interface ThermalReceiptData {
   }>;
   totals: {
     subtotal: string;
-    discount: string;
+    discount?: string;
     total: string;
     amount_tendered: string;
     change: string;
+    payment_method?: string;
   };
   footer: {
     message: string;
     notice: string;
   };
 }
+

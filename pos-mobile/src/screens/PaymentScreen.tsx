@@ -194,10 +194,10 @@ export const PaymentScreen: React.FC<Props> = ({ onBack, onSuccess }) => {
 
         {/* Change Display Card */}
         <View style={{ marginHorizontal: 16, backgroundColor: isSufficient ? '#022C22' : '#1E293B', borderWidth: 1, borderColor: isSufficient ? '#065F46' : '#334155', borderRadius: 16, padding: 18, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
+          <View>
             <Text style={{ color: '#94A3B8', fontSize: 13, fontWeight: 'bold' }}>{t('sukliChange')}</Text>
             <Text style={{ color: '#64748B', fontSize: 10, marginTop: 2 }}>{isSufficient ? t('returnToCustomer') : t('awaitingPayment')}</Text>
-          </div>
+          </View>
           <Text style={{ color: isSufficient ? '#34D399' : '#64748B', fontWeight: 'bold', fontSize: 26, fontFamily: 'monospace' }}>
             ₱ {changeAmount.toFixed(2)}
           </Text>

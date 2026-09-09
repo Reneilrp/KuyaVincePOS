@@ -55,14 +55,20 @@ export const DeviceActivationScreen: React.FC<{ onActivated: () => void }> = ({ 
       const prods = await prodRes.json();
 
       if (prods && Array.isArray(prods) && prods.length > 0) {
-        const catalogItems = prods.map((p: any) => ({
-          product_id: p.id,
+        const categories = [{ id: 1, name: 'General', color: '#3B82F6' }];
+        const products = prods.map((p: any) => ({
+          id: p.id,
+          category_id: p.category_id || 1,
+          category_name: p.category || 'General',
           name: p.name,
-          category: p.category || 'General',
-          base_price: Number(p.base_price),
-          stock_quantity: 100
+          base_price: Number(p.base_price || 0),
+          cost_price: Number(p.cost_price || 0),
+          stock: Number(p.stock_quantity || 100),
+          alert_threshold: 5,
+          is_low_stock: false,
+          is_out_of_stock: false
         }));
-        setCatalog(catalogItems);
+        setCatalog(categories, products);
       }
 
       const generatedTerminalName = 'Counter-' + Date.now();

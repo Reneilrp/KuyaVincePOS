@@ -230,12 +230,12 @@ export const ProductFormModal: React.FC<Props> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-xl w-full p-6 max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between pb-3 border-b border-slate-800">
           <div>
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <PackagePlus className="w-5 h-5 text-blue-400" />
+            <h3 className="text-base font-semibold text-white flex items-center gap-2">
+              <PackagePlus className="w-4 h-4 text-blue-400" />
               {initialProduct ? 'Edit Product & Pricing' : 'Add New Menu Item'}
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
@@ -244,34 +244,34 @@ export const ProductFormModal: React.FC<Props> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-800 rounded-lg transition"
+            className="p-1.5 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           {/* 1. Item Name */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Item / Product Name</label>
+            <label className="block text-xs font-semibold text-slate-300 mb-1">Item / Product Name</label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Iced Caramel Macchiato, Beef Tapa Bowl"
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-blue-500 font-medium"
+              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
             />
           </div>
 
           {/* 2. Category & Pricing Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Category</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Category</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
               >
                 <option value="Coffee & Drinks">Coffee & Drinks</option>
                 <option value="Bakery & Pastries">Bakery & Pastries</option>
@@ -283,7 +283,7 @@ export const ProductFormModal: React.FC<Props> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-emerald-400 uppercase mb-1">Selling Price (₱)</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Selling Price (₱)</label>
               <input
                 type="number"
                 step="0.01"
@@ -292,12 +292,12 @@ export const ProductFormModal: React.FC<Props> = ({
                 value={basePrice}
                 onChange={(e) => setBasePrice(e.target.value)}
                 placeholder="145.00"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-emerald-400 font-bold focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Cost Price (₱)</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Cost Price (₱)</label>
               <input
                 type="number"
                 step="0.01"
@@ -305,27 +305,27 @@ export const ProductFormModal: React.FC<Props> = ({
                 value={costPrice}
                 onChange={(e) => setCostPrice(e.target.value)}
                 placeholder="45.00"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-300 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs font-mono text-slate-300 focus:outline-none focus:border-blue-500"
               />
             </div>
           </div>
 
-          {/* 3. Product Image Section with Dual Option (Upload vs URL) */}
-          <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+          {/* 3. Product Image Section */}
+          <div className="bg-slate-950 border border-slate-800 rounded-lg p-3 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-300 uppercase flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
                 <ImageIcon className="w-4 h-4 text-blue-400" /> Product Image
               </span>
 
               {/* Dual Mode Switcher Tabs */}
-              <div className="flex bg-slate-900 p-0.5 rounded-lg border border-slate-800">
+              <div className="flex bg-slate-900 p-0.5 rounded border border-slate-800">
                 <button
                   type="button"
                   onClick={() => setImageMode('upload')}
-                  className={`flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-md transition ${
+                  className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded transition-colors ${
                     imageMode === 'upload'
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   <Upload className="w-3.5 h-3.5" /> Upload File
@@ -333,10 +333,10 @@ export const ProductFormModal: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => setImageMode('url')}
-                  className={`flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-md transition ${
+                  className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded transition-colors ${
                     imageMode === 'url'
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   <Link className="w-3.5 h-3.5" /> Image URL
@@ -356,24 +356,24 @@ export const ProductFormModal: React.FC<Props> = ({
                 />
 
                 {imageUrl ? (
-                  <div className="flex items-center gap-4 bg-slate-900 border border-slate-800 rounded-xl p-3">
+                  <div className="flex items-center gap-3 bg-slate-900 border border-slate-800 rounded-lg p-3">
                     <img
                       src={imageUrl}
                       alt="Preview"
-                      className="w-16 h-16 rounded-lg object-cover bg-slate-950 border border-slate-800"
+                      className="w-14 h-14 rounded object-cover bg-slate-950 border border-slate-800"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-white truncate">
+                      <p className="text-xs font-medium text-white truncate">
                         {uploadFileName || 'Custom Uploaded Image'}
                       </p>
-                      <p className="text-[11px] text-emerald-400 flex items-center gap-1 mt-0.5">
+                      <p className="text-xs text-emerald-400 flex items-center gap-1 mt-0.5">
                         <Check className="w-3 h-3" /> Ready & Optimized
                       </p>
-                      <div className="flex gap-2 mt-2">
+                      <div className="flex gap-2 mt-1.5">
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="text-[11px] font-semibold text-blue-400 hover:text-blue-300 underline"
+                          className="text-xs text-blue-400 hover:underline"
                         >
                           Change File
                         </button>
@@ -381,7 +381,7 @@ export const ProductFormModal: React.FC<Props> = ({
                         <button
                           type="button"
                           onClick={handleRemoveImage}
-                          className="text-[11px] font-semibold text-rose-400 hover:text-rose-300"
+                          className="text-xs text-slate-400 hover:text-rose-400"
                         >
                           Remove
                         </button>
@@ -397,27 +397,27 @@ export const ProductFormModal: React.FC<Props> = ({
                     onDragLeave={() => setIsDragOver(false)}
                     onDrop={handleDrop}
                     onClick={() => fileInputRef.current?.click()}
-                    className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition ${
+                    className={`border border-dashed rounded-lg p-5 text-center cursor-pointer transition-colors ${
                       isDragOver
                         ? 'border-blue-500 bg-blue-500/10'
-                        : 'border-slate-800 hover:border-slate-700 bg-slate-900/50 hover:bg-slate-900'
+                        : 'border-slate-800 hover:border-slate-700 bg-slate-900/50'
                     }`}
                   >
                     {isProcessingImage ? (
                       <div className="py-2 space-y-2">
-                        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                        <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
                         <p className="text-xs text-slate-400">Processing & optimizing image...</p>
                       </div>
                     ) : (
-                      <div className="space-y-1.5">
-                        <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center mx-auto text-blue-400">
-                          <Upload className="w-5 h-5" />
+                      <div className="space-y-1">
+                        <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center mx-auto text-blue-400">
+                          <Upload className="w-4 h-4" />
                         </div>
-                        <p className="text-xs font-semibold text-slate-200">
+                        <p className="text-xs font-medium text-slate-200">
                           Click to browse or drag & drop image
                         </p>
-                        <p className="text-[11px] text-slate-500">
-                          Supports PNG, JPG, WebP (auto-optimized for Sunmi POS)
+                        <p className="text-xs text-slate-500">
+                          PNG, JPG, WebP
                         </p>
                       </div>
                     )}
@@ -428,14 +428,14 @@ export const ProductFormModal: React.FC<Props> = ({
 
             {/* Option B: Image URL */}
             {imageMode === 'url' && (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <div className="relative">
                   <input
                     type="url"
                     value={imageUrl}
                     onChange={(e) => setImageUrl(e.target.value)}
                     placeholder="https://example.com/images/iced-coffee.jpg"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 pr-9 text-xs text-slate-200 focus:outline-none focus:border-blue-500 font-mono"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 pr-8 text-xs text-slate-200 focus:outline-none focus:border-blue-500 font-mono"
                   />
                   {imageUrl && (
                     <button
@@ -449,7 +449,7 @@ export const ProductFormModal: React.FC<Props> = ({
                 </div>
 
                 {imageUrl && (
-                  <div className="flex items-center gap-3 bg-slate-900 border border-slate-800 rounded-xl p-2.5">
+                  <div className="flex items-center gap-2.5 bg-slate-900 border border-slate-800 rounded-lg p-2">
                     <img
                       src={imageUrl}
                       alt="URL Preview"
@@ -457,11 +457,11 @@ export const ProductFormModal: React.FC<Props> = ({
                         (e.target as HTMLImageElement).src =
                           'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>';
                       }}
-                      className="w-12 h-12 rounded-lg object-cover bg-slate-950 border border-slate-800"
+                      className="w-10 h-10 rounded object-cover bg-slate-950 border border-slate-800"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-slate-300 truncate">{imageUrl}</p>
-                      <p className="text-[10px] text-emerald-400">External URL Linked</p>
+                      <p className="text-xs text-slate-300 truncate font-mono">{imageUrl}</p>
+                      <p className="text-xs text-emerald-400">External URL Linked</p>
                     </div>
                   </div>
                 )}
@@ -471,40 +471,40 @@ export const ProductFormModal: React.FC<Props> = ({
 
           {/* 4. Live Preview Card */}
           {name && (
-            <div className="bg-slate-950/80 border border-slate-800/80 rounded-xl p-3 flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center overflow-hidden flex-shrink-0">
+            <div className="bg-slate-950 border border-slate-800 rounded-lg p-3 flex items-center gap-3">
+              <div className="w-10 h-10 rounded bg-slate-900 border border-slate-800 flex items-center justify-center overflow-hidden flex-shrink-0">
                 {imageUrl ? (
                   <img src={imageUrl} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-lg">☕</span>
+                  <span>☕</span>
                 )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-white truncate">{name}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">
-                    {category}
+                  <span className="text-xs font-semibold text-white truncate">{name}</span>
+                  <span className="text-xs text-slate-500">
+                    ({category})
                   </span>
                 </div>
-                <p className="text-xs font-bold text-emerald-400 mt-0.5">
+                <p className="text-xs font-mono font-medium text-white mt-0.5">
                   ₱{basePrice ? parseFloat(basePrice || '0').toFixed(2) : '0.00'}
                 </p>
               </div>
-              <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider flex items-center gap-1">
-                <Eye className="w-3 h-3 text-blue-400" /> POS Card Preview
+              <span className="text-xs text-slate-500 flex items-center gap-1">
+                <Eye className="w-3.5 h-3.5 text-blue-400" /> Preview
               </span>
             </div>
           )}
 
-          {/* 5. Initial Stock Allocation Per Branch (1-Click Include/Exclude) */}
-          <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+          {/* 5. Initial Stock Allocation Per Branch */}
+          <div className="bg-slate-950 border border-slate-800 rounded-lg p-3 space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <span className="text-xs font-bold text-slate-300 uppercase flex items-center gap-1.5">
+                <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
                   <Layers className="w-4 h-4 text-blue-400" /> Stock per Branch (Optional)
                 </span>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  Click a branch badge to include or exclude it from carrying this item
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Click a branch toggle to include or exclude it from carrying this item
                 </p>
               </div>
 
@@ -513,14 +513,14 @@ export const ProductFormModal: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => setAllBranchesInclusion(true)}
-                  className="px-2.5 py-1 text-[11px] font-semibold bg-slate-900 hover:bg-slate-800 text-blue-400 border border-slate-800 rounded-md transition"
+                  className="px-2 py-1 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-blue-400 border border-slate-800 rounded transition-colors"
                 >
                   ✓ Include All
                 </button>
                 <button
                   type="button"
                   onClick={() => setAllBranchesInclusion(false)}
-                  className="px-2.5 py-1 text-[11px] font-semibold bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 rounded-md transition"
+                  className="px-2 py-1 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 rounded transition-colors"
                 >
                   ✕ Exclude All
                 </button>
@@ -534,14 +534,14 @@ export const ProductFormModal: React.FC<Props> = ({
                 return (
                   <div
                     key={b.id}
-                    className={`p-3 rounded-xl border transition flex flex-col justify-between ${
+                    className={`p-3 rounded-lg border transition-colors flex flex-col justify-between ${
                       isIncluded
-                        ? 'bg-slate-900 border-slate-700/80 shadow-sm'
-                        : 'bg-slate-950/60 border-slate-900 opacity-60'
+                        ? 'bg-slate-900 border-slate-800'
+                        : 'bg-slate-950 border-slate-800 opacity-60'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-1 mb-2">
-                      <label className="text-[11px] font-bold text-slate-300 truncate">
+                      <label className="text-xs font-semibold text-slate-300 truncate">
                         🏢 {b.name}
                       </label>
 
@@ -549,10 +549,10 @@ export const ProductFormModal: React.FC<Props> = ({
                       <button
                         type="button"
                         onClick={() => toggleBranchInclusion(b.id)}
-                        className={`text-[10px] px-2 py-0.5 rounded-full font-bold transition flex items-center gap-0.5 cursor-pointer ${
+                        className={`text-xs px-2 py-0.5 rounded font-medium transition-colors cursor-pointer ${
                           isIncluded
-                            ? 'bg-emerald-950/90 text-emerald-400 border border-emerald-800/80 hover:bg-emerald-900'
-                            : 'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'
+                            ? 'text-emerald-400 bg-slate-950 border border-slate-800 hover:bg-slate-800'
+                            : 'text-slate-500 bg-slate-950 border border-slate-800 hover:text-white'
                         }`}
                         title={isIncluded ? 'Click to exclude this branch' : 'Click to include this branch'}
                       >
@@ -568,16 +568,16 @@ export const ProductFormModal: React.FC<Props> = ({
                           value={branchStocks[b.id] ?? '0'}
                           onChange={(e) => handleStockChange(b.id, e.target.value)}
                           placeholder="Stock qty"
-                          className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-sm text-center font-bold text-white focus:outline-none focus:border-blue-500 font-mono"
+                          className="w-full bg-slate-950 border border-slate-800 rounded p-1.5 text-xs text-center font-mono font-medium text-white focus:outline-none focus:border-blue-500"
                         />
-                        <span className="block text-[10px] text-slate-500 text-center mt-1">Initial units</span>
+                        <span className="block text-xs text-slate-500 text-center mt-1">Initial units</span>
                       </div>
                     ) : (
                       <div
                         onClick={() => toggleBranchInclusion(b.id)}
-                        className="py-2.5 text-center cursor-pointer rounded-lg bg-slate-900/60 border border-dashed border-slate-800 hover:border-slate-700"
+                        className="py-2 text-center cursor-pointer rounded bg-slate-950 border border-dashed border-slate-800 hover:border-slate-700"
                       >
-                        <span className="text-[11px] text-slate-500 font-medium">Click to include</span>
+                        <span className="text-xs text-slate-500 font-medium">Click to include</span>
                       </div>
                     )}
                   </div>
@@ -587,18 +587,18 @@ export const ProductFormModal: React.FC<Props> = ({
           </div>
 
           {/* 6. Action Buttons */}
-          <div className="flex gap-3 pt-3">
+          <div className="flex gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl transition"
+              className="flex-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting || isProcessingImage}
-              className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 'Saving...'

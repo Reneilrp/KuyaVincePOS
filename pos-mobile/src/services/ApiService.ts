@@ -37,6 +37,10 @@ export class ApiService {
     return await res.json();
   }
 
+  public static async submitOrder(payload: any) {
+    return this.processCheckout(payload);
+  }
+
   public static async processCheckout(payload: any) {
     try {
       const res = await fetch(`${this.baseUrl}/checkout`, {
@@ -64,7 +68,7 @@ export class ApiService {
     }
   }
 
-  public static async openShift(payload: { branch_id: number; cashier_id: number; opening_cash: number; device_id?: number }) {
+  public static async openShift(payload: { branch_id: number; cashier_id: number; opening_cash: number; device_id?: number; clock_in_at?: string }) {
     const res = await fetch(`${this.baseUrl}/shifts/open`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

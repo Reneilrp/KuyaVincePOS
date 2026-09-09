@@ -14,6 +14,8 @@ interface PosState {
   // Device & Branch
   device: Device | null;
   branch: Branch | null;
+  setBranch: (branch: Branch | null) => void;
+  setDevice: (device: Device | null) => void;
   setDeviceAndBranch: (device: Device, branch: Branch) => void;
 
   // Cashier Session & Shift
@@ -31,7 +33,7 @@ interface PosState {
   products: Product[];
   selectedCategoryId: number | null;
   searchQuery: string;
-  setCatalog: (categories: Category[], products: Product[]) => void;
+  setCatalog: (categories: Category[], products?: Product[]) => void;
   setSelectedCategoryId: (catId: number | null) => void;
   setSearchQuery: (query: string) => void;
 
@@ -57,6 +59,8 @@ interface PosState {
 export const usePosStore = create<PosState>((set, get) => ({
   device: null,
   branch: null,
+  setBranch: (branch) => set({ branch }),
+  setDevice: (device) => set({ device }),
   setDeviceAndBranch: (device, branch) => set({ device, branch }),
 
   activeCashier: null,
@@ -72,7 +76,13 @@ export const usePosStore = create<PosState>((set, get) => ({
   products: [],
   selectedCategoryId: null,
   searchQuery: '',
-  setCatalog: (categories, products) => set({ categories, products }),
+  setCatalog: (categories, products) => {
+    if (products) {
+      set({ categories, products });
+    } else {
+      set({ products: categories as any });
+    }
+  },
   setSelectedCategoryId: (selectedCategoryId) => set({ selectedCategoryId }),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
 

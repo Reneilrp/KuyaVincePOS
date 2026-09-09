@@ -11,10 +11,16 @@
       "resizeMode": "contain",
       "backgroundColor": "#1E293B"
     },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sunmipos.multibranch"
+    },
     "android": {
       "package": "com.sunmipos.multibranch",
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
         "backgroundColor": "#1E293B"
       },
       "permissions": [
@@ -22,6 +28,20 @@
         "ACCESS_NETWORK_STATE"
       ]
     },
-    "jsEngine": "hermes"
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/1ed53c25-19e1-44cb-9b35-faf5caa8be21"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "1ed53c25-19e1-44cb-9b35-faf5caa8be21"
+      }
+    },
+    "owner": "pheinz"
   }
 }

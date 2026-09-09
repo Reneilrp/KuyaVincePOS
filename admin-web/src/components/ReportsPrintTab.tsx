@@ -54,34 +54,34 @@ export const ReportsPrintTab: React.FC<Props> = ({
   return (
     <div className="space-y-6">
       {/* 1. Client Data Export & Retrieval Hub */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-sm space-y-4">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
+            <h2 className="text-base font-semibold text-white flex items-center gap-2">
               📥 Client Data Retrieval & Export Center
             </h2>
-            <p className="text-xs text-slate-400">Download full offline copies in Excel, CSV, or raw JSON format (100% data ownership)</p>
+            <p className="text-xs text-slate-400 mt-0.5">Download full offline copies in CSV or raw JSON format</p>
           </div>
           {downloadSuccess && (
-            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 flex items-center gap-1.5">
+            <span className="text-xs font-medium text-emerald-400 flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5" /> {downloadSuccess}
             </span>
           )}
         </div>
 
         {/* 1-Click Export Buttons Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
           <button
             onClick={handleExportSales}
-            className="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-blue-500 text-slate-200 text-xs font-bold transition shadow-sm"
+            className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold transition-colors"
           >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+            <FileSpreadsheet className="w-4 h-4 text-blue-400" />
             Export Sales (CSV)
           </button>
 
           <button
             onClick={handleExportInventory}
-            className="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-blue-500 text-slate-200 text-xs font-bold transition shadow-sm"
+            className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold transition-colors"
           >
             <FileSpreadsheet className="w-4 h-4 text-blue-400" />
             Export Stock Balances (CSV)
@@ -89,17 +89,17 @@ export const ReportsPrintTab: React.FC<Props> = ({
 
           <button
             onClick={handleExportPayroll}
-            className="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-blue-500 text-slate-200 text-xs font-bold transition shadow-sm"
+            className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold transition-colors"
           >
-            <FileSpreadsheet className="w-4 h-4 text-purple-400" />
+            <FileSpreadsheet className="w-4 h-4 text-blue-400" />
             Export Payroll (CSV)
           </button>
 
           <button
             onClick={handleExportBackup}
-            className="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-blue-500 text-slate-200 text-xs font-bold transition shadow-sm"
+            className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold transition-colors"
           >
-            <Database className="w-4 h-4 text-amber-400" />
+            <Database className="w-4 h-4 text-blue-400" />
             Download JSON Backup
           </button>
         </div>
@@ -109,28 +109,28 @@ export const ReportsPrintTab: React.FC<Props> = ({
       <OfflineJsonDropzone onImportBatch={onImportOfflineBatch} />
 
       {/* 3. Physical Print Center (Z-Reading & A4) */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
+          <h2 className="text-base font-semibold text-white flex items-center gap-2">
             🖨️ Daily Z-Reports & Executive Print Center
           </h2>
-          <p className="text-xs text-slate-400">Generate printable 58mm thermal receipts or full A4 financial summaries</p>
+          <p className="text-xs text-slate-400 mt-0.5">Generate printable 58mm thermal receipts or full A4 financial summaries</p>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex bg-slate-950 border border-slate-800 rounded-lg p-1">
+          <div className="flex bg-slate-950 border border-slate-800 rounded-lg p-0.5">
             <button
               onClick={() => setReportType('z_read')}
-              className={`px-3 py-1 text-xs font-semibold rounded-md transition ${
-                reportType === 'z_read' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'
+              className={`px-3 py-1 text-xs font-semibold rounded transition-colors ${
+                reportType === 'z_read' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
               }`}
             >
               58mm Thermal Z-Read
             </button>
             <button
               onClick={() => setReportType('a4_summary')}
-              className={`px-3 py-1 text-xs font-semibold rounded-md transition ${
-                reportType === 'a4_summary' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'
+              className={`px-3 py-1 text-xs font-semibold rounded transition-colors ${
+                reportType === 'a4_summary' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
               }`}
             >
               A4 Financial Audit
@@ -139,7 +139,7 @@ export const ReportsPrintTab: React.FC<Props> = ({
 
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors"
           >
             <Printer className="w-4 h-4" /> Print Document
           </button>
@@ -147,13 +147,13 @@ export const ReportsPrintTab: React.FC<Props> = ({
       </div>
 
       {/* 4. Document Preview Area */}
-      <div className="flex justify-center p-6 bg-slate-950/60 border border-slate-800 rounded-2xl">
+      <div className="flex justify-center p-6 bg-slate-950 border border-slate-800 rounded-xl">
         {reportType === 'z_read' ? (
           /* 58mm Sunmi Thermal Z-Reading Simulation */
-          <div className="bg-white text-black font-mono text-xs w-[320px] p-6 rounded-lg shadow-2xl border border-slate-300">
+          <div className="bg-white text-black font-mono text-xs w-[320px] p-6 rounded-lg border border-slate-300">
             <div className="text-center mb-4">
-              <p className="font-bold text-sm">*** DAILY Z-READING REPORT ***</p>
-              <p className="font-bold">{selectedBranchName}</p>
+              <p className="font-semibold text-sm">*** DAILY Z-READING REPORT ***</p>
+              <p className="font-semibold">{selectedBranchName}</p>
               <p className="text-[10px] text-gray-600">Date: {new Date().toISOString().split('T')[0]}</p>
               <p className="text-[10px] text-gray-600">Time: {new Date().toLocaleTimeString()}</p>
             </div>
@@ -161,11 +161,11 @@ export const ReportsPrintTab: React.FC<Props> = ({
             <div className="border-t border-b border-black py-2 my-2 space-y-1">
               <div className="flex justify-between">
                 <span>Total Gross Sales:</span>
-                <span className="font-bold">₱{kpis.total_gross_revenue.toFixed(2)}</span>
+                <span className="font-semibold">₱{kpis.total_gross_revenue.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Total Orders:</span>
-                <span className="font-bold">{kpis.total_sales_count}</span>
+                <span className="font-semibold">{kpis.total_sales_count}</span>
               </div>
               <div className="flex justify-between">
                 <span>Average Order:</span>
@@ -173,7 +173,7 @@ export const ReportsPrintTab: React.FC<Props> = ({
               </div>
             </div>
 
-            <p className="font-bold mt-2">PAYMENT BREAKDOWN:</p>
+            <p className="font-semibold mt-2">PAYMENT BREAKDOWN:</p>
             <div className="space-y-1 my-1">
               <div className="flex justify-between">
                 <span>Cash in Drawer:</span>
@@ -190,17 +190,17 @@ export const ReportsPrintTab: React.FC<Props> = ({
             </div>
 
             <div className="border-t border-black pt-2 mt-4 text-center text-[10px]">
-              <p>Supabase + Vercel Cloud POS</p>
+              <p>KuyaVince POS System</p>
               <p>Authorized Client Audit Copy</p>
               <p>*** END OF Z-REPORT ***</p>
             </div>
           </div>
         ) : (
           /* Full A4 Financial Audit Report */
-          <div className="bg-white text-slate-900 w-full max-w-3xl p-8 rounded-xl shadow-2xl border border-slate-200">
+          <div className="bg-white text-slate-900 w-full max-w-3xl p-8 rounded-xl border border-slate-200">
             <div className="flex justify-between items-start border-b border-slate-300 pb-4 mb-6">
               <div>
-                <h2 className="text-xl font-bold uppercase tracking-tight text-slate-900">Multi-Branch Financial Audit</h2>
+                <h2 className="text-xl font-semibold uppercase tracking-tight text-slate-900">Multi-Branch Financial Audit</h2>
                 <p className="text-sm text-slate-600">{selectedBranchName}</p>
               </div>
               <div className="text-right text-xs text-slate-500">
@@ -211,22 +211,22 @@ export const ReportsPrintTab: React.FC<Props> = ({
 
             <div className="grid grid-cols-3 gap-4 mb-6">
               <div className="p-4 bg-slate-100 rounded-lg">
-                <span className="text-xs text-slate-500 uppercase font-semibold">Total Revenue</span>
-                <p className="text-xl font-bold text-slate-900 mt-1">₱{kpis.total_gross_revenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                <span className="text-xs text-slate-500 font-medium">Total Revenue</span>
+                <p className="text-xl font-semibold font-mono text-slate-900 mt-1">₱{kpis.total_gross_revenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
               </div>
               <div className="p-4 bg-slate-100 rounded-lg">
-                <span className="text-xs text-slate-500 uppercase font-semibold">Transactions</span>
-                <p className="text-xl font-bold text-slate-900 mt-1">{kpis.total_sales_count} Sales</p>
+                <span className="text-xs text-slate-500 font-medium">Transactions</span>
+                <p className="text-xl font-semibold font-mono text-slate-900 mt-1">{kpis.total_sales_count} Sales</p>
               </div>
               <div className="p-4 bg-slate-100 rounded-lg">
-                <span className="text-xs text-slate-500 uppercase font-semibold">Average Ticket</span>
-                <p className="text-xl font-bold text-slate-900 mt-1">₱{kpis.average_order_value.toFixed(2)}</p>
+                <span className="text-xs text-slate-500 font-medium">Average Ticket</span>
+                <p className="text-xl font-semibold font-mono text-slate-900 mt-1">₱{kpis.average_order_value.toFixed(2)}</p>
               </div>
             </div>
 
-            <h3 className="text-sm font-bold text-slate-800 uppercase mb-3">Branch Breakdown Performance</h3>
+            <h3 className="text-sm font-semibold text-slate-800 uppercase mb-3">Branch Breakdown Performance</h3>
             <table className="w-full text-left text-xs mb-6 border border-slate-200">
-              <thead className="bg-slate-100 uppercase text-slate-600">
+              <thead className="bg-slate-100 uppercase text-slate-600 font-semibold">
                 <tr>
                   <th className="p-2.5">Branch Name</th>
                   <th className="p-2.5">Code</th>
@@ -237,17 +237,17 @@ export const ReportsPrintTab: React.FC<Props> = ({
               <tbody className="divide-y divide-slate-200">
                 {analytics.branch_comparison.map((b) => (
                   <tr key={b.branch_id}>
-                    <td className="p-2.5 font-semibold text-slate-900">{b.name}</td>
-                    <td className="p-2.5 text-slate-600">{b.code}</td>
-                    <td className="p-2.5 text-center">{b.order_count}</td>
-                    <td className="p-2.5 text-right font-bold text-slate-900">₱{b.total_sales.toFixed(2)}</td>
+                    <td className="p-2.5 font-medium text-slate-900">{b.name}</td>
+                    <td className="p-2.5 text-slate-600 font-mono">{b.code}</td>
+                    <td className="p-2.5 text-center font-mono">{b.order_count}</td>
+                    <td className="p-2.5 text-right font-mono font-medium text-slate-900">₱{b.total_sales.toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
             <div className="border-t border-slate-300 pt-4 flex justify-between items-center text-xs text-slate-500">
-              <span>Supabase + Vercel Cloud Point of Sale System</span>
+              <span>KuyaVince POS Point of Sale System</span>
               <span>Page 1 of 1</span>
             </div>
           </div>

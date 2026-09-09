@@ -34,27 +34,26 @@ export const BranchFilterHeader: React.FC<Props> = ({
   const showDateFilter = !activeBranchDetail && ["sales", "payroll", "reports"].includes(activeTab);
 
   return (
-    <header className="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30 px-6 py-3.5 no-print">
+    <header className="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 px-6 py-3.5 no-print">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        {/* Left: Dynamic Clean Page Title */}
+        {/* Left: Clean Page Title */}
         <div>
-          <h1 className="text-base font-bold text-white tracking-tight">
+          <h1 className="text-base font-semibold text-white">
             {activeBranchDetail ? `🏢 ${activeBranchDetail.name}` : pageTitle}
           </h1>
-          <p className="text-[11px] text-slate-400">
+          <p className="text-xs text-slate-400">
             {activeBranchDetail
-              ? `📍 ${activeBranchDetail.address || "Zamboanga City"} • Branch Dashboard`
-              : "100% Live Supabase PostgreSQL • Zero Mock Data"}
+              ? `${activeBranchDetail.address || "Zamboanga City"} • Branch Dashboard`
+              : "Live Supabase PostgreSQL • Central Database"}
           </p>
         </div>
 
-        {/* Right: Contextual Actions & Z-Report Button */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Top-Right Print 58mm Daily Z-Report (When inside a branch) */}
+        {/* Right: Context Actions */}
+        <div className="flex flex-wrap items-center gap-2">
           {activeBranchDetail && onOpenZReport && (
             <button
               onClick={onOpenZReport}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-emerald-600/20"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg transition-colors"
               title="Print 58mm Daily Audit Slip"
             >
               <Printer className="w-3.5 h-3.5" /> Print 58mm Daily Z-Report
@@ -63,17 +62,17 @@ export const BranchFilterHeader: React.FC<Props> = ({
 
           {/* Branch Dropdown */}
           {showBranchFilter && (
-            <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 shadow-sm">
-              <Building2 className="w-3.5 h-3.5 text-blue-400" />
+            <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5">
+              <Building2 className="w-3.5 h-3.5 text-slate-400" />
               <select
                 value={selectedBranchId}
                 onChange={(e) => onSelectBranch(e.target.value)}
-                className="bg-transparent text-xs font-semibold text-slate-200 focus:outline-none cursor-pointer"
+                className="bg-transparent text-xs font-medium text-slate-200 focus:outline-none cursor-pointer"
               >
-                <option value="all" className="bg-slate-900 text-white">🌐 All Branches</option>
+                <option value="all" className="bg-slate-900 text-white">All Branches</option>
                 {branches.map((b) => (
                   <option key={b.id} value={String(b.id)} className="bg-slate-900 text-white">
-                    🏢 {b.name} [{b.import_code || b.code}]
+                    {b.name} [{b.import_code || b.code}]
                   </option>
                 ))}
               </select>
@@ -82,15 +81,15 @@ export const BranchFilterHeader: React.FC<Props> = ({
 
           {/* Date Range Selector */}
           {showDateFilter && (
-            <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-0.5 shadow-sm">
+            <div className="flex items-center bg-slate-950 border border-slate-800 rounded-lg p-0.5">
               <Calendar className="w-3.5 h-3.5 text-slate-500 ml-2 mr-1" />
               {(["today", "week", "month"] as const).map((r) => (
                 <button
                   key={r}
                   onClick={() => onSelectRange(r)}
-                  className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition ${
+                  className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
                     selectedRange === r
-                      ? "bg-blue-600 text-white shadow-sm"
+                      ? "bg-blue-600 text-white"
                       : "text-slate-400 hover:text-slate-200"
                   }`}
                 >
@@ -104,8 +103,8 @@ export const BranchFilterHeader: React.FC<Props> = ({
           <button
             onClick={onRefresh}
             disabled={isLoading}
-            className="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800 transition"
-            title="Sync Latest Supabase Data"
+            className="p-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            title="Sync Latest Data"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-blue-400" : ""}`} />
           </button>
