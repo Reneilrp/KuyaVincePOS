@@ -9,13 +9,9 @@ import {
   LogOut,
   ShieldCheck,
   ChevronLeft,
-  ChevronRight,
-  Globe,
-  Sun,
-  Moon
+  ChevronRight
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { useTheme } from '../context/ThemeContext';
 import { TranslationKey } from '../i18n/translations';
 
 export type TabKey = 'branches' | 'inventory' | 'sales' | 'payroll' | 'reports' | 'settings';
@@ -37,8 +33,7 @@ export const SidebarMenuBar: React.FC<Props> = ({
   isCollapsed,
   onToggleCollapse
 }) => {
-  const { t, language, setLanguage } = useLanguage();
-  const { theme, setTheme, toggleTheme } = useTheme();
+  const { t } = useLanguage();
 
   const menuSections = [
     {
@@ -127,103 +122,8 @@ export const SidebarMenuBar: React.FC<Props> = ({
           </button>
         </div>
 
-        {/* Language & Theme Controls */}
-        <div className="px-3 pt-3 space-y-2">
-          {/* Language Switcher */}
-          {!isCollapsed ? (
-            <div className="flex items-center justify-between p-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs">
-              <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 pl-1.5">
-                <Globe className="w-3.5 h-3.5 text-slate-400" />
-                <span>{language === 'tl' ? 'Wika' : 'Lang'}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setLanguage('en')}
-                  className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
-                    language === 'en'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                  }`}
-                >
-                  EN
-                </button>
-                <button
-                  onClick={() => setLanguage('tl')}
-                  className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
-                    language === 'tl'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                  }`}
-                >
-                  TL
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={() => setLanguage(language === 'en' ? 'tl' : 'en')}
-              className="w-full py-1 flex items-center justify-center bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-              title={`Switch Language (${language.toUpperCase()})`}
-            >
-              {language.toUpperCase()}
-            </button>
-          )}
-
-          {/* Theme Switcher */}
-          {!isCollapsed ? (
-            <div className="flex items-center justify-between p-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs">
-              <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 pl-1.5">
-                {theme === 'dark' ? (
-                  <Moon className="w-3.5 h-3.5 text-slate-400" />
-                ) : (
-                  <Sun className="w-3.5 h-3.5 text-amber-500" />
-                )}
-                <span>{t('theme')}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setTheme('light')}
-                  className={`px-2 py-0.5 rounded text-xs font-medium transition-colors flex items-center gap-1 ${
-                    theme === 'light'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                  }`}
-                  title={t('lightMode')}
-                >
-                  <Sun className="w-3 h-3" />
-                  <span>{t('lightMode')}</span>
-                </button>
-                <button
-                  onClick={() => setTheme('dark')}
-                  className={`px-2 py-0.5 rounded text-xs font-medium transition-colors flex items-center gap-1 ${
-                    theme === 'dark'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                  }`}
-                  title={t('darkMode')}
-                >
-                  <Moon className="w-3 h-3" />
-                  <span>{t('darkMode')}</span>
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={toggleTheme}
-              className="w-full py-1 flex items-center justify-center bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-              title={t('toggleTheme')}
-            >
-              {theme === 'dark' ? (
-                <Moon className="w-3.5 h-3.5 text-slate-400" />
-              ) : (
-                <Sun className="w-3.5 h-3.5 text-amber-500" />
-              )}
-            </button>
-          )}
-        </div>
-
         {/* 2. Menu Navigation */}
-        <nav className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-250px)]">
+        <nav className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-140px)]">
           {menuSections.map((section) => (
             <div key={section.titleKey} className="space-y-1">
               {!isCollapsed && (
