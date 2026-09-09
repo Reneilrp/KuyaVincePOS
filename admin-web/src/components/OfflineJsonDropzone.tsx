@@ -52,15 +52,15 @@ export const OfflineJsonDropzone: React.FC<Props> = ({ onImportBatch }) => {
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-3">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
             📥 Offline JSON Batch Uploader
           </h3>
-          <p className="text-xs text-slate-400 mt-0.5">Import .json sales files exported from disconnected Sunmi terminals</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Import .json sales files exported from disconnected Sunmi terminals</p>
         </div>
-        <span className="text-xs text-slate-400 font-medium">
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
           Zero Server Needed
         </span>
       </div>
@@ -70,7 +70,7 @@ export const OfflineJsonDropzone: React.FC<Props> = ({ onImportBatch }) => {
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
         className={`border border-dashed rounded-lg p-5 text-center transition-colors cursor-pointer ${
-          isDragging ? 'border-blue-500 bg-blue-950/20' : 'border-slate-800 hover:border-slate-700 bg-slate-950'
+          isDragging ? 'border-blue-500 bg-blue-950/20' : 'border-slate-300 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700 bg-slate-50 dark:bg-slate-950'
         }`}
       >
         <input
@@ -81,10 +81,10 @@ export const OfflineJsonDropzone: React.FC<Props> = ({ onImportBatch }) => {
           className="hidden"
         />
         <label htmlFor="json-file-input" className="cursor-pointer flex flex-col items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-blue-400">
+          <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-blue-600 dark:text-blue-400">
             <UploadCloud className="w-4 h-4" />
           </div>
-          <p className="text-xs font-medium text-slate-200">
+          <p className="text-xs font-medium text-slate-800 dark:text-slate-200">
             Drag & drop <span className="text-blue-400 font-mono">daily_sales.json</span> here or <span className="text-blue-400 underline">browse file</span>
           </p>
           <p className="text-xs text-slate-500">Supports all Sunmi offline exported bundles</p>
@@ -92,14 +92,14 @@ export const OfflineJsonDropzone: React.FC<Props> = ({ onImportBatch }) => {
       </div>
 
       {successMessage && (
-        <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 text-emerald-400 text-xs flex items-center gap-2">
+        <div className="p-3 rounded-lg bg-emerald-50 dark:bg-slate-950 border border-emerald-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 text-xs flex items-center gap-2">
           <FileCheck className="w-4 h-4 flex-shrink-0" />
           <span>{successMessage}</span>
         </div>
       )}
 
       {errorMessage && (
-        <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 text-rose-400 text-xs flex items-center gap-2">
+        <div className="p-3 rounded-lg bg-rose-50 dark:bg-slate-950 border border-rose-200 dark:border-slate-800 text-rose-700 dark:text-rose-400 text-xs flex items-center gap-2">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           <span>{errorMessage}</span>
         </div>

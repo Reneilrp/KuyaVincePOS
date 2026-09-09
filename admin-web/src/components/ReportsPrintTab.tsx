@@ -54,13 +54,13 @@ export const ReportsPrintTab: React.FC<Props> = ({
   return (
     <div className="space-y-6">
       {/* 1. Client Data Export & Retrieval Hub */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
-            <h2 className="text-base font-semibold text-white flex items-center gap-2">
+            <h2 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
               📥 Client Data Retrieval & Export Center
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">Download full offline copies in CSV or raw JSON format</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Download full offline copies in CSV or raw JSON format</p>
           </div>
           {downloadSuccess && (
             <span className="text-xs font-medium text-emerald-400 flex items-center gap-1.5">
@@ -73,7 +73,7 @@ export const ReportsPrintTab: React.FC<Props> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
           <button
             onClick={handleExportSales}
-            className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold transition-colors"
+            className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors"
           >
             <FileSpreadsheet className="w-4 h-4 text-blue-400" />
             Export Sales (CSV)
@@ -81,7 +81,7 @@ export const ReportsPrintTab: React.FC<Props> = ({
 
           <button
             onClick={handleExportInventory}
-            className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold transition-colors"
+            className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors"
           >
             <FileSpreadsheet className="w-4 h-4 text-blue-400" />
             Export Stock Balances (CSV)
@@ -89,7 +89,7 @@ export const ReportsPrintTab: React.FC<Props> = ({
 
           <button
             onClick={handleExportPayroll}
-            className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold transition-colors"
+            className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors"
           >
             <FileSpreadsheet className="w-4 h-4 text-blue-400" />
             Export Payroll (CSV)
@@ -97,7 +97,7 @@ export const ReportsPrintTab: React.FC<Props> = ({
 
           <button
             onClick={handleExportBackup}
-            className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold transition-colors"
+            className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors"
           >
             <Database className="w-4 h-4 text-blue-400" />
             Download JSON Backup
@@ -111,10 +111,10 @@ export const ReportsPrintTab: React.FC<Props> = ({
       {/* 3. Physical Print Center (Z-Reading & A4) */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h2 className="text-base font-semibold text-white flex items-center gap-2">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
             🖨️ Daily Z-Reports & Executive Print Center
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">Generate printable 58mm thermal receipts or full A4 financial summaries</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Generate printable 58mm thermal receipts or full A4 financial summaries</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -122,7 +122,7 @@ export const ReportsPrintTab: React.FC<Props> = ({
             <button
               onClick={() => setReportType('z_read')}
               className={`px-3 py-1 text-xs font-semibold rounded transition-colors ${
-                reportType === 'z_read' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                reportType === 'z_read' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               58mm Thermal Z-Read
@@ -130,7 +130,7 @@ export const ReportsPrintTab: React.FC<Props> = ({
             <button
               onClick={() => setReportType('a4_summary')}
               className={`px-3 py-1 text-xs font-semibold rounded transition-colors ${
-                reportType === 'a4_summary' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                reportType === 'a4_summary' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               A4 Financial Audit

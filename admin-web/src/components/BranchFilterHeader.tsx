@@ -1,7 +1,8 @@
 import React from "react";
-import { Building2, Calendar, RefreshCw, Printer } from "lucide-react";
+import { Building2, Calendar, RefreshCw, Printer, Sun, Moon } from "lucide-react";
 import { Branch } from "../types";
 import { TabKey } from "./SidebarMenuBar";
+import { useTheme } from "../context/ThemeContext";
 
 interface Props {
   branches: Branch[];
@@ -30,18 +31,19 @@ export const BranchFilterHeader: React.FC<Props> = ({
   activeBranchDetail,
   onOpenZReport
 }) => {
+  const { theme, toggleTheme } = useTheme();
   const showBranchFilter = !activeBranchDetail && ["sales", "payroll", "reports"].includes(activeTab);
   const showDateFilter = !activeBranchDetail && ["sales", "payroll", "reports"].includes(activeTab);
 
   return (
-    <header className="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 px-6 py-3.5 no-print">
+    <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 px-6 py-3.5 no-print transition-colors">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         {/* Left: Clean Page Title */}
         <div>
-          <h1 className="text-base font-semibold text-white">
+          <h1 className="text-base font-semibold text-slate-900 dark:text-white">
             {activeBranchDetail ? `🏢 ${activeBranchDetail.name}` : pageTitle}
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             {activeBranchDetail
               ? `${activeBranchDetail.address || "Zamboanga City"} • Branch Dashboard`
               : "Live Supabase PostgreSQL • Central Database"}
@@ -62,16 +64,16 @@ export const BranchFilterHeader: React.FC<Props> = ({
 
           {/* Branch Dropdown */}
           {showBranchFilter && (
-            <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5">
+            <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5">
               <Building2 className="w-3.5 h-3.5 text-slate-400" />
               <select
                 value={selectedBranchId}
                 onChange={(e) => onSelectBranch(e.target.value)}
-                className="bg-transparent text-xs font-medium text-slate-200 focus:outline-none cursor-pointer"
+                className="bg-transparent text-xs font-medium text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer"
               >
-                <option value="all" className="bg-slate-900 text-white">All Branches</option>
+                <option value="all" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">All Branches</option>
                 {branches.map((b) => (
-                  <option key={b.id} value={String(b.id)} className="bg-slate-900 text-white">
+                  <option key={b.id} value={String(b.id)} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                     {b.name} [{b.import_code || b.code}]
                   </option>
                 ))}
@@ -81,8 +83,8 @@ export const BranchFilterHeader: React.FC<Props> = ({
 
           {/* Date Range Selector */}
           {showDateFilter && (
-            <div className="flex items-center bg-slate-950 border border-slate-800 rounded-lg p-0.5">
-              <Calendar className="w-3.5 h-3.5 text-slate-500 ml-2 mr-1" />
+            <div className="flex items-center bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-0.5">
+              <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 ml-2 mr-1" />
               {(["today", "week", "month"] as const).map((r) => (
                 <button
                   key={r}
@@ -90,7 +92,7 @@ export const BranchFilterHeader: React.FC<Props> = ({
                   className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
                     selectedRange === r
                       ? "bg-blue-600 text-white"
-                      : "text-slate-400 hover:text-slate-200"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                   }`}
                 >
                   {r === "today" ? "Today" : r === "week" ? "Week" : "Month"}
@@ -99,14 +101,27 @@ export const BranchFilterHeader: React.FC<Props> = ({
             </div>
           )}
 
+          {/* Quick Theme Toggle Button */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+          >
+            {theme === 'dark' ? (
+              <Sun className="w-3.5 h-3.5 text-amber-500" />
+            ) : (
+              <Moon className="w-3.5 h-3.5 text-slate-600" />
+            )}
+          </button>
+
           {/* Refresh Button */}
           <button
             onClick={onRefresh}
             disabled={isLoading}
-            className="p-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             title="Sync Latest Data"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-blue-400" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-blue-500" : ""}`} />
           </button>
         </div>
       </div>

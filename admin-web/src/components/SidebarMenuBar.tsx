@@ -10,9 +10,12 @@ import {
   ShieldCheck,
   ChevronLeft,
   ChevronRight,
-  Globe
+  Globe,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 import { TranslationKey } from '../i18n/translations';
 
 export type TabKey = 'branches' | 'inventory' | 'sales' | 'payroll' | 'reports' | 'settings';
@@ -35,6 +38,7 @@ export const SidebarMenuBar: React.FC<Props> = ({
   onToggleCollapse
 }) => {
   const { t, language, setLanguage } = useLanguage();
+  const { theme, setTheme, toggleTheme } = useTheme();
 
   const menuSections = [
     {
@@ -91,21 +95,21 @@ export const SidebarMenuBar: React.FC<Props> = ({
 
   return (
     <aside
-      className={`bg-slate-900 border-r border-slate-800 flex flex-col justify-between flex-shrink-0 h-screen sticky top-0 transition-all duration-200 no-print z-20 ${
+      className={`bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between flex-shrink-0 h-screen sticky top-0 transition-all duration-200 no-print z-20 ${
         isCollapsed ? 'w-16' : 'w-60'
       }`}
     >
       {/* 1. Header Branding & Collapse Toggle */}
       <div>
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           {!isCollapsed ? (
             <div className="flex items-center gap-2.5 truncate">
               <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white font-semibold text-xs flex-shrink-0">
                 KV
               </div>
               <div className="truncate">
-                <h1 className="text-sm font-semibold text-white truncate">KuyaVince POS</h1>
-                <span className="text-xs text-slate-400 font-normal">{t('appSubtitle')}</span>
+                <h1 className="text-sm font-semibold text-slate-900 dark:text-white truncate">KuyaVince POS</h1>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-normal">{t('appSubtitle')}</span>
               </div>
             </div>
           ) : (
@@ -116,18 +120,19 @@ export const SidebarMenuBar: React.FC<Props> = ({
 
           <button
             onClick={onToggleCollapse}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors flex-shrink-0"
+            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex-shrink-0"
             title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
           >
             {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
         </div>
 
-        {/* Language Switcher */}
-        <div className="px-3 pt-3">
+        {/* Language & Theme Controls */}
+        <div className="px-3 pt-3 space-y-2">
+          {/* Language Switcher */}
           {!isCollapsed ? (
-            <div className="flex items-center justify-between p-1 bg-slate-950 border border-slate-800 rounded-lg text-xs">
-              <div className="flex items-center gap-1.5 text-slate-400 pl-1.5">
+            <div className="flex items-center justify-between p-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs">
+              <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 pl-1.5">
                 <Globe className="w-3.5 h-3.5 text-slate-400" />
                 <span>{language === 'tl' ? 'Wika' : 'Lang'}</span>
               </div>
@@ -137,7 +142,7 @@ export const SidebarMenuBar: React.FC<Props> = ({
                   className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
                     language === 'en'
                       ? 'bg-blue-600 text-white'
-                      : 'text-slate-400 hover:text-slate-200'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                   }`}
                 >
                   EN
@@ -147,7 +152,7 @@ export const SidebarMenuBar: React.FC<Props> = ({
                   className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
                     language === 'tl'
                       ? 'bg-blue-600 text-white'
-                      : 'text-slate-400 hover:text-slate-200'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                   }`}
                 >
                   TL
@@ -157,20 +162,72 @@ export const SidebarMenuBar: React.FC<Props> = ({
           ) : (
             <button
               onClick={() => setLanguage(language === 'en' ? 'tl' : 'en')}
-              className="w-full py-1 flex items-center justify-center bg-slate-950 border border-slate-800 rounded-lg text-xs font-medium text-slate-400 hover:text-white transition-colors"
+              className="w-full py-1 flex items-center justify-center bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
               title={`Switch Language (${language.toUpperCase()})`}
             >
               {language.toUpperCase()}
             </button>
           )}
+
+          {/* Theme Switcher */}
+          {!isCollapsed ? (
+            <div className="flex items-center justify-between p-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs">
+              <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 pl-1.5">
+                {theme === 'dark' ? (
+                  <Moon className="w-3.5 h-3.5 text-slate-400" />
+                ) : (
+                  <Sun className="w-3.5 h-3.5 text-amber-500" />
+                )}
+                <span>{t('theme')}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setTheme('light')}
+                  className={`px-2 py-0.5 rounded text-xs font-medium transition-colors flex items-center gap-1 ${
+                    theme === 'light'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                  title={t('lightMode')}
+                >
+                  <Sun className="w-3 h-3" />
+                  <span>{t('lightMode')}</span>
+                </button>
+                <button
+                  onClick={() => setTheme('dark')}
+                  className={`px-2 py-0.5 rounded text-xs font-medium transition-colors flex items-center gap-1 ${
+                    theme === 'dark'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                  title={t('darkMode')}
+                >
+                  <Moon className="w-3 h-3" />
+                  <span>{t('darkMode')}</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={toggleTheme}
+              className="w-full py-1 flex items-center justify-center bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+              title={t('toggleTheme')}
+            >
+              {theme === 'dark' ? (
+                <Moon className="w-3.5 h-3.5 text-slate-400" />
+              ) : (
+                <Sun className="w-3.5 h-3.5 text-amber-500" />
+              )}
+            </button>
+          )}
         </div>
 
         {/* 2. Menu Navigation */}
-        <nav className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-200px)]">
+        <nav className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-250px)]">
           {menuSections.map((section) => (
             <div key={section.titleKey} className="space-y-1">
               {!isCollapsed && (
-                <h2 className="px-2 text-xs font-medium text-slate-500">
+                <h2 className="px-2 text-xs font-medium text-slate-500 dark:text-slate-500">
                   {t(section.titleKey)}
                 </h2>
               )}
@@ -190,7 +247,7 @@ export const SidebarMenuBar: React.FC<Props> = ({
                       } ${
                         isActive
                           ? 'bg-blue-600 text-white'
-                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
                       }`}
                     >
                       <Icon className="w-4 h-4 flex-shrink-0" />
@@ -205,19 +262,19 @@ export const SidebarMenuBar: React.FC<Props> = ({
       </div>
 
       {/* 3. Bottom Admin Profile & Logout */}
-      <div className="p-3 border-t border-slate-800 bg-slate-900">
+      <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
         {!isCollapsed ? (
-          <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950 border border-slate-800">
+          <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
             <div className="truncate">
-              <p className="text-xs font-medium text-white truncate">{currentUser.email}</p>
-              <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+              <p className="text-xs font-medium text-slate-900 dark:text-white truncate">{currentUser.email}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
                 <ShieldCheck className="w-3 h-3 text-slate-400" /> {currentUser.role}
               </p>
             </div>
 
             <button
               onClick={onLogout}
-              className="p-1.5 rounded text-slate-400 hover:text-rose-400 transition-colors"
+              className="p-1.5 rounded text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
               title={t('signOut')}
             >
               <LogOut className="w-4 h-4" />
@@ -226,7 +283,7 @@ export const SidebarMenuBar: React.FC<Props> = ({
         ) : (
           <button
             onClick={onLogout}
-            className="w-full py-2 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
+            className="w-full py-2 flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             title={`${t('signOut')} (${currentUser.email})`}
           >
             <LogOut className="w-4 h-4" />

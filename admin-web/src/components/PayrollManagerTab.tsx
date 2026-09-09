@@ -219,12 +219,12 @@ export const PayrollManagerTab: React.FC<Props> = ({
   return (
     <div className="space-y-6">
       {/* 1. Header with Tab Switcher */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h2 className="text-base font-semibold text-white flex items-center gap-2">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
             👥 Staff Timeclocks & Hourly Payroll Manager
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Centralized company-wide staff directory and automated payroll wage calculations
           </p>
         </div>
@@ -263,7 +263,7 @@ export const PayrollManagerTab: React.FC<Props> = ({
 
       {/* 2. SUB-TAB 1: CENTRALIZED STAFF MASTER DIRECTORY */}
       {activeSubTab === "directory" && (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
               {/* Search Bar */}
@@ -274,13 +274,13 @@ export const PayrollManagerTab: React.FC<Props> = ({
                   placeholder="Search staff name or role..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               {/* Branch Filter */}
-              <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-300">
-                <Building2 className="w-3.5 h-3.5 text-blue-400" />
+              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-300">
+                <Building2 className="w-3.5 h-3.5 text-slate-400" />
                 <select
                   value={filterBranch}
                   onChange={(e) => setFilterBranch(e.target.value)}
@@ -313,7 +313,7 @@ export const PayrollManagerTab: React.FC<Props> = ({
                 <Users className="w-5 h-5" />
               </div>
               <h4 className="text-sm font-semibold text-slate-200">No Staff Members Found</h4>
-              <p className="text-xs text-slate-400 max-w-sm mx-auto">
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
                 Add staff members here so they can be assigned to branches and log into Sunmi terminals with their PIN.
               </p>
               <button
@@ -326,7 +326,7 @@ export const PayrollManagerTab: React.FC<Props> = ({
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-950 text-xs font-semibold text-slate-400 border-b border-slate-800">
+                <thead className="bg-slate-50 dark:bg-slate-950 text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="p-3">Staff Name</th>
                     <th className="p-3">Assigned Branch</th>
@@ -337,14 +337,14 @@ export const PayrollManagerTab: React.FC<Props> = ({
                     <th className="p-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800">
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                   {filteredStaff.map((staff) => {
                     const assignedBr = branches.find((b) => b.id === staff.branch_id);
 
                     return (
-                      <tr key={staff.id} className="hover:bg-slate-800/50 transition-colors">
+                      <tr key={staff.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                         <td className="p-3 font-medium text-white flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 font-semibold text-xs">
+                          <div className="w-7 h-7 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 font-semibold text-xs">
                             {staff.name.charAt(0)}
                           </div>
                           <span>{staff.name}</span>
@@ -373,21 +373,21 @@ export const PayrollManagerTab: React.FC<Props> = ({
                                 setResetPinStaff(staff);
                                 setNewPin("1234");
                               }}
-                              className="p-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-blue-400 rounded transition-colors"
+                              className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-800 text-blue-400 rounded transition-colors"
                               title="Reset 4-Digit PIN"
                             >
                               <Key className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => setEditingStaff({ ...staff })}
-                              className="p-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded transition-colors"
+                              className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-800 text-slate-300 rounded transition-colors"
                               title="Edit Staff Member"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleToggleStatus(staff)}
-                              className="p-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white rounded transition-colors"
+                              className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white rounded transition-colors"
                               title={staff.is_active ? "Deactivate" : "Activate"}
                             >
                               {staff.is_active ? <UserX className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
@@ -396,7 +396,7 @@ export const PayrollManagerTab: React.FC<Props> = ({
                               onClick={() => handleDeleteStaff(staff)}
                               disabled={!isSuperAdmin}
                               title={!isSuperAdmin ? 'Super Admin access required' : 'Delete Permanently'}
-                              className="p-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-rose-400 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                              className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-rose-400 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -416,21 +416,21 @@ export const PayrollManagerTab: React.FC<Props> = ({
       {activeSubTab === "payroll" && (
         <div className="space-y-6">
           {/* Date Range & Branch Filters */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
             <div>
               <h3 className="text-sm font-semibold text-white flex items-center gap-2">
                 ⏰ Automated Shift Wage Calculator
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">Calculate staff wages automatically from logged Sunmi timeclocks</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Calculate staff wages automatically from logged Sunmi timeclocks</p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5">
-                <span className="text-xs text-slate-400">Branch:</span>
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5">
+                <span className="text-xs text-slate-500 dark:text-slate-400">Branch:</span>
                 <select
                   value={selectedCalcBranch}
                   onChange={(e) => setSelectedCalcBranch(e.target.value)}
-                  className="bg-transparent text-xs text-slate-200 focus:outline-none cursor-pointer"
+                  className="bg-transparent text-xs text-slate-900 dark:text-slate-200 focus:outline-none cursor-pointer"
                 >
                   <option value="all" className="bg-slate-900 text-white">All Branches</option>
                   {branches.map((b) => (
@@ -441,20 +441,20 @@ export const PayrollManagerTab: React.FC<Props> = ({
                 </select>
               </div>
 
-              <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5">
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5">
                 <Calendar className="w-3.5 h-3.5 text-slate-400" />
                 <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="bg-transparent text-xs text-slate-200 focus:outline-none cursor-pointer"
+                  className="bg-transparent text-xs text-slate-900 dark:text-slate-200 focus:outline-none cursor-pointer"
                 />
                 <span className="text-slate-500 text-xs">to</span>
                 <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="bg-transparent text-xs text-slate-200 focus:outline-none cursor-pointer"
+                  className="bg-transparent text-xs text-slate-900 dark:text-slate-200 focus:outline-none cursor-pointer"
                 />
               </div>
 
@@ -471,32 +471,32 @@ export const PayrollManagerTab: React.FC<Props> = ({
 
           {/* Payroll KPI Summary */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-              <span className="text-xs text-slate-400 block">Total Payroll Cost</span>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
+              <span className="text-xs text-slate-500 dark:text-slate-400 block">Total Payroll Cost</span>
               <p className="text-xl font-semibold font-mono text-white mt-1">
                 ₱{totalGrossPayroll.toLocaleString("en-US", { minimumFractionDigits: 2 })}
               </p>
               <p className="text-xs text-slate-500 mt-0.5">For selected date cycle</p>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-              <span className="text-xs text-slate-400 block">Accumulated Shift Hours</span>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
+              <span className="text-xs text-slate-500 dark:text-slate-400 block">Accumulated Shift Hours</span>
               <p className="text-xl font-semibold font-mono text-white mt-1">{totalHoursWorked.toFixed(1)} hrs</p>
               <p className="text-xs text-slate-500 mt-0.5">Logged across all branches</p>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-              <span className="text-xs text-slate-400 block">Staff on Payroll</span>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
+              <span className="text-xs text-slate-500 dark:text-slate-400 block">Staff on Payroll</span>
               <p className="text-xl font-semibold font-mono text-blue-400 mt-1">{payrollData.length} Staff</p>
               <p className="text-xs text-slate-500 mt-0.5">Cashiers & branch operators</p>
             </div>
           </div>
 
           {/* Payroll Table */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-950 text-xs font-semibold text-slate-400 border-b border-slate-800">
+                <thead className="bg-slate-50 dark:bg-slate-950 text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="p-3">Staff Member</th>
                     <th className="p-3">Branch</th>
@@ -507,7 +507,7 @@ export const PayrollManagerTab: React.FC<Props> = ({
                     <th className="p-3 text-right">Payslip</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800">
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                   {payrollData.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="py-6 text-center text-slate-500">
@@ -516,14 +516,14 @@ export const PayrollManagerTab: React.FC<Props> = ({
                     </tr>
                   ) : (
                     payrollData.map((staff) => (
-                      <tr key={staff.user_id} className="hover:bg-slate-800/50 transition-colors">
+                      <tr key={staff.user_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                         <td className="p-3 font-medium text-white flex items-center gap-2">
                           <div className="w-7 h-7 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-semibold text-slate-300">
                             {staff.staff_name.charAt(0)}
                           </div>
                           <div>
                             <p>{staff.staff_name}</p>
-                            <span className="text-xs text-slate-400 capitalize">{staff.role}</span>
+                            <span className="text-xs text-slate-500 dark:text-slate-400 capitalize">{staff.role}</span>
                           </div>
                         </td>
                         <td className="p-3 text-slate-300">🏢 {staff.branch_name}</td>
@@ -534,7 +534,7 @@ export const PayrollManagerTab: React.FC<Props> = ({
                         <td className="p-3 text-right">
                           <button
                             onClick={() => setSelectedPayslip(staff)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded transition-colors"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded transition-colors"
                           >
                             <Printer className="w-3.5 h-3.5" /> View Slip
                           </button>
@@ -546,8 +546,8 @@ export const PayrollManagerTab: React.FC<Props> = ({
               </table>
             </div>
 
-            <div className="p-3 bg-slate-950 border-t border-slate-800 flex justify-between items-center">
-              <p className="text-xs text-slate-400">Cycle: {startDate} to {endDate}</p>
+            <div className="p-3 bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center">
+              <p className="text-xs text-slate-500 dark:text-slate-400">Cycle: {startDate} to {endDate}</p>
               <button
                 onClick={handleApprovePayroll}
                 disabled={isApproving || payrollData.length === 0 || !isSuperAdmin}
@@ -565,32 +565,32 @@ export const PayrollManagerTab: React.FC<Props> = ({
       {/* Modal 1: Create New Staff */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6">
-            <h3 className="text-base font-semibold text-white flex items-center gap-2">
-              <Users className="w-4 h-4 text-blue-400" /> Add New Staff Member
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-md w-full p-6">
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <Users className="w-4 h-4 text-slate-400" /> Add New Staff Member
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">Register employee for timeclocks and POS terminal access</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Register employee for timeclocks and POS terminal access</p>
 
             <form onSubmit={handleCreateStaff} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Full Name</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Maria Santos"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Assigned Branch</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Assigned Branch</label>
                   <select
                     value={branchId}
                     onChange={(e) => setBranchId(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                   >
                     {branches.map((b) => (
                       <option key={b.id} value={b.id}>
@@ -601,11 +601,11 @@ export const PayrollManagerTab: React.FC<Props> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Role</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Role</label>
                   <select
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                   >
                     <option value="cashier">Cashier</option>
                     <option value="supervisor">Shift Supervisor</option>
@@ -617,19 +617,19 @@ export const PayrollManagerTab: React.FC<Props> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Hourly Wage (₱/hr)</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Hourly Wage (₱/hr)</label>
                   <input
                     type="number"
                     step="0.5"
                     value={hourlyRate}
                     onChange={(e) => setHourlyRate(e.target.value)}
                     placeholder="85.00"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs font-mono text-slate-200 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs font-mono text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">4-Digit Terminal PIN</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">4-Digit Terminal PIN</label>
                   <input
                     type="text"
                     maxLength={4}
@@ -637,7 +637,7 @@ export const PayrollManagerTab: React.FC<Props> = ({
                     value={pinCode}
                     onChange={(e) => setPinCode(e.target.value.replace(/[^0-9]/g, ""))}
                     placeholder="1234"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-center text-xs font-mono text-white tracking-widest focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-center text-xs font-mono text-white tracking-widest focus:outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -646,7 +646,7 @@ export const PayrollManagerTab: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="flex-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition-colors"
+                  className="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
@@ -666,31 +666,31 @@ export const PayrollManagerTab: React.FC<Props> = ({
       {/* Modal 2: Edit Staff */}
       {editingStaff && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6">
-            <h3 className="text-base font-semibold text-white flex items-center gap-2">
-              <Edit2 className="w-4 h-4 text-blue-400" /> Edit Staff Details
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-md w-full p-6">
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <Edit2 className="w-4 h-4 text-slate-400" /> Edit Staff Details
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">Update employee information and branch transfer</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Update employee information and branch transfer</p>
 
             <form onSubmit={handleUpdateStaff} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Full Name</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
                 <input
                   type="text"
                   required
                   value={editingStaff.name}
                   onChange={(e) => setEditingStaff({ ...editingStaff, name: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Assigned Branch</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Assigned Branch</label>
                   <select
                     value={editingStaff.branch_id || ""}
                     onChange={(e) => setEditingStaff({ ...editingStaff, branch_id: Number(e.target.value) })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                   >
                     {branches.map((b) => (
                       <option key={b.id} value={b.id}>
@@ -701,11 +701,11 @@ export const PayrollManagerTab: React.FC<Props> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Role</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Role</label>
                   <select
                     value={editingStaff.role}
                     onChange={(e) => setEditingStaff({ ...editingStaff, role: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                   >
                     <option value="cashier">Cashier</option>
                     <option value="supervisor">Shift Supervisor</option>
@@ -716,13 +716,13 @@ export const PayrollManagerTab: React.FC<Props> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Hourly Wage (₱/hr)</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Hourly Wage (₱/hr)</label>
                 <input
                   type="number"
                   step="0.5"
                   value={editingStaff.hourly_rate || 85}
                   onChange={(e) => setEditingStaff({ ...editingStaff, hourly_rate: parseFloat(e.target.value) })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs font-mono text-slate-200 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs font-mono text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -730,7 +730,7 @@ export const PayrollManagerTab: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => setEditingStaff(null)}
-                  className="flex-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition-colors"
+                  className="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
@@ -750,15 +750,15 @@ export const PayrollManagerTab: React.FC<Props> = ({
       {/* Modal 3: Reset PIN */}
       {resetPinStaff && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-sm w-full p-6">
-            <h3 className="text-base font-semibold text-white flex items-center gap-2">
-              <Key className="w-4 h-4 text-blue-400" /> Reset PIN for {resetPinStaff.name}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-sm w-full p-6">
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <Key className="w-4 h-4 text-slate-400" /> Reset PIN for {resetPinStaff.name}
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">Enter a new 4-digit PIN for Sunmi terminal login</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Enter a new 4-digit PIN for Sunmi terminal login</p>
 
             <form onSubmit={handleResetPin} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">New 4-Digit PIN</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">New 4-Digit PIN</label>
                 <input
                   type="text"
                   maxLength={4}
@@ -767,7 +767,7 @@ export const PayrollManagerTab: React.FC<Props> = ({
                   value={newPin}
                   onChange={(e) => setNewPin(e.target.value.replace(/[^0-9]/g, ""))}
                   placeholder="e.g. 5678"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-center text-xl font-mono font-semibold text-blue-400 tracking-widest focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-center text-xl font-mono font-semibold text-blue-400 tracking-widest focus:outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -775,7 +775,7 @@ export const PayrollManagerTab: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => setResetPinStaff(null)}
-                  className="flex-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition-colors"
+                  className="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
@@ -795,41 +795,41 @@ export const PayrollManagerTab: React.FC<Props> = ({
       {/* Payslip Modal */}
       {selectedPayslip && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6">
-            <div className="border-b border-slate-800 pb-3 mb-4 text-center">
-              <h3 className="text-base font-semibold text-white uppercase">Official Employee Payslip</h3>
-              <p className="text-xs text-slate-400 mt-0.5">{selectedPayslip.branch_name}</p>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-md w-full p-6">
+            <div className="border-b border-slate-200 dark:border-slate-800 pb-3 mb-4 text-center">
+              <h3 className="text-base font-semibold text-slate-900 dark:text-white uppercase">Official Employee Payslip</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{selectedPayslip.branch_name}</p>
               <p className="text-xs text-slate-500">
                 Period: {selectedPayslip.period_start} to {selectedPayslip.period_end}
               </p>
             </div>
 
             <div className="space-y-2 text-xs text-slate-300">
-              <div className="flex justify-between py-1 border-b border-slate-800">
+              <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-800">
                 <span className="text-slate-400">Employee Name:</span>
                 <span className="font-medium text-white">{selectedPayslip.staff_name}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-800">
+              <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-800">
                 <span className="text-slate-400">Role:</span>
                 <span className="capitalize text-slate-300">{selectedPayslip.role}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-800">
+              <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-800">
                 <span className="text-slate-400">Hourly Pay Rate:</span>
                 <span className="font-mono">₱{selectedPayslip.hourly_rate.toFixed(2)}/hr</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-800">
+              <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-800">
                 <span className="text-slate-400">Logged Shift Hours:</span>
                 <span className="font-mono font-medium text-white">{selectedPayslip.total_hours.toFixed(2)} hours</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-800">
+              <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-800">
                 <span className="text-slate-400">Gross Wages:</span>
                 <span className="font-mono font-medium text-white">₱{selectedPayslip.gross_pay.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-800">
+              <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-800">
                 <span className="text-slate-400">Deductions:</span>
                 <span className="font-mono">-₱{selectedPayslip.deductions.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between py-2 border-t border-slate-800 text-sm font-semibold text-white">
+              <div className="flex justify-between py-2 border-t border-slate-200 dark:border-slate-800 text-sm font-semibold text-white">
                 <span>NET TAKE-HOME PAY:</span>
                 <span className="font-mono">₱{selectedPayslip.net_pay.toFixed(2)}</span>
               </div>
@@ -839,7 +839,7 @@ export const PayrollManagerTab: React.FC<Props> = ({
               <button
                 type="button"
                 onClick={() => setSelectedPayslip(null)}
-                className="flex-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition-colors"
+                className="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg transition-colors"
               >
                 Close
               </button>

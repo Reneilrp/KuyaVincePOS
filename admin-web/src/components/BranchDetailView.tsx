@@ -137,10 +137,10 @@ export const BranchDetailView: React.FC<Props> = ({
   return (
     <div className="space-y-6">
       {/* 1. Header: Back Button & Sub-Tabs Navigation */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 border border-slate-800 p-4 rounded-xl">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold transition-colors"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-semibold transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Back to All Branches
         </button>
@@ -152,7 +152,7 @@ export const BranchDetailView: React.FC<Props> = ({
             className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
               innerTab === "sales"
                 ? "bg-blue-600 text-white"
-                : "text-slate-400 hover:text-white hover:bg-slate-800"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
             }`}
           >
             <TrendingUp className="w-4 h-4" /> {t("cashBalancingTitle")}
@@ -163,7 +163,7 @@ export const BranchDetailView: React.FC<Props> = ({
             className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
               innerTab === "inventory"
                 ? "bg-blue-600 text-white"
-                : "text-slate-400 hover:text-white hover:bg-slate-800"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
             }`}
           >
             <Package className="w-4 h-4" /> {t("stockAtBranch")} ({assignedItems.length})
@@ -174,7 +174,7 @@ export const BranchDetailView: React.FC<Props> = ({
             className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
               innerTab === "staff"
                 ? "bg-blue-600 text-white"
-                : "text-slate-400 hover:text-white hover:bg-slate-800"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
             }`}
           >
             <Users className="w-4 h-4" /> {t("cashierRoster")}
@@ -185,7 +185,7 @@ export const BranchDetailView: React.FC<Props> = ({
             className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
               innerTab === "devices"
                 ? "bg-blue-600 text-white"
-                : "text-slate-400 hover:text-white hover:bg-slate-800"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
             }`}
           >
             <Smartphone className="w-4 h-4" /> {t("sunmiTerminal")}
@@ -197,11 +197,10 @@ export const BranchDetailView: React.FC<Props> = ({
       {innerTab === "sales" && (
         <div className="space-y-6">
           {/* Time & Specific Date Filter Bar */}
-          {/* Time & Specific Date Filter Bar */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-sm">
             <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-blue-400" />
-              <span className="text-xs font-semibold text-white">{t("branchPerformancePeriod")}:</span>
+              <Calendar className="w-4 h-4 text-slate-400" />
+              <span className="text-xs font-semibold text-slate-900 dark:text-white">{t("branchPerformancePeriod")}:</span>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -212,7 +211,7 @@ export const BranchDetailView: React.FC<Props> = ({
                   className={`px-3 py-1 text-xs font-semibold rounded-lg capitalize transition-colors ${
                     dateRange === r
                       ? "bg-blue-600 text-white"
-                      : "bg-slate-950 border border-slate-800 text-slate-400 hover:text-white"
+                      : "bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
                   {r === "today" ? t("today") : r === "week" ? t("thisWeek") : r === "month" ? t("thisMonth") : t("thisYear")}
@@ -225,14 +224,14 @@ export const BranchDetailView: React.FC<Props> = ({
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-lg p-1.5"
+                    className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-200 rounded-lg p-1.5"
                   />
                   <span className="text-slate-500 text-xs">to</span>
                   <input
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-lg p-1.5"
+                    className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-slate-200 rounded-lg p-1.5"
                   />
                 </div>
               )}
@@ -241,29 +240,29 @@ export const BranchDetailView: React.FC<Props> = ({
 
           {/* Quick KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-              <span className="text-xs text-slate-400 block">{t("totalGrossRevenue")}</span>
-              <p className="text-xl font-semibold font-mono text-white mt-1">₱{branchGrossSales.toFixed(2)}</p>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
+              <span className="text-xs text-slate-500 dark:text-slate-400 block">{t("totalGrossRevenue")}</span>
+              <p className="text-xl font-semibold font-mono text-slate-900 dark:text-white mt-1">₱{branchGrossSales.toFixed(2)}</p>
               <p className="text-xs text-slate-500 mt-0.5">{branch.name} only</p>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-              <span className="text-xs text-slate-400 block">{t("totalOrdersCompleted")}</span>
-              <p className="text-xl font-semibold font-mono text-white mt-1">{branchOrdersCount} Orders</p>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
+              <span className="text-xs text-slate-500 dark:text-slate-400 block">{t("totalOrdersCompleted")}</span>
+              <p className="text-xl font-semibold font-mono text-slate-900 dark:text-white mt-1">{branchOrdersCount} Orders</p>
               <p className="text-xs text-slate-500 mt-0.5">Checked out on Sunmi</p>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-              <span className="text-xs text-slate-400 block">{t("avgTicketSize")}</span>
-              <p className="text-xl font-semibold font-mono text-white mt-1">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
+              <span className="text-xs text-slate-500 dark:text-slate-400 block">{t("avgTicketSize")}</span>
+              <p className="text-xl font-semibold font-mono text-slate-900 dark:text-white mt-1">
                 ₱{branchOrdersCount > 0 ? (branchGrossSales / branchOrdersCount).toFixed(2) : "0.00"}
               </p>
               <p className="text-xs text-slate-500 mt-0.5">Per customer order</p>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-              <span className="text-xs text-slate-400 block">{t("floorInventoryStock")}</span>
-              <p className="text-xl font-semibold font-mono text-blue-400 mt-1">{totalStockOnFloor} Units</p>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
+              <span className="text-xs text-slate-500 dark:text-slate-400 block">{t("floorInventoryStock")}</span>
+              <p className="text-xl font-semibold font-mono text-blue-600 dark:text-blue-400 mt-1">{totalStockOnFloor} Units</p>
               <p className="text-xs text-slate-500 mt-0.5">{assignedItems.length} menu items active</p>
             </div>
           </div>
@@ -281,19 +280,19 @@ export const BranchDetailView: React.FC<Props> = ({
           />
 
           {/* Daily Batch Sync History for this Branch */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 shadow-sm">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
               📜 {t("batchHistory")}
             </h3>
 
             {branchBatches.length === 0 ? (
-              <div className="p-6 text-center bg-slate-950 rounded-lg border border-slate-800 text-xs text-slate-400">
+              <div className="p-6 text-center bg-slate-50 dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
                 No batches synchronized from this branch yet. When the cashier sends sales on the Sunmi terminal, the audit record will appear here.
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-300">
-                  <thead className="bg-slate-950 text-xs font-semibold text-slate-400 border-b border-slate-800">
+                <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+                  <thead className="bg-slate-50 dark:bg-slate-950 text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                     <tr>
                       <th className="p-3">Sync Date</th>
                       <th className="p-3">Batch ID</th>
@@ -303,16 +302,16 @@ export const BranchDetailView: React.FC<Props> = ({
                       <th className="p-3 text-right">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800">
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                     {branchBatches.map((batch) => (
-                      <tr key={batch.id} className="hover:bg-slate-800/50 transition-colors">
-                        <td className="p-3 font-medium text-white">{batch.sync_date}</td>
-                        <td className="p-3 font-mono text-slate-300">{batch.batch_id}</td>
-                        <td className="p-3 text-slate-400 font-mono">{batch.device_serial || "SUNMI-V2S"}</td>
+                      <tr key={batch.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <td className="p-3 font-medium text-slate-900 dark:text-white">{batch.sync_date}</td>
+                        <td className="p-3 font-mono text-slate-600 dark:text-slate-300">{batch.batch_id}</td>
+                        <td className="p-3 text-slate-500 dark:text-slate-400 font-mono">{batch.device_serial || "SUNMI-V2S"}</td>
                         <td className="p-3 text-center font-mono">{batch.orders_count}</td>
-                        <td className="p-3 text-right font-mono font-medium text-white">₱{Number(batch.gross_sales).toFixed(2)}</td>
+                        <td className="p-3 text-right font-mono font-medium text-slate-900 dark:text-white">₱{Number(batch.gross_sales).toFixed(2)}</td>
                         <td className="p-3 text-right">
-                          <span className="text-xs text-emerald-400 font-medium">
+                          <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
                             Ingested
                           </span>
                         </td>
@@ -328,13 +327,13 @@ export const BranchDetailView: React.FC<Props> = ({
 
       {/* 3. Branch Tab 2: Stock & Commissary at this Branch */}
       {innerTab === "inventory" && (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 shadow-sm">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
-              <h2 className="text-base font-semibold text-white">
+              <h2 className="text-base font-semibold text-slate-900 dark:text-white">
                 Products & Stock at {branch.name}
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Select items from your centralized Master Catalog to stock this branch
               </p>
             </div>
@@ -348,12 +347,12 @@ export const BranchDetailView: React.FC<Props> = ({
           </div>
 
           {assignedItems.length === 0 ? (
-            <div className="p-8 text-center space-y-3 bg-slate-950 rounded-lg border border-slate-800">
-              <div className="w-10 h-10 rounded-lg bg-slate-900 border border-slate-800 mx-auto flex items-center justify-center text-slate-400">
+            <div className="p-8 text-center space-y-3 bg-slate-50 dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800">
+              <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 mx-auto flex items-center justify-center text-slate-400">
                 <Layers className="w-5 h-5" />
               </div>
-              <h3 className="text-sm font-semibold text-slate-200">No Products Assigned to this Branch</h3>
-              <p className="text-xs text-slate-400 max-w-sm mx-auto">
+              <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">No Products Assigned to this Branch</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
                 Select an item from the centralized Master Catalog to allocate inventory to this location.
               </p>
               <button
@@ -365,8 +364,8 @@ export const BranchDetailView: React.FC<Props> = ({
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-950 text-xs font-semibold text-slate-400 border-b border-slate-800">
+              <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+                <thead className="bg-slate-50 dark:bg-slate-950 text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="p-3">Item Name</th>
                     <th className="p-3">Category</th>
@@ -376,32 +375,32 @@ export const BranchDetailView: React.FC<Props> = ({
                     <th className="p-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800">
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                   {assignedItems.map((item) => {
                     const stock = item.branch_stocks[branch.id] || 0;
                     const isLow = stock <= 10;
 
                     return (
-                      <tr key={item.product_id} className="hover:bg-slate-800/50 transition-colors">
+                      <tr key={item.product_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                         <td className="p-3">
                           <div className="flex items-center gap-2.5">
                             {item.image_url ? (
-                              <img src={item.image_url} alt="" className="w-7 h-7 rounded object-cover bg-slate-800" />
+                              <img src={item.image_url} alt="" className="w-7 h-7 rounded object-cover bg-slate-100 dark:bg-slate-800" />
                             ) : (
-                              <div className="w-7 h-7 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-xs">
+                              <div className="w-7 h-7 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-xs">
                                 ☕
                               </div>
                             )}
-                            <span className="font-semibold text-white text-sm">{item.name}</span>
+                            <span className="font-semibold text-slate-900 dark:text-white text-sm">{item.name}</span>
                           </div>
                         </td>
-                        <td className="p-3 text-slate-400">{item.category}</td>
-                        <td className="p-3 font-mono font-medium text-white">₱{item.base_price.toFixed(2)}</td>
-                        <td className="p-3 text-center font-mono font-semibold text-sm text-white">
+                        <td className="p-3 text-slate-600 dark:text-slate-400">{item.category}</td>
+                        <td className="p-3 font-mono font-medium text-slate-900 dark:text-white">₱{item.base_price.toFixed(2)}</td>
+                        <td className="p-3 text-center font-mono font-semibold text-sm text-slate-900 dark:text-white">
                           {stock}
                         </td>
                         <td className="p-3 text-center">
-                          <span className={`text-xs font-medium ${isLow ? "text-rose-400" : "text-emerald-400"}`}>
+                          <span className={`text-xs font-normal ${isLow ? "text-amber-600 dark:text-amber-400" : "text-slate-500 dark:text-slate-400"}`}>
                             {isLow ? "Low Stock" : "In Stock"}
                           </span>
                         </td>
@@ -441,32 +440,32 @@ export const BranchDetailView: React.FC<Props> = ({
       {innerTab === "devices" && (
         <div className="space-y-6">
           {/* Branch Profile Card Header */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 shadow-sm">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-blue-400 flex-shrink-0">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-blue-400 flex-shrink-0">
                   <Building2 className="w-5 h-5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-base font-semibold text-white">{branch.name}</h2>
-                    <span className="font-mono text-xs text-slate-400">
+                    <h2 className="text-base font-semibold text-slate-900 dark:text-white">{branch.name}</h2>
+                    <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
                       ({branch.code})
                     </span>
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-slate-400 mt-0.5">
+                  <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     <span className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-slate-500" /> {branch.address || "Zamboanga City"}
+                      <MapPin className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" /> {branch.address || "Zamboanga City"}
                     </span>
                     <span className="flex items-center gap-1">
-                      <Phone className="w-3.5 h-3.5 text-slate-500" /> {branch.phone || "No phone set"}
+                      <Phone className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" /> {branch.phone || "No phone set"}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="text-right text-xs text-slate-400">
-                <p className="font-medium text-slate-300">Device: Sunmi V2s</p>
+              <div className="text-right text-xs text-slate-500 dark:text-slate-400">
+                <p className="font-medium text-slate-700 dark:text-slate-300">Device: Sunmi V2s</p>
                 <p className="text-slate-500">Status: Awaiting First Sync</p>
               </div>
             </div>
@@ -474,33 +473,33 @@ export const BranchDetailView: React.FC<Props> = ({
 
           {/* Pairing Instructions & Terminal Capabilities */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-3">
-              <span className="text-xs font-semibold text-blue-400">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-xl space-y-3 shadow-sm">
+              <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
                 Step-by-Step Device Setup
               </span>
-              <ol className="space-y-2 text-xs text-slate-300 list-decimal list-inside">
+              <ol className="space-y-2 text-xs text-slate-700 dark:text-slate-300 list-decimal list-inside">
                 <li>Turn on the Sunmi Handheld terminal.</li>
-                <li>Open the <strong className="text-white">KuyaVince POS</strong> application.</li>
+                <li>Open the <strong className="text-slate-900 dark:text-white">KuyaVince POS</strong> application.</li>
                 <li>When prompted for the Branch Import Code, enter:</li>
               </ol>
 
-              <div className="p-4 bg-slate-950 border border-slate-800 rounded-lg text-center">
-                <span className="block text-xs text-slate-400 font-semibold mb-1">Import Code</span>
-                <span className="text-xl font-mono font-semibold text-blue-400 tracking-wider">
+              <div className="p-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-center">
+                <span className="block text-xs text-slate-500 dark:text-slate-400 font-semibold mb-1">Import Code</span>
+                <span className="text-xl font-mono font-semibold text-blue-600 dark:text-blue-400 tracking-wider">
                   {branch.import_code || branch.code}
                 </span>
               </div>
 
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 The Sunmi device will download this branch's assigned menu items and prices in ~1 second.
               </p>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-3">
-              <span className="text-xs font-semibold text-slate-200">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-xl space-y-3 shadow-sm">
+              <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                 Terminal Capabilities on Store Floor
               </span>
-              <ul className="space-y-2 text-xs text-slate-300">
+              <ul className="space-y-2 text-xs text-slate-700 dark:text-slate-300">
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-slate-400" /> 100% Offline Daytime Tap-to-Order
                 </li>
@@ -534,24 +533,24 @@ export const BranchDetailView: React.FC<Props> = ({
       {/* 7. Assign Product Modal */}
       {isAssignModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6">
-            <h3 className="text-base font-semibold text-white">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-md w-full p-6 shadow-xl">
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white">
               Select Product from Master Catalog
             </h3>
-            <p className="text-xs text-slate-400 mt-1">
-              Choose an existing item and set the stock units for <span className="text-slate-200 font-semibold">{branch.name}</span>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Choose an existing item and set the stock units for <span className="text-slate-800 dark:text-slate-200 font-semibold">{branch.name}</span>
             </p>
 
             <form onSubmit={handleAssignSubmit} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Select Master Product</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Select Master Product</label>
                 <select
                   value={selectedProductId}
                   onChange={(e) => setSelectedProductId(Number(e.target.value))}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                 >
                   {masterProducts.map((p) => (
-                    <option key={p.id} value={p.id}>
+                    <option key={p.id} value={p.id} className="bg-white dark:bg-slate-900">
                       {p.name} — ₱{p.base_price.toFixed(2)} ({p.category})
                     </option>
                   ))}
@@ -559,7 +558,7 @@ export const BranchDetailView: React.FC<Props> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Stock Quantity to Assign</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Stock Quantity to Assign</label>
                 <input
                   type="number"
                   min="1"
@@ -567,7 +566,7 @@ export const BranchDetailView: React.FC<Props> = ({
                   value={assignStockQty}
                   onChange={(e) => setAssignStockQty(e.target.value)}
                   placeholder="e.g. 50"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -575,7 +574,7 @@ export const BranchDetailView: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => setIsAssignModalOpen(false)}
-                  className="flex-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition-colors"
+                  className="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
@@ -595,15 +594,15 @@ export const BranchDetailView: React.FC<Props> = ({
       {/* 8. Restock Modal */}
       {restockProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6">
-            <h3 className="text-base font-semibold text-white">
-              Restock: <span className="text-blue-400">{restockProduct.name}</span>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-md w-full p-6 shadow-xl">
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+              Restock: <span className="text-blue-600 dark:text-blue-400">{restockProduct.name}</span>
             </h3>
-            <p className="text-xs text-slate-400 mt-1">Delivering inventory to {branch.name}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Delivering inventory to {branch.name}</p>
 
             <form onSubmit={handleRestockSubmit} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Quantity to Add</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Quantity to Add</label>
                 <input
                   type="number"
                   min="1"
@@ -611,18 +610,18 @@ export const BranchDetailView: React.FC<Props> = ({
                   value={restockQty}
                   onChange={(e) => setRestockQty(e.target.value)}
                   placeholder="e.g. 50"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Delivery Notes</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Delivery Notes</label>
                 <input
                   type="text"
                   value={restockNotes}
                   onChange={(e) => setRestockNotes(e.target.value)}
                   placeholder="e.g. Weekly commissary replenishment"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs text-slate-900 dark:text-slate-300 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -630,7 +629,7 @@ export const BranchDetailView: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => setRestockProduct(null)}
-                  className="flex-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition-colors"
+                  className="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg transition-colors"
                 >
                   Cancel
                 </button>

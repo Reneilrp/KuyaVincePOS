@@ -231,20 +231,20 @@ export const ProductFormModal: React.FC<Props> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-xl w-full p-6 max-h-[92vh] overflow-y-auto">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-xl shadow-xl w-full p-6 max-h-[92vh] overflow-y-auto">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
           <div>
-            <h3 className="text-base font-semibold text-white flex items-center gap-2">
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
               <PackagePlus className="w-4 h-4 text-blue-400" />
               {initialProduct ? 'Edit Product & Pricing' : 'Add New Menu Item'}
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Set up item pricing, categories, image media, and branch inventory
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+            className="p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -253,25 +253,25 @@ export const ProductFormModal: React.FC<Props> = ({
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           {/* 1. Item Name */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Item / Product Name</label>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Item / Product Name</label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Iced Caramel Macchiato, Beef Tapa Bowl"
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500"
             />
           </div>
 
           {/* 2. Category & Pricing Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Category</label>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Category</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500"
               >
                 <option value="Coffee & Drinks">Coffee & Drinks</option>
                 <option value="Bakery & Pastries">Bakery & Pastries</option>
@@ -283,7 +283,7 @@ export const ProductFormModal: React.FC<Props> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Selling Price (₱)</label>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Selling Price (₱)</label>
               <input
                 type="number"
                 step="0.01"
@@ -292,12 +292,12 @@ export const ProductFormModal: React.FC<Props> = ({
                 value={basePrice}
                 onChange={(e) => setBasePrice(e.target.value)}
                 placeholder="145.00"
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Cost Price (₱)</label>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Cost Price (₱)</label>
               <input
                 type="number"
                 step="0.01"
@@ -305,20 +305,20 @@ export const ProductFormModal: React.FC<Props> = ({
                 value={costPrice}
                 onChange={(e) => setCostPrice(e.target.value)}
                 placeholder="45.00"
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs font-mono text-slate-300 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs font-mono text-slate-300 focus:outline-none focus:border-blue-500"
               />
             </div>
           </div>
 
           {/* 3. Product Image Section */}
-          <div className="bg-slate-950 border border-slate-800 rounded-lg p-3 space-y-3">
+          <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-3 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                 <ImageIcon className="w-4 h-4 text-blue-400" /> Product Image
               </span>
 
               {/* Dual Mode Switcher Tabs */}
-              <div className="flex bg-slate-900 p-0.5 rounded border border-slate-800">
+              <div className="flex bg-slate-900 p-0.5 rounded border border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setImageMode('upload')}
@@ -356,11 +356,11 @@ export const ProductFormModal: React.FC<Props> = ({
                 />
 
                 {imageUrl ? (
-                  <div className="flex items-center gap-3 bg-slate-900 border border-slate-800 rounded-lg p-3">
+                  <div className="flex items-center gap-3 bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3">
                     <img
                       src={imageUrl}
                       alt="Preview"
-                      className="w-14 h-14 rounded object-cover bg-slate-950 border border-slate-800"
+                      className="w-14 h-14 rounded object-cover bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-white truncate">
@@ -381,7 +381,7 @@ export const ProductFormModal: React.FC<Props> = ({
                         <button
                           type="button"
                           onClick={handleRemoveImage}
-                          className="text-xs text-slate-400 hover:text-rose-400"
+                          className="text-xs text-slate-500 dark:text-slate-400 hover:text-rose-400"
                         >
                           Remove
                         </button>
@@ -406,7 +406,7 @@ export const ProductFormModal: React.FC<Props> = ({
                     {isProcessingImage ? (
                       <div className="py-2 space-y-2">
                         <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
-                        <p className="text-xs text-slate-400">Processing & optimizing image...</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Processing & optimizing image...</p>
                       </div>
                     ) : (
                       <div className="space-y-1">
@@ -435,7 +435,7 @@ export const ProductFormModal: React.FC<Props> = ({
                     value={imageUrl}
                     onChange={(e) => setImageUrl(e.target.value)}
                     placeholder="https://example.com/images/iced-coffee.jpg"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 pr-8 text-xs text-slate-200 focus:outline-none focus:border-blue-500 font-mono"
+                    className="w-full bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 pr-8 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-mono"
                   />
                   {imageUrl && (
                     <button
@@ -449,7 +449,7 @@ export const ProductFormModal: React.FC<Props> = ({
                 </div>
 
                 {imageUrl && (
-                  <div className="flex items-center gap-2.5 bg-slate-900 border border-slate-800 rounded-lg p-2">
+                  <div className="flex items-center gap-2.5 bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2">
                     <img
                       src={imageUrl}
                       alt="URL Preview"
@@ -457,7 +457,7 @@ export const ProductFormModal: React.FC<Props> = ({
                         (e.target as HTMLImageElement).src =
                           'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>';
                       }}
-                      className="w-10 h-10 rounded object-cover bg-slate-950 border border-slate-800"
+                      className="w-10 h-10 rounded object-cover bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-slate-300 truncate font-mono">{imageUrl}</p>
@@ -471,8 +471,8 @@ export const ProductFormModal: React.FC<Props> = ({
 
           {/* 4. Live Preview Card */}
           {name && (
-            <div className="bg-slate-950 border border-slate-800 rounded-lg p-3 flex items-center gap-3">
-              <div className="w-10 h-10 rounded bg-slate-900 border border-slate-800 flex items-center justify-center overflow-hidden flex-shrink-0">
+            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-3 flex items-center gap-3">
+              <div className="w-10 h-10 rounded bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center overflow-hidden flex-shrink-0">
                 {imageUrl ? (
                   <img src={imageUrl} alt="" className="w-full h-full object-cover" />
                 ) : (
@@ -497,10 +497,10 @@ export const ProductFormModal: React.FC<Props> = ({
           )}
 
           {/* 5. Initial Stock Allocation Per Branch */}
-          <div className="bg-slate-950 border border-slate-800 rounded-lg p-3 space-y-3">
+          <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-3 space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                   <Layers className="w-4 h-4 text-blue-400" /> Stock per Branch (Optional)
                 </span>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -513,14 +513,14 @@ export const ProductFormModal: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => setAllBranchesInclusion(true)}
-                  className="px-2 py-1 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-blue-400 border border-slate-800 rounded transition-colors"
+                  className="px-2 py-1 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-blue-400 border border-slate-200 dark:border-slate-800 rounded transition-colors"
                 >
                   ✓ Include All
                 </button>
                 <button
                   type="button"
                   onClick={() => setAllBranchesInclusion(false)}
-                  className="px-2 py-1 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 rounded transition-colors"
+                  className="px-2 py-1 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-200 dark:border-slate-800 rounded transition-colors"
                 >
                   ✕ Exclude All
                 </button>
@@ -537,7 +537,7 @@ export const ProductFormModal: React.FC<Props> = ({
                     className={`p-3 rounded-lg border transition-colors flex flex-col justify-between ${
                       isIncluded
                         ? 'bg-slate-900 border-slate-800'
-                        : 'bg-slate-950 border-slate-800 opacity-60'
+                        : 'bg-slate-50 dark:bg-slate-950 border-slate-800 opacity-60'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-1 mb-2">
@@ -551,8 +551,8 @@ export const ProductFormModal: React.FC<Props> = ({
                         onClick={() => toggleBranchInclusion(b.id)}
                         className={`text-xs px-2 py-0.5 rounded font-medium transition-colors cursor-pointer ${
                           isIncluded
-                            ? 'text-emerald-400 bg-slate-950 border border-slate-800 hover:bg-slate-800'
-                            : 'text-slate-500 bg-slate-950 border border-slate-800 hover:text-white'
+                            ? 'text-emerald-400 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:bg-slate-800'
+                            : 'text-slate-500 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:text-white'
                         }`}
                         title={isIncluded ? 'Click to exclude this branch' : 'Click to include this branch'}
                       >
@@ -568,14 +568,14 @@ export const ProductFormModal: React.FC<Props> = ({
                           value={branchStocks[b.id] ?? '0'}
                           onChange={(e) => handleStockChange(b.id, e.target.value)}
                           placeholder="Stock qty"
-                          className="w-full bg-slate-950 border border-slate-800 rounded p-1.5 text-xs text-center font-mono font-medium text-white focus:outline-none focus:border-blue-500"
+                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded p-1.5 text-xs text-center font-mono font-medium text-white focus:outline-none focus:border-blue-500"
                         />
                         <span className="block text-xs text-slate-500 text-center mt-1">Initial units</span>
                       </div>
                     ) : (
                       <div
                         onClick={() => toggleBranchInclusion(b.id)}
-                        className="py-2 text-center cursor-pointer rounded bg-slate-950 border border-dashed border-slate-800 hover:border-slate-700"
+                        className="py-2 text-center cursor-pointer rounded bg-slate-50 dark:bg-slate-950 border border-dashed border-slate-800 hover:border-slate-700"
                       >
                         <span className="text-xs text-slate-500 font-medium">Click to include</span>
                       </div>
@@ -591,7 +591,7 @@ export const ProductFormModal: React.FC<Props> = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition-colors"
+              className="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg transition-colors"
             >
               Cancel
             </button>

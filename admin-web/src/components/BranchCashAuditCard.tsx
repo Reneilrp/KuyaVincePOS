@@ -51,13 +51,13 @@ export const BranchCashAuditCard: React.FC<Props> = ({
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-4">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 space-y-4 shadow-sm">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
             <DollarSign className="w-4 h-4 text-slate-400" /> {t('cashBalancingTitle')}
           </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             {t('cashBalancingSubtitle')} ({branchName})
           </p>
         </div>
@@ -65,17 +65,18 @@ export const BranchCashAuditCard: React.FC<Props> = ({
         {/* Variance Status Text */}
         <div className="flex items-center gap-2">
           {isBalanced && (
-            <span className="text-xs font-medium text-slate-300">
+            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
               {t('statusBalanced')}
             </span>
           )}
           {isOver && (
-            <span className="text-xs font-medium text-slate-300 font-mono">
+            <span className="text-xs font-medium text-slate-700 dark:text-slate-300 font-mono">
               +{t('statusOver', { amount: variance.toFixed(2) })}
             </span>
           )}
           {isShort && (
-            <span className="text-xs font-medium text-rose-400 font-mono">
+            <span className="text-xs font-semibold text-rose-600 dark:text-rose-400 font-mono flex items-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
               -{t('statusShort', { amount: Math.abs(variance).toFixed(2) })}
             </span>
           )}
@@ -85,49 +86,49 @@ export const BranchCashAuditCard: React.FC<Props> = ({
       {/* 4-Column Cash Reconciliation Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-1">
         {/* 1. Opening Float */}
-        <div className="bg-slate-950 p-4 rounded-lg border border-slate-800">
-          <span className="text-xs font-medium text-slate-400 block">
+        <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
+          <span className="text-xs font-medium text-slate-500 dark:text-slate-400 block">
             {t('startingFloat')}
           </span>
-          <p className="text-base font-semibold font-mono text-slate-200 mt-1">₱{openingFloat.toFixed(2)}</p>
+          <p className="text-base font-semibold font-mono text-slate-800 dark:text-slate-200 mt-1">₱{openingFloat.toFixed(2)}</p>
           <span className="text-xs text-slate-500 mt-0.5 block">{t('startingFloatSub')}</span>
         </div>
 
         {/* 2. Cash Sales */}
-        <div className="bg-slate-950 p-4 rounded-lg border border-slate-800">
-          <span className="text-xs font-medium text-slate-400 block">
+        <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
+          <span className="text-xs font-medium text-slate-500 dark:text-slate-400 block">
             {t('todayCashSales')}
           </span>
-          <p className="text-base font-semibold font-mono text-slate-200 mt-1">+₱{cashSales.toFixed(2)}</p>
+          <p className="text-base font-semibold font-mono text-slate-800 dark:text-slate-200 mt-1">+₱{cashSales.toFixed(2)}</p>
           <span className="text-xs text-slate-500 mt-0.5 block">{t('todayCashSalesSub')}</span>
         </div>
 
         {/* 3. Expected Total */}
-        <div className="bg-slate-950 p-4 rounded-lg border border-slate-800">
-          <span className="text-xs font-medium text-slate-400 block">
+        <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
+          <span className="text-xs font-medium text-slate-500 dark:text-slate-400 block">
             {t('expectedDrawer')}
           </span>
-          <p className="text-base font-semibold font-mono text-white mt-1">₱{expectedCash.toFixed(2)}</p>
+          <p className="text-base font-semibold font-mono text-slate-900 dark:text-white mt-1">₱{expectedCash.toFixed(2)}</p>
           <span className="text-xs text-slate-500 mt-0.5 block">{t('expectedDrawerSub')}</span>
         </div>
 
         {/* 4. Actual Physical Counted */}
-        <div className="bg-slate-950 p-4 rounded-lg border border-slate-800">
+        <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
           <div className="flex justify-between items-center">
-            <span className="text-xs font-medium text-slate-400">
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
               {t('actualCounted')}
             </span>
             {showCashierReadOnly ? (
               <button
                 onClick={onEnableOverride}
-                className="text-xs text-slate-400 hover:text-white font-medium flex items-center gap-1"
+                className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium flex items-center gap-1"
               >
                 <AlertCircle className="w-3 h-3" /> {t('adminOverride')}
               </button>
             ) : (
               <button
                 onClick={() => setIsEditing(!isEditing)}
-                className="text-xs text-slate-400 hover:text-white font-medium flex items-center gap-1"
+                className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium flex items-center gap-1"
               >
                 <Edit3 className="w-3 h-3" /> {isEditing ? t('done') : t('editCount')}
               </button>
@@ -136,13 +137,13 @@ export const BranchCashAuditCard: React.FC<Props> = ({
 
           {showCashierReadOnly ? (
             <>
-              <p className="text-base font-semibold font-mono text-white mt-1">₱{cashierEnteredCash!.toFixed(2)}</p>
+              <p className="text-base font-semibold font-mono text-slate-900 dark:text-white mt-1">₱{cashierEnteredCash!.toFixed(2)}</p>
               <span className="text-xs text-slate-500 mt-0.5 block">{t('enteredByCashier')}</span>
             </>
           ) : (
             <>
               {isAdminOverride && (
-                <span className="inline-flex items-center gap-1 text-xs text-slate-400 mb-1 mt-0.5">
+                <span className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 mb-1 mt-0.5">
                   <AlertCircle className="w-3 h-3" /> {t('adminOverrideActive')}
                 </span>
               )}
@@ -153,7 +154,7 @@ export const BranchCashAuditCard: React.FC<Props> = ({
                     step="0.01"
                     value={actualCounted}
                     onChange={(e) => setActualCounted(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm font-mono text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 text-sm font-mono text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
                   />
                   <button
                     onClick={handleSave}
@@ -163,7 +164,7 @@ export const BranchCashAuditCard: React.FC<Props> = ({
                   </button>
                 </div>
               ) : (
-                <p className="text-base font-semibold font-mono text-white mt-1">₱{parsedCounted.toFixed(2)}</p>
+                <p className="text-base font-semibold font-mono text-slate-900 dark:text-white mt-1">₱{parsedCounted.toFixed(2)}</p>
               )}
               <span className="text-xs text-slate-500 mt-0.5 block">{t('actualCountedSub')}</span>
             </>

@@ -85,6 +85,13 @@ export const translations = {
     englishOption: "English (Default)",
     tagalogOption: "Tagalog / Filipino",
     languageChangedNotice: "Language successfully switched to {lang}!",
+    // Theme & Appearance
+    themeSettingTitle: "Theme & Appearance",
+    themeSettingSubtitle: "Choose between light and dark mode for the dashboard interface",
+    theme: "Theme",
+    lightMode: "Light Mode",
+    darkMode: "Dark Mode",
+    toggleTheme: "Toggle Theme",
   },
   tl: {
     // App & Branding
@@ -170,6 +177,13 @@ export const translations = {
     englishOption: "English (Ingles)",
     tagalogOption: "Tagalog / Filipino",
     languageChangedNotice: "Matagumpay na pinalitan ang wika sa {lang}!",
+    // Theme & Appearance
+    themeSettingTitle: "Tema at Itsura (Theme & Appearance)",
+    themeSettingSubtitle: "Pumili sa maliwanag o madilim na tema para sa interface ng dashboard",
+    theme: "Tema",
+    lightMode: "Maliwanag na Tema",
+    darkMode: "Madilim na Tema",
+    toggleTheme: "Palitan ang Tema",
   }
 };
 

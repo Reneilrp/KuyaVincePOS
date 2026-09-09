@@ -57,12 +57,12 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches, items, onRestock
   return (
     <div className="space-y-6">
       {/* 1. Header with Add Product & Stats */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
         <div>
-          <h2 className="text-base font-semibold text-white flex items-center gap-2">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
             <Package className="w-5 h-5 text-slate-400" /> Stock Matrix & Products
           </h2>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Create items, adjust pricing, and manage stock allocations across all branches
           </p>
         </div>
@@ -84,7 +84,7 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches, items, onRestock
             className={`px-3 py-1 text-xs font-medium rounded-lg capitalize transition-colors ${
               selectedCategory === cat
                 ? 'bg-blue-600 text-white'
-                : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200'
+                : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
             {cat === 'all' ? 'All Products' : cat}
@@ -93,12 +93,12 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches, items, onRestock
       </div>
 
       {/* 3. Cross-Branch Stock Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
         {filteredItems.length === 0 ? (
           <div className="p-12 text-center space-y-3">
-            <Package className="w-8 h-8 mx-auto text-slate-500" />
-            <h3 className="text-sm font-medium text-slate-200">No Products Found</h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+            <Package className="w-8 h-8 mx-auto text-slate-400 dark:text-slate-500" />
+            <h3 className="text-sm font-medium text-slate-800 dark:text-slate-200">No Products Found</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
               Create your first product or adjust category filters to see items.
             </p>
             <button
@@ -110,8 +110,8 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches, items, onRestock
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-950 text-xs font-medium text-slate-400 border-b border-slate-800">
+            <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+              <thead className="bg-slate-50 dark:bg-slate-950 text-xs font-medium text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <tr>
                   <th className="p-3.5">Product Name</th>
                   <th className="p-3.5">Category</th>
@@ -120,34 +120,34 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches, items, onRestock
                   {branches.map((b) => (
                     <th key={b.id} className="p-3.5 text-center">
                       {b.name}
-                      <span className="block text-xs font-mono text-slate-500">[{b.code}]</span>
+                      <span className="block text-xs font-mono text-slate-400 dark:text-slate-500">[{b.code}]</span>
                     </th>
                   ))}
                   <th className="p-3.5 text-center">Total Stock</th>
                   <th className="p-3.5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                 {filteredItems.map((item) => {
                   const isLow = item.total_stock <= 20;
 
                   return (
-                    <tr key={item.product_id} className="hover:bg-slate-800/40 transition-colors">
+                    <tr key={item.product_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                       <td className="p-3.5">
                         <div className="flex items-center gap-2.5">
                           {item.image_url ? (
-                            <img src={item.image_url} alt="" className="w-7 h-7 rounded object-cover bg-slate-800" />
+                            <img src={item.image_url} alt="" className="w-7 h-7 rounded object-cover bg-slate-100 dark:bg-slate-800" />
                           ) : (
-                            <div className="w-7 h-7 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-xs">
+                            <div className="w-7 h-7 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-xs">
                               ☕
                             </div>
                           )}
-                          <span className="text-sm font-normal text-white">{item.name}</span>
+                          <span className="text-sm font-normal text-slate-900 dark:text-white">{item.name}</span>
                         </div>
                       </td>
-                      <td className="p-3.5 text-slate-400">{item.category}</td>
-                      <td className="p-3.5 font-mono text-slate-200">₱{item.base_price.toFixed(2)}</td>
-                      <td className="p-3.5 font-mono text-slate-400">₱{item.cost_price.toFixed(2)}</td>
+                      <td className="p-3.5 text-slate-600 dark:text-slate-400">{item.category}</td>
+                      <td className="p-3.5 font-mono text-slate-900 dark:text-slate-200">₱{item.base_price.toFixed(2)}</td>
+                      <td className="p-3.5 font-mono text-slate-500 dark:text-slate-400">₱{item.cost_price.toFixed(2)}</td>
                       {branches.map((b) => {
                         const isExcluded = item.excluded_branch_ids?.includes(b.id) ?? false;
                         const stock = item.branch_stocks[b.id] ?? 0;
@@ -155,17 +155,17 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches, items, onRestock
                         return (
                           <td key={b.id} className="p-3.5 text-center font-mono">
                             {!isExcluded ? (
-                              <span className={isBranchLow ? 'text-amber-400 font-medium' : 'text-slate-300'}>
+                              <span className={isBranchLow ? 'text-amber-600 dark:text-amber-400 font-medium' : 'text-slate-700 dark:text-slate-300'}>
                                 {stock}
                               </span>
                             ) : (
-                              <span className="text-slate-500">—</span>
+                              <span className="text-slate-400 dark:text-slate-500">—</span>
                             )}
                           </td>
                         );
                       })}
                       <td className="p-3.5 text-center font-mono font-medium">
-                        <span className={isLow ? 'text-rose-400' : 'text-slate-200'}>
+                        <span className={isLow ? 'text-amber-600 dark:text-amber-400' : 'text-slate-900 dark:text-slate-200'}>
                           {item.total_stock}
                         </span>
                       </td>
@@ -173,14 +173,14 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches, items, onRestock
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => handleOpenEditProduct(item)}
-                            className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                            className="p-1.5 rounded text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                             title="Edit Product Info"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleOpenRestock(item)}
-                            className="px-2.5 py-1 bg-slate-800 hover:bg-blue-600 text-slate-200 hover:text-white font-medium rounded text-xs transition-colors"
+                            className="px-2.5 py-1 bg-slate-100 hover:bg-blue-600 text-slate-700 hover:text-white dark:bg-slate-800 dark:text-slate-200 font-medium rounded text-xs transition-colors"
                           >
                             Restock
                           </button>
@@ -207,24 +207,24 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches, items, onRestock
       {/* 5. Restock Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-sm w-full p-6 space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-sm w-full p-6 space-y-4 shadow-xl">
             <div>
-              <h3 className="text-base font-semibold text-white">
+              <h3 className="text-base font-semibold text-slate-900 dark:text-white">
                 Restock: {selectedProduct.name}
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">Allocate stock to a specific branch</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Allocate stock to a specific branch</p>
             </div>
 
             <form onSubmit={handleRestockSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Destination Branch</label>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Destination Branch</label>
                 <select
                   value={restockBranchId}
                   onChange={(e) => setRestockBranchId(Number(e.target.value))}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                 >
                   {branches.map((b) => (
-                    <option key={b.id} value={b.id}>
+                    <option key={b.id} value={b.id} className="bg-white dark:bg-slate-900">
                       {b.name} [{b.code}] (Current: {selectedProduct.branch_stocks[b.id] ?? 0})
                     </option>
                   ))}
@@ -232,7 +232,7 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches, items, onRestock
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Quantity</label>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Quantity</label>
                 <input
                   type="number"
                   min="1"
@@ -240,18 +240,18 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches, items, onRestock
                   value={restockQty}
                   onChange={(e) => setRestockQty(e.target.value)}
                   placeholder="e.g. 50"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-sm font-mono text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2 text-sm font-mono text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Notes</label>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Notes</label>
                 <input
                   type="text"
                   value={restockNotes}
                   onChange={(e) => setRestockNotes(e.target.value)}
                   placeholder="e.g. Supplier delivery invoice #491"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2 text-xs text-slate-900 dark:text-slate-300 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -259,7 +259,7 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches, items, onRestock
                 <button
                   type="button"
                   onClick={() => setSelectedProduct(null)}
-                  className="flex-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg transition-colors"
+                  className="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
