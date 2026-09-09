@@ -21,6 +21,20 @@ export interface User {
   name: string;
   role: string;
   branch_id: number | null;
+  hourly_rate?: number;
+}
+
+export interface StaffRecord {
+  id: number;
+  branch_id: number | null;
+  name: string;
+  role: string;
+  pin_code?: string;
+  pin_salt: string;
+  pin_hash: string;
+  hourly_rate?: number;
+  is_active: boolean;
+  is_deleted?: boolean;
 }
 
 export interface Product {

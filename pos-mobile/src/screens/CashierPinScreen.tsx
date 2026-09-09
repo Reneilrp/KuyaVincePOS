@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, SafeAreaView, Modal, TextInput } from 'react-native';
 import { ApiService } from '../services/ApiService';
+import { StaffSyncService } from '../services/StaffSyncService';
 import { usePosStore } from '../stores/usePosStore';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -21,9 +22,18 @@ export const CashierPinScreen: React.FC<{ onAuthenticated: () => void }> = ({ on
 
   const branch = usePosStore((s) => s.branch);
   const device = usePosStore((s) => s.device);
+  const activeCashier = usePosStore((s) => s.activeCashier);
   const setActiveCashier = usePosStore((s) => s.setActiveCashier);
   const setActiveShiftId = usePosStore((s) => s.setActiveShiftId);
   const setOpeningFloat = usePosStore((s) => s.setOpeningFloat);
+
+  // Background opportunistic sync of staff records when screen mounts
+  useEffect(() => {
+    const branchId = branch ? branch.id : 1;
+    StaffSyncService.syncBranchStaff(branchId).catch((err) => {
+      console.warn('Silent staff sync background notification:', err);
+    });
+  }, [branch?.id]);
 
   // Lockout countdown timer
   useEffect(() => {
@@ -123,7 +133,7 @@ export const CashierPinScreen: React.FC<{ onAuthenticated: () => void }> = ({ on
     try {
       const shiftRes = await ApiService.openShift({
         branch_id: branch ? branch.id : 1,
-        cashier_id: 1,
+        cashier_id: activeCashier?.id || 1,
         opening_cash: confirmedFloat,
         device_id: device?.id,
         clock_in_at: new Date().toISOString()
@@ -144,19 +154,29 @@ export const CashierPinScreen: React.FC<{ onAuthenticated: () => void }> = ({ on
     if (isLocked) return;
 
     try {
-      const res = await ApiService.cashierPinLogin(enteredPin, branch?.id);
-      if (res.status === 'success' && res.user) {
-        completeLogin(res.user);
-      } else {
-        handleFailedAttempt();
+      const branchId = branch ? branch.id : 1;
+
+      // 1. Primary: Verify against local cached salted SHA-256 hashes (100% offline resilient)
+      const authResult = await StaffSyncService.verifyStaffPin(enteredPin, branchId);
+      if (authResult.success && authResult.user) {
+        completeLogin(authResult.user);
+        return;
       }
+
+      // 2. Secondary: If online backend API endpoint is reachable, try cloud verification
+      try {
+        const res = await ApiService.cashierPinLogin(enteredPin, branch?.id);
+        if (res.status === 'success' && res.user) {
+          completeLogin(res.user);
+          return;
+        }
+      } catch (apiErr) {
+        // Offline or backend unreachable, already evaluated by StaffSyncService above
+      }
+
+      handleFailedAttempt();
     } catch (e) {
-      // Fallback for offline store
-      if (enteredPin === '1234' || enteredPin === '5678' || enteredPin === '4321') {
-        completeLogin({ id: 1, name: 'Cashier (Active Shift)', role: 'cashier', branch_id: branch?.id || 1 });
-      } else {
-        handleFailedAttempt();
-      }
+      handleFailedAttempt();
     }
   };
 

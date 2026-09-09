@@ -43,4 +43,15 @@ describe('PIN Security & Salted Hashing', () => {
     expect(isValid).toBe(true);
     expect(isInvalid).toBe(false);
   });
+
+  test('case-insensitive hex matching and leading zero normalization in verification', async () => {
+    const salt = 'abcdef1234567890abcdef1234567890';
+    const hash = await hashPin('0007', salt);
+
+    // Number vs string input
+    expect(await verifyPinHash(7, salt, hash)).toBe(true);
+    expect(await verifyPinHash('7', salt, hash)).toBe(true);
+    expect(await verifyPinHash('0007', salt, hash)).toBe(true);
+    expect(await verifyPinHash('0008', salt, hash)).toBe(false);
+  });
 });

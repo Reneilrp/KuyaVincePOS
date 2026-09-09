@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { usePosStore } from '../stores/usePosStore';
+import { StaffSyncService } from '../services/StaffSyncService';
 
 const SUPABASE_URL = 'https://diddsyaqdqxvadgttguq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpZGRzeWFxZHF4dmFkZ3R0Z3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwNTI1NzQsImV4cCI6MjEwMzYyODU3NH0.0JKA5syorKUuwP5KtFTjQXpQFwb_uYuDyM8yL4ZdRh4';
@@ -73,7 +74,14 @@ export const DeviceActivationScreen: React.FC<{ onActivated: () => void }> = ({ 
 
       const generatedTerminalName = 'Counter-' + Date.now();
 
-      // 3. Save Active Device & Branch State
+      // 3. Download & Cache Branch Staff Records for Offline PIN Login
+      try {
+        await StaffSyncService.syncBranchStaff(matchedBranch.id);
+      } catch (staffErr) {
+        console.warn('Initial staff sync skipped:', staffErr);
+      }
+
+      // 4. Save Active Device & Branch State
       setBranch(matchedBranch);
       setDevice({
         id: 1,

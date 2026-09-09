@@ -82,12 +82,16 @@ export const PayrollManagerTab: React.FC<Props> = ({
 
     setIsSubmitting(true);
     try {
+      const salt = generatePinSalt();
+      const hash = await hashPin(pinCode, salt);
       const { error } = await supabase.from("staff_records").insert([
         {
           branch_id: Number(branchId),
           name,
           role,
           pin_code: pinCode,
+          pin_salt: salt,
+          pin_hash: hash,
           hourly_rate: parseFloat(hourlyRate || "85"),
           is_active: true
         }
@@ -97,7 +101,7 @@ export const PayrollManagerTab: React.FC<Props> = ({
       await onRefreshStaff();
       setIsCreateModalOpen(false);
       setName("");
-      triggerNotice(`✅ Staff member "${name}" registered successfully!`);
+      triggerNotice(`✅ Staff member "${name}" registered with secure PIN hash!`);
     } catch (e: any) {
       alert("Failed to add staff: " + e.message);
     } finally {

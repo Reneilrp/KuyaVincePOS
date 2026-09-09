@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Modal, Alert, ActivityIndicator } from 'react-native';
 import { BatchSyncService } from '../services/BatchSyncService';
+import { StaffSyncService } from '../services/StaffSyncService';
 import { SunmiPrinterDriver } from '../services/SunmiPrinterDriver';
 import { usePosStore } from '../stores/usePosStore';
 import { useLanguage } from '../context/LanguageContext';
@@ -93,6 +94,14 @@ export const EndOfDaySyncScreen: React.FC<Props> = ({ visible, onClose }) => {
 
       setSyncStatus('success');
       clearStockAdjustments();
+
+      // Refresh staff credentials and PIN hashes for the next shift
+      try {
+        await StaffSyncService.syncBranchStaff(branch?.id || 1);
+      } catch (staffErr) {
+        console.warn('Post-sync staff refresh skipped:', staffErr);
+      }
+
       await loadDayStats();
     } catch (e: any) {
       setSyncStatus('error');
