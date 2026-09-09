@@ -28,8 +28,10 @@ export const PaymentScreen: React.FC<Props> = ({ onBack, onSuccess }) => {
   const getSubtotal = usePosStore((s) => s.getSubtotal);
 
   const total = getTotal();
-  const tenderedAmount = parseFloat(tenderedInput || '0');
-  const changeAmount = Math.max(0, tenderedAmount - total);
+  const subtotal = getSubtotal();
+  const tenderedAmount = Math.round(parseFloat(tenderedInput || '0') * 100) / 100;
+  const changeAmount = Math.max(0, Math.round((tenderedAmount - total) * 100) / 100);
+  const discountAmount = Math.max(0, Math.round((subtotal - total) * 100) / 100);
   const isSufficient = tenderedAmount >= total;
 
   const handleQuickCash = (amt: number) => {
@@ -37,7 +39,7 @@ export const PaymentScreen: React.FC<Props> = ({ onBack, onSuccess }) => {
   };
 
   const handleExactCash = () => {
-    setTenderedInput(String(total));
+    setTenderedInput(total.toFixed(2));
   };
 
   const handleConfirm = async () => {
@@ -54,8 +56,8 @@ export const PaymentScreen: React.FC<Props> = ({ onBack, onSuccess }) => {
         cashier_id: cashier?.id,
         shift_id: activeShiftId,
         payment_method: 'cash',
-        subtotal: getSubtotal(),
-        discount_amount: getSubtotal() - total,
+        subtotal: subtotal,
+        discount_amount: discountAmount,
         senior_pwd_id: seniorDiscount.enabled ? seniorDiscount.idNumber : null,
         total_amount: total,
         amount_tendered: tenderedAmount,
@@ -91,8 +93,8 @@ export const PaymentScreen: React.FC<Props> = ({ onBack, onSuccess }) => {
             total_price: i.total_price.toFixed(2)
           })),
           totals: {
-            subtotal: total.toFixed(2),
-            discount: (getSubtotal() - total).toFixed(2),
+            subtotal: subtotal.toFixed(2),
+            discount: discountAmount.toFixed(2),
             total: total.toFixed(2),
             amount_tendered: tenderedAmount.toFixed(2),
             change: changeAmount.toFixed(2),
@@ -109,7 +111,7 @@ export const PaymentScreen: React.FC<Props> = ({ onBack, onSuccess }) => {
       await BatchSyncService.saveOrderLocally({
         order_number: receipt.order_info.order_number,
         client_tx_id: 'TX-' + Date.now(),
-        subtotal: total,
+        subtotal: subtotal,
         total_amount: total,
         payment_method: 'cash',
         amount_tendered: tenderedAmount,

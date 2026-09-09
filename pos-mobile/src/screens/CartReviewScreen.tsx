@@ -22,7 +22,7 @@ export const CartReviewScreen: React.FC<Props> = ({ onBack, onProceed }) => {
 
   const subtotal = getSubtotal();
   const total = getTotal();
-  const discountDeduction = subtotal - total;
+  const discountDeduction = Math.round((subtotal - total) * 100) / 100;
 
   return (
     <View style={{ flex: 1, backgroundColor: '#0F172A' }}>
@@ -119,10 +119,10 @@ export const CartReviewScreen: React.FC<Props> = ({ onBack, onProceed }) => {
           <View style={{ height: 1, backgroundColor: '#334155', marginVertical: 8 }} />
 
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
+            <View>
               <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 }}>{t('totalAmountDue')}</Text>
               <Text style={{ color: '#64748B', fontSize: 11, marginTop: 2 }}>{t('cashAtCounter')}</Text>
-            </div>
+            </View>
             <Text style={{ color: '#34D399', fontWeight: 'bold', fontSize: 28, fontFamily: 'monospace' }}>
               ₱{total.toFixed(2)}
             </Text>

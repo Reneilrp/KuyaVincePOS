@@ -169,37 +169,38 @@ export default function App() {
       setRawBatches(batches || []);
 
       if (batches && batches.length > 0) {
-        let totalGross = 0;
+        let totalGrossCents = 0;
         let totalOrders = 0;
-        let cashTotal = 0;
-        let ewalletTotal = 0;
-        let cardTotal = 0;
-        const branchMap: Record<number, { count: number; sales: number }> = {};
-        const productMap: Record<string, { qty: number; revenue: number }> = {};
+        let cashTotalCents = 0;
+        let ewalletTotalCents = 0;
+        let cardTotalCents = 0;
+        const branchMap: Record<number, { count: number; salesCents: number }> = {};
+        const productMap: Record<string, { qty: number; revenueCents: number }> = {};
 
         for (const b of batches) {
-          const gross = Number(b.gross_sales || 0);
+          const grossCents = Math.round(Number(b.gross_sales || 0) * 100);
           const count = Number(b.orders_count || 0);
-          totalGross += gross;
+          totalGrossCents += grossCents;
           totalOrders += count;
-          cashTotal += Number(b.cash_sales || 0);
-          ewalletTotal += Number(b.ewallet_sales || 0);
-          cardTotal += Number(b.card_sales || 0);
+          cashTotalCents += Math.round(Number(b.cash_sales || 0) * 100);
+          ewalletTotalCents += Math.round(Number(b.ewallet_sales || 0) * 100);
+          cardTotalCents += Math.round(Number(b.card_sales || 0) * 100);
 
           if (!branchMap[b.branch_id]) {
-            branchMap[b.branch_id] = { count: 0, sales: 0 };
+            branchMap[b.branch_id] = { count: 0, salesCents: 0 };
           }
           branchMap[b.branch_id].count += count;
-          branchMap[b.branch_id].sales += gross;
+          branchMap[b.branch_id].salesCents += grossCents;
 
           if (Array.isArray(b.orders_payload)) {
             for (const ord of b.orders_payload) {
               if (Array.isArray(ord.items)) {
                 for (const it of ord.items) {
                   const pName = it.name || "Custom Item";
-                  if (!productMap[pName]) productMap[pName] = { qty: 0, revenue: 0 };
+                  if (!productMap[pName]) productMap[pName] = { qty: 0, revenueCents: 0 };
+                  const itemRevenueCents = Math.round(Number(it.total_price || (it.qty * it.unit_price) || 0) * 100);
                   productMap[pName].qty += Number(it.qty || 1);
-                  productMap[pName].revenue += Number(it.total_price || (it.qty * it.unit_price) || 0);
+                  productMap[pName].revenueCents += itemRevenueCents;
                 }
               }
             }
@@ -207,7 +208,7 @@ export default function App() {
         }
 
         const topProds = Object.entries(productMap)
-          .map(([name, stat]) => ({ product_name: name, total_qty: stat.qty, total_revenue: stat.revenue }))
+          .map(([name, stat]) => ({ product_name: name, total_qty: stat.qty, total_revenue: stat.revenueCents / 100 }))
           .sort((a, b) => b.total_revenue - a.total_revenue)
           .slice(0, 5);
 
@@ -217,17 +218,20 @@ export default function App() {
           code: br.code,
           import_code: br.import_code,
           active_devices: 1,
-          total_sales: branchMap[br.id]?.sales || 0,
+          total_sales: (branchMap[br.id]?.salesCents || 0) / 100,
           order_count: branchMap[br.id]?.count || 0
         }));
+
+        const totalGross = totalGrossCents / 100;
+        const avgOrderValue = totalOrders > 0 ? Math.round((totalGross / totalOrders) * 100) / 100 : 0;
 
         setAnalytics({
           filters: { branch_id: selectedBranchId, range: selectedRange, start_date: "", end_date: "" },
           kpis: {
             total_gross_revenue: totalGross,
             total_sales_count: totalOrders,
-            average_order_value: totalOrders > 0 ? totalGross / totalOrders : 0,
-            payment_breakdown: { cash: cashTotal, ewallet: ewalletTotal, card: cardTotal }
+            average_order_value: avgOrderValue,
+            payment_breakdown: { cash: cashTotalCents / 100, ewallet: ewalletTotalCents / 100, card: cardTotalCents / 100 }
           },
           branch_comparison: comparison,
           top_products: topProds

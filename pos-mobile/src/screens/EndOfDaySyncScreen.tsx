@@ -33,9 +33,9 @@ export const EndOfDaySyncScreen: React.FC<Props> = ({ visible, onClose }) => {
   const [unsyncedCount, setUnsyncedCount] = useState(0);
 
   const [countedCash, setCountedCash] = useState('');
-  const expectedDrawer = openingFloat + cashSales;
-  const counted = parseFloat(countedCash || '0');
-  const variance = counted - expectedDrawer;
+  const expectedDrawer = Math.round((openingFloat + cashSales) * 100) / 100;
+  const counted = Math.round(parseFloat(countedCash || '0') * 100) / 100;
+  const variance = Math.round((counted - expectedDrawer) * 100) / 100;
   const isBalanced = Math.abs(variance) < 0.01;
 
   // Manager Override Modal for Offline Exit
@@ -49,14 +49,14 @@ export const EndOfDaySyncScreen: React.FC<Props> = ({ visible, onClose }) => {
       const pending = orders.filter((o) => !o.synced);
       setUnsyncedCount(pending.length);
 
-      let gross = 0;
-      let cash = 0;
+      let grossCents = 0;
+      let cashCents = 0;
       for (const ord of orders) {
-        gross += Number(ord.total_amount || 0);
-        cash += Number(ord.total_amount || 0);
+        grossCents += Math.round(Number(ord.total_amount || 0) * 100);
+        cashCents += Math.round(Number(ord.total_amount || 0) * 100);
       }
-      setTotalGrossRevenue(gross);
-      setCashSales(cash);
+      setTotalGrossRevenue(grossCents / 100);
+      setCashSales(cashCents / 100);
     } catch (e) {
       console.warn('Could not read offline stats', e);
     }

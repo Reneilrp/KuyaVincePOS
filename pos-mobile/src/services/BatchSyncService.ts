@@ -80,7 +80,8 @@ export class BatchSyncService {
 
     const batchId = `BATCH-${deviceSerial}-${new Date().toISOString().split('T')[0]}-${Date.now()}`;
     const syncDate = new Date().toISOString().split('T')[0];
-    const grossSales = pendingOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+    const grossSalesCents = pendingOrders.reduce((sum, o) => sum + Math.round(Number(o.total_amount || 0) * 100), 0);
+    const grossSales = grossSalesCents / 100;
 
     const payload = {
       branch_id: Number(branchId) || 1,
