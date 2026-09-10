@@ -56,19 +56,31 @@ export const DeviceActivationScreen: React.FC<{ onActivated: () => void }> = ({ 
       const prods = await prodRes.json();
 
       if (prods && Array.isArray(prods) && prods.length > 0) {
-        const categories = [{ id: 1, name: 'General', color: '#3B82F6' }];
-        const products = prods.map((p: any) => ({
-          id: p.id,
-          category_id: p.category_id || 1,
-          category_name: p.category || 'General',
-          name: p.name,
-          base_price: Number(p.base_price || 0),
-          cost_price: Number(p.cost_price || 0),
-          stock: Number(p.stock_quantity || 100),
-          alert_threshold: 5,
-          is_low_stock: false,
-          is_out_of_stock: false
+        const uniqueCatNames = Array.from(new Set(prods.map((p: any) => p.category || 'General')));
+        const categories = uniqueCatNames.map((cName: any, idx: number) => ({
+          id: idx + 1,
+          name: String(cName),
+          color: '#3B82F6'
         }));
+        const catMap: Record<string, number> = {};
+        categories.forEach((c) => { catMap[c.name] = c.id; });
+
+        const products = prods.map((p: any) => {
+          const cName = p.category || 'General';
+          return {
+            id: p.id,
+            category_id: catMap[cName] || 1,
+            category_name: cName,
+            name: p.name,
+            base_price: Number(p.base_price || 0),
+            cost_price: Number(p.cost_price || 0),
+            image_url: p.image_url || undefined,
+            stock: Number(p.stock_quantity || 100),
+            alert_threshold: 5,
+            is_low_stock: false,
+            is_out_of_stock: false
+          };
+        });
         setCatalog(categories, products);
       }
 

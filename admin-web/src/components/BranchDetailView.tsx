@@ -23,6 +23,7 @@ import {
 import { BranchCashAuditCard } from "./BranchCashAuditCard";
 import { BranchStaffManager } from "./BranchStaffManager";
 import { BranchZReportModal } from "./BranchZReportModal";
+import { PaginationControls } from "./PaginationControls";
 import { Branch, InventoryItem, Product, StaffRecord } from "../types";
 import { useLanguage } from "../context/LanguageContext";
 
@@ -63,6 +64,10 @@ export const BranchDetailView: React.FC<Props> = ({
   const [dateRange, setDateRange] = useState<"today" | "week" | "month" | "custom">("today");
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
+  const [batchPage, setBatchPage] = useState<number>(1);
+  const [stockPage, setStockPage] = useState<number>(1);
+  const BATCH_PAGE_SIZE = 8;
+  const STOCK_PAGE_SIZE = 10;
 
   // Assign product modal state (Multi-Select & Bulk Assignment)
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -414,36 +419,47 @@ export const BranchDetailView: React.FC<Props> = ({
                 No batches synchronized from this branch yet. When the cashier sends sales on the Sunmi terminal, the audit record will appear here.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
-                  <thead className="bg-slate-50 dark:bg-slate-950 text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
-                    <tr>
-                      <th className="p-3">Sync Date</th>
-                      <th className="p-3">Batch ID</th>
-                      <th className="p-3">Device Serial</th>
-                      <th className="p-3 text-center">Orders</th>
-                      <th className="p-3 text-right">Gross Sales</th>
-                      <th className="p-3 text-right">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                    {branchBatches.map((batch) => (
-                      <tr key={batch.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <td className="p-3 font-medium text-slate-900 dark:text-white">{batch.sync_date}</td>
-                        <td className="p-3 font-mono text-slate-600 dark:text-slate-300">{batch.batch_id}</td>
-                        <td className="p-3 text-slate-500 dark:text-slate-400 font-mono">{batch.device_serial || "SUNMI-V2S"}</td>
-                        <td className="p-3 text-center font-mono">{batch.orders_count}</td>
-                        <td className="p-3 text-right font-mono font-medium text-slate-900 dark:text-white">₱{Number(batch.gross_sales).toFixed(2)}</td>
-                        <td className="p-3 text-right">
-                          <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                            Ingested
-                          </span>
-                        </td>
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+                    <thead className="bg-slate-50 dark:bg-slate-950 text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                      <tr>
+                        <th className="p-3">Sync Date</th>
+                        <th className="p-3">Batch ID</th>
+                        <th className="p-3">Device Serial</th>
+                        <th className="p-3 text-center">Orders</th>
+                        <th className="p-3 text-right">Gross Sales</th>
+                        <th className="p-3 text-right">Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                      {branchBatches.slice((batchPage - 1) * BATCH_PAGE_SIZE, batchPage * BATCH_PAGE_SIZE).map((batch) => (
+                        <tr key={batch.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                          <td className="p-3 font-medium text-slate-900 dark:text-white">{batch.sync_date}</td>
+                          <td className="p-3 font-mono text-slate-600 dark:text-slate-300">{batch.batch_id}</td>
+                          <td className="p-3 text-slate-500 dark:text-slate-400 font-mono">{batch.device_serial || "SUNMI-V2S"}</td>
+                          <td className="p-3 text-center font-mono">{batch.orders_count}</td>
+                          <td className="p-3 text-right font-mono font-medium text-slate-900 dark:text-white">₱{Number(batch.gross_sales).toFixed(2)}</td>
+                          <td className="p-3 text-right">
+                            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                              Ingested
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Batch Pagination Controls */}
+                <PaginationControls
+                  currentPage={batchPage}
+                  totalItems={branchBatches.length}
+                  pageSize={BATCH_PAGE_SIZE}
+                  onPageChange={setBatchPage}
+                  itemLabel="daily batch logs"
+                />
+              </>
             )}
           </div>
         </div>
@@ -487,82 +503,93 @@ export const BranchDetailView: React.FC<Props> = ({
               </button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
-                <thead className="bg-slate-50 dark:bg-slate-950 text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
-                  <tr>
-                    <th className="p-3">Item Name</th>
-                    <th className="p-3">Category</th>
-                    <th className="p-3">Branch Selling Price</th>
-                    <th className="p-3 text-center">Stock at Branch</th>
-                    <th className="p-3 text-center">Status</th>
-                    <th className="p-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                  {assignedItems.map((item) => {
-                    const stock = item.branch_stocks[branch.id] || 0;
-                    const isLow = stock <= 10;
-                    const branchPrice =
-                      item.branch_prices && item.branch_prices[branch.id] !== undefined && item.branch_prices[branch.id] !== null
-                        ? item.branch_prices[branch.id]
-                        : item.base_price;
-                    const hasOverride =
-                      item.branch_prices &&
-                      item.branch_prices[branch.id] !== undefined &&
-                      item.branch_prices[branch.id] !== null &&
-                      item.branch_prices[branch.id] !== item.base_price;
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+                  <thead className="bg-slate-50 dark:bg-slate-950 text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                    <tr>
+                      <th className="p-3">Item Name</th>
+                      <th className="p-3">Category</th>
+                      <th className="p-3">Branch Selling Price</th>
+                      <th className="p-3 text-center">Stock at Branch</th>
+                      <th className="p-3 text-center">Status</th>
+                      <th className="p-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                    {assignedItems.slice((stockPage - 1) * STOCK_PAGE_SIZE, stockPage * STOCK_PAGE_SIZE).map((item) => {
+                      const stock = item.branch_stocks[branch.id] || 0;
+                      const isLow = stock <= 10;
+                      const branchPrice =
+                        item.branch_prices && item.branch_prices[branch.id] !== undefined && item.branch_prices[branch.id] !== null
+                          ? item.branch_prices[branch.id]
+                          : item.base_price;
+                      const hasOverride =
+                        item.branch_prices &&
+                        item.branch_prices[branch.id] !== undefined &&
+                        item.branch_prices[branch.id] !== null &&
+                        item.branch_prices[branch.id] !== item.base_price;
 
-                    return (
-                      <tr key={item.product_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <td className="p-3">
-                          <div className="flex items-center gap-2.5">
-                            {item.image_url ? (
-                              <img src={item.image_url} alt="" className="w-8 h-8 rounded-lg object-cover bg-slate-100 dark:bg-slate-800" />
-                            ) : (
-                              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-sm">
-                                🍲
-                              </div>
-                            )}
-                            <span className="font-semibold text-slate-900 dark:text-white text-sm">{item.name}</span>
-                          </div>
-                        </td>
-                        <td className="p-3 text-slate-600 dark:text-slate-400">{item.category}</td>
-                        <td className="p-3 font-mono font-medium text-slate-900 dark:text-white">
-                          <div className="flex items-center gap-1.5">
-                            <span>₱{Number(branchPrice).toFixed(2)}</span>
-                            {hasOverride && (
-                              <span className="text-[10px] font-sans font-medium px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
-                                Custom
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="p-3 text-center font-mono font-semibold text-sm text-slate-900 dark:text-white">
-                          {stock}
-                        </td>
-                        <td className="p-3 text-center">
-                          <span className={`text-xs font-normal ${isLow ? "text-amber-600 dark:text-amber-400" : "text-slate-500 dark:text-slate-400"}`}>
-                            {isLow ? "Low Stock" : "In Stock"}
-                          </span>
-                        </td>
-                        <td className="p-3 text-right">
-                          <button
-                            onClick={() => {
-                              setRestockProduct(item);
-                              setRestockQty("20");
-                            }}
-                            className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded text-xs transition-colors"
-                          >
-                            + Restock
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                      return (
+                        <tr key={item.product_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                          <td className="p-3">
+                            <div className="flex items-center gap-2.5">
+                              {item.image_url ? (
+                                <img src={item.image_url} alt="" className="w-8 h-8 rounded-lg object-cover bg-slate-100 dark:bg-slate-800" />
+                              ) : (
+                                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-sm">
+                                  🍲
+                                </div>
+                              )}
+                              <span className="font-semibold text-slate-900 dark:text-white text-sm">{item.name}</span>
+                            </div>
+                          </td>
+                          <td className="p-3 text-slate-600 dark:text-slate-400">{item.category}</td>
+                          <td className="p-3 font-mono font-medium text-slate-900 dark:text-white">
+                            <div className="flex items-center gap-1.5">
+                              <span>₱{Number(branchPrice).toFixed(2)}</span>
+                              {hasOverride && (
+                                <span className="text-[10px] font-sans font-medium px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+                                  Custom
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-3 text-center font-mono font-semibold text-sm text-slate-900 dark:text-white">
+                            {stock}
+                          </td>
+                          <td className="p-3 text-center">
+                            <span className={`text-xs font-normal ${isLow ? "text-amber-600 dark:text-amber-400" : "text-slate-500 dark:text-slate-400"}`}>
+                              {isLow ? "Low Stock" : "In Stock"}
+                            </span>
+                          </td>
+                          <td className="p-3 text-right">
+                            <button
+                              onClick={() => {
+                                setRestockProduct(item);
+                                setRestockQty("20");
+                              }}
+                              className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded text-xs transition-colors"
+                            >
+                              + Restock
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Branch Stock Pagination Controls */}
+              <PaginationControls
+                currentPage={stockPage}
+                totalItems={assignedItems.length}
+                pageSize={STOCK_PAGE_SIZE}
+                onPageChange={setStockPage}
+                itemLabel="branch products"
+              />
+            </>
           )}
         </div>
       )}

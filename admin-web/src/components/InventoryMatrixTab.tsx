@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Package, Plus, Edit2, Search, Filter } from 'lucide-react';
 import { ProductFormModal } from './ProductFormModal';
+import { PaginationControls } from './PaginationControls';
 import { Branch, InventoryItem, Product } from '../types';
 
 interface Props {
@@ -15,6 +16,13 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches = [], items, onSa
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const PAGE_SIZE = 10;
+
+  // Reset page to 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory]);
 
   const categories = ['all', ...Array.from(new Set(items.map((i) => i.category)))];
 
@@ -35,6 +43,8 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches = [], items, onSa
     setEditingProduct(item);
     setIsProductModalOpen(true);
   };
+
+  const paginatedItems = filteredItems.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
     <div className="space-y-4">
@@ -118,54 +128,65 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches = [], items, onSa
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
-              <thead className="bg-slate-50 dark:bg-slate-950 text-xs font-medium text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
-                <tr>
-                  <th className="p-3.5">Product Name</th>
-                  <th className="p-3.5">Category</th>
-                  <th className="p-3.5">Default Base Price</th>
-                  <th className="p-3.5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                {filteredItems.map((item) => (
-                  <tr key={item.product_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="p-3.5">
-                      <div className="flex items-center gap-3">
-                        {item.image_url ? (
-                          <img src={item.image_url} alt="" className="w-8 h-8 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700" />
-                        ) : (
-                          <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-sm">
-                            🍲
-                          </div>
-                        )}
-                        <span className="text-sm font-medium text-slate-900 dark:text-white">{item.name}</span>
-                      </div>
-                    </td>
-                    <td className="p-3.5">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                        {item.category}
-                      </span>
-                    </td>
-                    <td className="p-3.5 font-mono font-medium text-slate-900 dark:text-slate-200 text-sm">
-                      ₱{item.base_price.toFixed(2)}
-                    </td>
-                    <td className="p-3.5 text-right">
-                      <button
-                        onClick={() => handleOpenEditProduct(item)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white bg-slate-100 hover:bg-blue-50 dark:bg-slate-800 dark:hover:bg-slate-700 font-medium transition-colors"
-                        title="Edit Master Product"
-                      >
-                        <Edit2 className="w-3.5 h-3.5 text-blue-500" />
-                        <span>Edit</span>
-                      </button>
-                    </td>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+                <thead className="bg-slate-50 dark:bg-slate-950 text-xs font-medium text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                  <tr>
+                    <th className="p-3.5">Product Name</th>
+                    <th className="p-3.5">Category</th>
+                    <th className="p-3.5">Default Base Price</th>
+                    <th className="p-3.5 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                  {paginatedItems.map((item) => (
+                    <tr key={item.product_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="p-3.5">
+                        <div className="flex items-center gap-3">
+                          {item.image_url ? (
+                            <img src={item.image_url} alt="" className="w-8 h-8 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-sm">
+                              🍲
+                            </div>
+                          )}
+                          <span className="text-sm font-medium text-slate-900 dark:text-white">{item.name}</span>
+                        </div>
+                      </td>
+                      <td className="p-3.5">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                          {item.category}
+                        </span>
+                      </td>
+                      <td className="p-3.5 font-mono font-medium text-slate-900 dark:text-slate-200 text-sm">
+                        ₱{item.base_price.toFixed(2)}
+                      </td>
+                      <td className="p-3.5 text-right">
+                        <button
+                          onClick={() => handleOpenEditProduct(item)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white bg-slate-100 hover:bg-blue-50 dark:bg-slate-800 dark:hover:bg-slate-700 font-medium transition-colors"
+                          title="Edit Master Product"
+                        >
+                          <Edit2 className="w-3.5 h-3.5 text-blue-500" />
+                          <span>Edit</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls */}
+            <PaginationControls
+              currentPage={currentPage}
+              totalItems={filteredItems.length}
+              pageSize={PAGE_SIZE}
+              onPageChange={setCurrentPage}
+              itemLabel="products"
+            />
+          </>
         )}
       </div>
 

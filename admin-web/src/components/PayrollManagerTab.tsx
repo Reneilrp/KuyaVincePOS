@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Users,
   Clock,
@@ -18,6 +18,7 @@ import {
 import { Branch, PayrollItem, StaffRecord } from "../types";
 import { supabase } from "../services/supabaseClient";
 import { hashPin, generatePinSalt } from "../utils/pinHash";
+import { PaginationControls } from "./PaginationControls";
 
 interface Props {
   branches: Branch[];
@@ -42,6 +43,14 @@ export const PayrollManagerTab: React.FC<Props> = ({
   const [activeSubTab, setActiveSubTab] = useState<"directory" | "payroll">("directory");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterBranch, setFilterBranch] = useState("all");
+  const [staffPage, setStaffPage] = useState<number>(1);
+  const [payrollPage, setPayrollPage] = useState<number>(1);
+  const STAFF_PAGE_SIZE = 10;
+  const PAYROLL_PAGE_SIZE = 10;
+
+  useEffect(() => {
+    setStaffPage(1);
+  }, [searchQuery, filterBranch]);
 
   // Staff CRUD Modals State
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -313,7 +322,8 @@ export const PayrollManagerTab: React.FC<Props> = ({
               </button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+              <div className="overflow-x-auto">
               <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
                 <thead className="bg-slate-50 dark:bg-slate-950 text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <tr>
@@ -327,7 +337,7 @@ export const PayrollManagerTab: React.FC<Props> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                  {filteredStaff.map((staff) => {
+                  {filteredStaff.slice((staffPage - 1) * STAFF_PAGE_SIZE, staffPage * STAFF_PAGE_SIZE).map((staff) => {
                     const assignedBr = branches.find((b) => b.id === staff.branch_id);
 
                     return (
@@ -371,8 +381,18 @@ export const PayrollManagerTab: React.FC<Props> = ({
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
+
+            {/* Staff Directory Pagination Controls */}
+            <PaginationControls
+              currentPage={staffPage}
+              totalItems={filteredStaff.length}
+              pageSize={STAFF_PAGE_SIZE}
+              onPageChange={setStaffPage}
+              itemLabel="staff members"
+            />
+          </>
+        )}
+      </div>
       )}
 
       {/* 3. SUB-TAB 2: WAGE CALCULATIONS & AUTOMATED SLIPS */}
@@ -478,7 +498,7 @@ export const PayrollManagerTab: React.FC<Props> = ({
                       </td>
                     </tr>
                   ) : (
-                    payrollData.map((staff) => (
+                    payrollData.slice((payrollPage - 1) * PAYROLL_PAGE_SIZE, payrollPage * PAYROLL_PAGE_SIZE).map((staff) => (
                       <tr key={staff.user_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                         <td className="p-3 font-medium text-slate-900 dark:text-white flex items-center gap-2">
                           <div className="w-7 h-7 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-xs font-semibold text-slate-700 dark:text-slate-300">
@@ -508,6 +528,17 @@ export const PayrollManagerTab: React.FC<Props> = ({
                 </tbody>
               </table>
             </div>
+
+            {/* Wage Calculations Pagination Controls */}
+            {payrollData.length > 0 && (
+              <PaginationControls
+                currentPage={payrollPage}
+                totalItems={payrollData.length}
+                pageSize={PAYROLL_PAGE_SIZE}
+                onPageChange={setPayrollPage}
+                itemLabel="wage slips"
+              />
+            )}
 
             <div className="p-3 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center">
               <p className="text-xs text-slate-500 dark:text-slate-400">Cycle: {startDate} to {endDate}</p>

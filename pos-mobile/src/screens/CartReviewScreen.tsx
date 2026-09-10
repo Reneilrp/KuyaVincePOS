@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Switch } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Switch, Image } from 'react-native';
 import { usePosStore } from '../stores/usePosStore';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -43,7 +43,16 @@ export const CartReviewScreen: React.FC<Props> = ({ onBack, onProceed }) => {
         </Text>
         
         {cart.map((item) => (
-          <View key={item.product.id} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#1E293B' }}>
+          <View key={item.product.id} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#1E293B', gap: 10 }}>
+            {/* Product Thumbnail */}
+            <View style={{ width: 44, height: 44, borderRadius: 10, backgroundColor: '#0F172A', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 1, borderColor: '#334155', flexShrink: 0 }}>
+              {item.product.image_url ? (
+                <Image source={{ uri: item.product.image_url }} style={{ width: '100%', height: '100%', borderRadius: 10 }} resizeMode="cover" />
+              ) : (
+                <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 18 }}>{item.product.name.charAt(0)}</Text>
+              )}
+            </View>
+
             <View style={{ flex: 1 }}>
               <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 14 }}>{item.product.name}</Text>
               <Text style={{ color: '#94A3B8', fontSize: 11, marginTop: 2 }}>₱{item.unit_price.toFixed(2)} {t('each')}</Text>

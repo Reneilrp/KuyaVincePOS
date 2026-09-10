@@ -126,11 +126,11 @@ export const PosRegisterScreen: React.FC<Props> = ({
           const cartItem = cart.find((i) => i.product.id === prod.id);
           return (
             <View style={{ backgroundColor: '#1E293B', borderRadius: 16, borderColor: '#334155', borderWidth: 1, padding: 12, flex: 1, margin: 4 }}>
-              <View style={{ width: 56, height: 56, borderRadius: 12, backgroundColor: '#0F172A', alignItems: 'center', justifyContent: 'center', marginBottom: 8, alignSelf: 'center' }}>
+              <View style={{ width: 64, height: 64, borderRadius: 12, backgroundColor: '#0F172A', alignItems: 'center', justifyContent: 'center', marginBottom: 8, alignSelf: 'center', overflow: 'hidden', borderWidth: 1, borderColor: '#334155' }}>
                 {prod.image_url ? (
-                  <Image source={{ uri: prod.image_url }} style={{ width: 40, height: 40 }} />
+                  <Image source={{ uri: prod.image_url }} style={{ width: '100%', height: '100%', borderRadius: 12 }} resizeMode="cover" />
                 ) : (
-                  <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 22 }}>{prod.name.charAt(0)}</Text>
+                  <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 24 }}>{prod.name.charAt(0)}</Text>
                 )}
               </View>
               <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 14, marginBottom: 4 }} numberOfLines={2}>{prod.name}</Text>
