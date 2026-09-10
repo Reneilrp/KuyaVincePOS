@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Package, Plus, Edit2 } from 'lucide-react';
+import { Package, Plus, Edit2, Search, Filter } from 'lucide-react';
 import { ProductFormModal } from './ProductFormModal';
 import { Branch, InventoryItem, Product } from '../types';
 
@@ -13,13 +13,18 @@ interface Props {
 export const InventoryMatrixTab: React.FC<Props> = ({ branches = [], items, onSaveProduct }) => {
   const [editingProduct, setEditingProduct] = useState<InventoryItem | null>(null);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const categories = ['all', ...Array.from(new Set(items.map((i) => i.category)))];
 
-  const filteredItems = selectedCategory === 'all'
-    ? items
-    : items.filter((i) => i.category === selectedCategory);
+  const filteredItems = items.filter((item) => {
+    const matchesCategory = selectedCategory === 'all' || item.category.toLowerCase() === selectedCategory.toLowerCase();
+    const matchesSearch = searchQuery.trim() === '' || 
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      item.category.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   const handleOpenNewProduct = () => {
     setEditingProduct(null);
@@ -32,58 +37,85 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches = [], items, onSa
   };
 
   return (
-    <div className="space-y-6">
-      {/* 1. Header with Add Product & Title */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
-        <div>
-          <h2 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            <Package className="w-5 h-5 text-blue-500 dark:text-blue-400" /> Master Product Catalog
-          </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Manage global product definitions, categories, and default base selling prices
-          </p>
+    <div className="space-y-4">
+      {/* 1. Single-row Toolbar: Search Query, Filters, and + Add Product on the very right */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        {/* Left: Search Query & Category Filters */}
+        <div className="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-2.5 max-w-xl">
+          {/* Search Input */}
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search products by name or category..."
+              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500 shadow-xs"
+            />
+          </div>
+
+          {/* Category Filter Select */}
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 shadow-xs sm:w-48">
+            <Filter className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="bg-transparent text-xs text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer w-full capitalize"
+            >
+              <option value="all" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                All Categories ({items.length})
+              </option>
+              {categories.filter(c => c !== 'all').map((cat) => {
+                const count = items.filter(i => i.category === cat).length;
+                return (
+                  <option key={cat} value={cat} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white capitalize">
+                    {cat} ({count})
+                  </option>
+                );
+              })}
+            </select>
+          </div>
         </div>
 
+        {/* Very Right Side: + Add Product Button */}
         <button
           onClick={handleOpenNewProduct}
-          className="flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg transition-colors shadow-sm"
+          className="flex items-center justify-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors shadow-xs whitespace-nowrap flex-shrink-0"
         >
           <Plus className="w-4 h-4" /> Add Product
         </button>
       </div>
 
-      {/* 2. Category Filter Pills */}
-      <div className="flex flex-wrap gap-2">
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setSelectedCategory(cat)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg capitalize transition-colors ${
-              selectedCategory === cat
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-            }`}
-          >
-            {cat === 'all' ? 'All Products' : cat}
-          </button>
-        ))}
-      </div>
-
-      {/* 3. Master Product Catalog Table */}
+      {/* 2. Master Product Table */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
         {filteredItems.length === 0 ? (
           <div className="p-12 text-center space-y-3">
             <Package className="w-8 h-8 mx-auto text-slate-400 dark:text-slate-500" />
             <h3 className="text-sm font-medium text-slate-800 dark:text-slate-200">No Products Found</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-              Create your first product or adjust category filters to see catalog items.
+              {searchQuery || selectedCategory !== 'all'
+                ? "No products match your search query or selected filter. Try clearing the filters or add a new product."
+                : "Create your first product to see catalog items."}
             </p>
-            <button
-              onClick={handleOpenNewProduct}
-              className="inline-flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg transition-colors"
-            >
-              <Plus className="w-4 h-4" /> Add Product
-            </button>
+            <div className="flex items-center justify-center gap-2 pt-1">
+              {(searchQuery || selectedCategory !== 'all') && (
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedCategory('all');
+                  }}
+                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium rounded-lg transition-colors"
+                >
+                  Clear Filters
+                </button>
+              )}
+              <button
+                onClick={handleOpenNewProduct}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg transition-colors"
+              >
+                <Plus className="w-4 h-4" /> Add Product
+              </button>
+            </div>
           </div>
         ) : (
           <div className="overflow-x-auto">

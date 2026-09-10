@@ -13,8 +13,6 @@ import {
   Search,
   Building2,
   ShieldCheck,
-  UserCheck,
-  UserX,
   Check
 } from "lucide-react";
 import { Branch, PayrollItem, StaffRecord } from "../types";
@@ -48,15 +46,21 @@ export const PayrollManagerTab: React.FC<Props> = ({
   // Staff CRUD Modals State
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<StaffRecord | null>(null);
-  const [resetPinStaff, setResetPinStaff] = useState<StaffRecord | null>(null);
 
-  // Form State
+  // Edit Staff Form State (integrated PIN, Status, and Delete)
+  const [editName, setEditName] = useState("");
+  const [editRole, setEditRole] = useState("cashier");
+  const [editBranchId, setEditBranchId] = useState<number>(branches[0]?.id || 1);
+  const [editHourlyRate, setEditHourlyRate] = useState("85.00");
+  const [editPinCode, setEditPinCode] = useState("1234");
+  const [editIsActive, setEditIsActive] = useState(true);
+
+  // Create Staff Form State
   const [name, setName] = useState("");
   const [role, setRole] = useState("cashier");
   const [branchId, setBranchId] = useState<number>(branches[0]?.id || 1);
   const [pinCode, setPinCode] = useState("1234");
   const [hourlyRate, setHourlyRate] = useState("85.00");
-  const [newPin, setNewPin] = useState("1234");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -75,10 +79,24 @@ export const PayrollManagerTab: React.FC<Props> = ({
     setTimeout(() => setNotice(null), 3500);
   };
 
+  // Open Edit Modal & Populate Form
+  const openEditModal = (staff: StaffRecord) => {
+    setEditingStaff(staff);
+    setEditName(staff.name || "");
+    setEditRole(staff.role || "cashier");
+    setEditBranchId(staff.branch_id || branches[0]?.id || 1);
+    setEditHourlyRate(String(staff.hourly_rate || 85));
+    setEditPinCode(staff.pin_code || "1234");
+    setEditIsActive(staff.is_active !== false);
+  };
+
   // 1. Create Staff
   const handleCreateStaff = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !pinCode) return;
+    if (!name.trim() || pinCode.length !== 4) {
+      alert("Please enter a valid staff name and 4-digit PIN.");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -87,7 +105,7 @@ export const PayrollManagerTab: React.FC<Props> = ({
       const { error } = await supabase.from("staff_records").insert([
         {
           branch_id: Number(branchId),
-          name,
+          name: name.trim(),
           role,
           pin_code: pinCode,
           pin_salt: salt,
@@ -101,7 +119,8 @@ export const PayrollManagerTab: React.FC<Props> = ({
       await onRefreshStaff();
       setIsCreateModalOpen(false);
       setName("");
-      triggerNotice(`✅ Staff member "${name}" registered with secure PIN hash!`);
+      setPinCode("1234");
+      triggerNotice(`✅ Staff member "${name.trim()}" registered with secure PIN hash!`);
     } catch (e: any) {
       alert("Failed to add staff: " + e.message);
     } finally {
@@ -109,27 +128,38 @@ export const PayrollManagerTab: React.FC<Props> = ({
     }
   };
 
-  // 2. Update Staff
+  // 2. Update Staff (includes Name, Branch, Role, Hourly Wage, PIN, and Active Status)
   const handleUpdateStaff = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingStaff) return;
+    if (!editingStaff || !editName.trim()) return;
+    if (editPinCode.length !== 4) {
+      alert("Terminal PIN must be exactly 4 numeric digits.");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
+      const salt = generatePinSalt();
+      const hash = await hashPin(editPinCode, salt);
+
       const { error } = await supabase
         .from("staff_records")
         .update({
-          name: editingStaff.name,
-          role: editingStaff.role,
-          branch_id: Number(editingStaff.branch_id),
-          hourly_rate: parseFloat(String(editingStaff.hourly_rate || 85))
+          name: editName.trim(),
+          role: editRole,
+          branch_id: Number(editBranchId),
+          hourly_rate: parseFloat(editHourlyRate || "85"),
+          pin_code: editPinCode,
+          pin_salt: salt,
+          pin_hash: hash,
+          is_active: editIsActive
         })
         .eq("id", editingStaff.id);
 
       if (error) throw error;
       await onRefreshStaff();
       setEditingStaff(null);
-      triggerNotice(`✅ Updated details for "${editingStaff.name}"`);
+      triggerNotice(`✅ Updated details and security credentials for "${editName.trim()}"`);
     } catch (e: any) {
       alert("Failed to update staff: " + e.message);
     } finally {
@@ -137,56 +167,20 @@ export const PayrollManagerTab: React.FC<Props> = ({
     }
   };
 
-  // 3. Reset PIN
-  const handleResetPin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!resetPinStaff || newPin.length !== 4) return;
-
-    setIsSubmitting(true);
-    try {
-      const salt = generatePinSalt();
-      const hash = await hashPin(newPin, salt);
-      const { error } = await supabase
-        .from("staff_records")
-        .update({ pin_code: newPin, pin_salt: salt, pin_hash: hash })
-        .eq("id", resetPinStaff.id);
-
-      if (error) throw error;
-      await onRefreshStaff();
-      triggerNotice(`🔑 PIN for "${resetPinStaff.name}" updated to ${newPin}!`);
-      setResetPinStaff(null);
-    } catch (e: any) {
-      alert("Failed to reset PIN: " + e.message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // 4. Toggle Active / Disabled
-  const handleToggleStatus = async (staff: StaffRecord) => {
-    try {
-      const { error } = await supabase
-        .from("staff_records")
-        .update({ is_active: !staff.is_active })
-        .eq("id", staff.id);
-
-      if (error) throw error;
-      await onRefreshStaff();
-    } catch (e: any) {
-      alert("Failed to update status: " + e.message);
-    }
-  };
-
-  // 5. Delete Staff
+  // 3. Delete Staff
   const handleDeleteStaff = async (staff: StaffRecord) => {
-    if (!confirm(`Are you sure you want to permanently delete "${staff.name}"?`)) return;
+    if (!confirm(`Are you sure you want to permanently delete "${staff.name}"? This action cannot be undone.`)) return;
+    setIsSubmitting(true);
     try {
       const { error } = await supabase.from("staff_records").delete().eq("id", staff.id);
       if (error) throw error;
       await onRefreshStaff();
+      setEditingStaff(null);
       triggerNotice(`🗑️ Removed "${staff.name}"`);
     } catch (e: any) {
-      alert("Failed to delete: " + e.message);
+      alert("Failed to delete staff: " + e.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -222,22 +216,12 @@ export const PayrollManagerTab: React.FC<Props> = ({
 
   return (
     <div className="space-y-6">
-      {/* 1. Header with Tab Switcher */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-sm">
-        <div>
-          <h2 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            👥 Staff Timeclocks & Hourly Payroll Manager
-          </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Centralized company-wide staff directory and automated payroll wage calculations
-          </p>
-        </div>
-
-        {/* Tab Toggle */}
-        <div className="flex bg-slate-100 dark:bg-slate-950 p-0.5 rounded-lg border border-slate-200 dark:border-slate-800">
+      {/* 1. Sub-Tab Switcher */}
+      <div className="flex items-center">
+        <div className="flex bg-slate-100 dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs">
           <button
             onClick={() => setActiveSubTab("directory")}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+            className={`px-3.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
               activeSubTab === "directory"
                 ? "bg-blue-600 text-white shadow-xs"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -247,7 +231,7 @@ export const PayrollManagerTab: React.FC<Props> = ({
           </button>
           <button
             onClick={() => setActiveSubTab("payroll")}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+            className={`px-3.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
               activeSubTab === "payroll"
                 ? "bg-blue-600 text-white shadow-xs"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -372,40 +356,14 @@ export const PayrollManagerTab: React.FC<Props> = ({
                           </span>
                         </td>
                         <td className="p-3 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => {
-                                setResetPinStaff(staff);
-                                setNewPin("1234");
-                              }}
-                              className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-blue-600 dark:text-blue-400 rounded-lg transition-colors"
-                              title="Reset 4-Digit PIN"
-                            >
-                              <Key className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => setEditingStaff({ ...staff })}
-                              className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-lg transition-colors"
-                              title="Edit Staff Member"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleToggleStatus(staff)}
-                              className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-lg transition-colors"
-                              title={staff.is_active ? "Deactivate" : "Activate"}
-                            >
-                              {staff.is_active ? <UserX className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
-                            </button>
-                            <button
-                              onClick={() => handleDeleteStaff(staff)}
-                              disabled={!isSuperAdmin}
-                              title={!isSuperAdmin ? 'Super Admin access required' : 'Delete Permanently'}
-                              className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
+                          <button
+                            onClick={() => openEditModal(staff)}
+                            className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg transition-colors inline-flex items-center gap-1.5 text-xs font-medium"
+                            title="Edit Staff Member"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                            <span>Edit</span>
+                          </button>
                         </td>
                       </tr>
                     );
@@ -668,33 +626,44 @@ export const PayrollManagerTab: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Modal 2: Edit Staff */}
+      {/* Modal: Edit Staff Details (Integrated with PIN reset, status toggle, and delete) */}
       {editingStaff && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-md w-full p-6 shadow-xl">
-            <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-              <Edit2 className="w-4 h-4 text-slate-400" /> Edit Staff Details
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Update employee information and branch transfer</p>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-md w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div>
+              <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                <Edit2 className="w-4 h-4 text-blue-600 dark:text-blue-400" /> Edit Staff Member
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Update credentials, branch assignment, PIN, active status, or delete
+              </p>
+            </div>
 
-            <form onSubmit={handleUpdateStaff} className="mt-4 space-y-4">
+            <form onSubmit={handleUpdateStaff} className="space-y-4 pt-1">
+              {/* Full Name */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Full Name
+                </label>
                 <input
                   type="text"
                   required
-                  value={editingStaff.name}
-                  onChange={(e) => setEditingStaff({ ...editingStaff, name: e.target.value })}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="e.g. Maria Santos"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-normal"
                 />
               </div>
 
+              {/* Assigned Branch & Role */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Assigned Branch</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Assigned Branch
+                  </label>
                   <select
-                    value={editingStaff.branch_id || ""}
-                    onChange={(e) => setEditingStaff({ ...editingStaff, branch_id: Number(e.target.value) })}
+                    value={editBranchId}
+                    onChange={(e) => setEditBranchId(Number(e.target.value))}
                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                   >
                     {branches.map((b) => (
@@ -706,10 +675,12 @@ export const PayrollManagerTab: React.FC<Props> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Role</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Role
+                  </label>
                   <select
-                    value={editingStaff.role}
-                    onChange={(e) => setEditingStaff({ ...editingStaff, role: e.target.value })}
+                    value={editRole}
+                    onChange={(e) => setEditRole(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                   >
                     <option value="cashier" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Cashier</option>
@@ -720,17 +691,104 @@ export const PayrollManagerTab: React.FC<Props> = ({
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Hourly Wage (₱/hr)</label>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={editingStaff.hourly_rate || 85}
-                  onChange={(e) => setEditingStaff({ ...editingStaff, hourly_rate: parseFloat(e.target.value) })}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs font-mono text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                />
+              {/* Hourly Wage & 4-Digit Login PIN */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Hourly Wage (₱/hr)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    required
+                    value={editHourlyRate}
+                    onChange={(e) => setEditHourlyRate(e.target.value)}
+                    placeholder="85.00"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs font-mono text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
+                    <span>Terminal PIN</span>
+                    <span className="text-[10px] text-slate-400 font-normal">4 Digits</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      maxLength={4}
+                      required
+                      value={editPinCode}
+                      onChange={(e) => setEditPinCode(e.target.value.replace(/[^0-9]/g, ""))}
+                      placeholder="1234"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-center text-xs font-mono font-semibold text-blue-600 dark:text-blue-400 tracking-widest focus:outline-none focus:border-blue-500"
+                    />
+                    <Key className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3 pointer-events-none" />
+                  </div>
+                </div>
               </div>
 
+              {/* Staff Status Selector (Active vs Deactivated) */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Account Operational Status
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditIsActive(true)}
+                    className={`p-2.5 rounded-lg border text-left transition-all ${
+                      editIsActive
+                        ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-400"
+                        : "bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-semibold text-xs">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                      Active
+                    </div>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Can log into Sunmi POS
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setEditIsActive(false)}
+                    className={`p-2.5 rounded-lg border text-left transition-all ${
+                      !editIsActive
+                        ? "bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 ring-1 ring-amber-400"
+                        : "bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-semibold text-xs">
+                      <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                      Deactivated
+                    </div>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Login blocked on POS
+                    </p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Danger Zone: Delete Staff */}
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">Permanent Removal</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400">Delete this staff profile completely</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteStaff(editingStaff)}
+                  className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
+                  title="Delete Staff"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Delete Staff
+                </button>
+              </div>
+
+              {/* Action Buttons */}
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
@@ -741,55 +799,10 @@ export const PayrollManagerTab: React.FC<Props> = ({
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || editPinCode.length !== 4}
                   className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50"
                 >
                   {isSubmitting ? "Saving..." : "Save Changes"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal 3: Reset PIN */}
-      {resetPinStaff && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-sm w-full p-6 shadow-xl">
-            <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-              <Key className="w-4 h-4 text-slate-400" /> Reset PIN for {resetPinStaff.name}
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Enter a new 4-digit PIN for Sunmi terminal login</p>
-
-            <form onSubmit={handleResetPin} className="mt-4 space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">New 4-Digit PIN</label>
-                <input
-                  type="text"
-                  maxLength={4}
-                  autoFocus
-                  required
-                  value={newPin}
-                  onChange={(e) => setNewPin(e.target.value.replace(/[^0-9]/g, ""))}
-                  placeholder="e.g. 5678"
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-center text-xl font-mono font-semibold text-blue-600 dark:text-blue-400 tracking-widest focus:outline-none focus:border-blue-500"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setResetPinStaff(null)}
-                  className="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting || newPin.length !== 4}
-                  className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50"
-                >
-                  {isSubmitting ? "Updating..." : "Update PIN"}
                 </button>
               </div>
             </form>

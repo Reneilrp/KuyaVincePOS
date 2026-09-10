@@ -118,8 +118,7 @@ describe('Live Supabase Full-Stack Database Verification', () => {
         pin_salt: salt,
         pin_hash: hash,
         hourly_rate: 90.00,
-        is_active: true,
-        is_deleted: false
+        is_active: true
       })
     });
     expect(createRes.status).toBe(201);
@@ -134,26 +133,24 @@ describe('Live Supabase Full-Stack Database Verification', () => {
     expect(isValid).toBe(true);
     expect(isInvalid).toBe(false);
 
-    // C. Soft Delete (Archive Staff)
-    const softDelRes = await fetch(`${SUPABASE_URL}/rest/v1/staff_records?id=eq.${createdStaff.id}`, {
+    // C. Deactivate Staff
+    const deactRes = await fetch(`${SUPABASE_URL}/rest/v1/staff_records?id=eq.${createdStaff.id}`, {
       method: 'PATCH',
       headers,
-      body: JSON.stringify({ is_deleted: true, is_active: false })
+      body: JSON.stringify({ is_active: false })
     });
-    expect(softDelRes.status).toBe(200);
-    const [archivedStaff] = await softDelRes.json();
-    expect(archivedStaff.is_deleted).toBe(true);
+    expect(deactRes.status).toBe(200);
+    const [archivedStaff] = await deactRes.json();
     expect(archivedStaff.is_active).toBe(false);
 
-    // D. Restore Staff
+    // D. Reactivate Staff
     const restoreRes = await fetch(`${SUPABASE_URL}/rest/v1/staff_records?id=eq.${createdStaff.id}`, {
       method: 'PATCH',
       headers,
-      body: JSON.stringify({ is_deleted: false, is_active: true })
+      body: JSON.stringify({ is_active: true })
     });
     expect(restoreRes.status).toBe(200);
     const [restoredStaff] = await restoreRes.json();
-    expect(restoredStaff.is_deleted).toBe(false);
     expect(restoredStaff.is_active).toBe(true);
 
     // Cleanup
@@ -163,8 +160,8 @@ describe('Live Supabase Full-Stack Database Verification', () => {
     });
   }, 15000);
 
-  // 4. Test Branch Inventory Matrix & Soft Exclusion
-  test('4. Branch Inventory: Stock Allocation & Soft Toggle Exclusion', async () => {
+  // 4. Test Branch Inventory Matrix & Price Override
+  test('4. Branch Inventory: Stock Allocation & Branch Price Override', async () => {
     // Create a temporary product
     const curProds = await (await fetch(`${SUPABASE_URL}/rest/v1/products?select=*`, { headers })).json();
     const nextProdId = Math.max(...curProds.map((p: any) => Number(p.id)), 0) + 1;
@@ -181,7 +178,7 @@ describe('Live Supabase Full-Stack Database Verification', () => {
     });
     const [prod] = await prodRes.json();
 
-    // A. Allocate Stock to Branch 1
+    // A. Allocate Stock to Branch 1 with custom price override
     const invRes = await fetch(`${SUPABASE_URL}/rest/v1/branch_inventory`, {
       method: 'POST',
       headers,
@@ -189,24 +186,24 @@ describe('Live Supabase Full-Stack Database Verification', () => {
         branch_id: 1,
         product_id: prod.id,
         stock_quantity: 75.00,
-        alert_threshold: 15.00,
-        is_active: true
+        price_override: 70.00,
+        alert_threshold: 15.00
       })
     });
     expect(invRes.status).toBe(201);
     const [inv] = await invRes.json();
     expect(Number(inv.stock_quantity)).toBe(75.00);
-    expect(inv.is_active).toBe(true);
+    expect(Number(inv.price_override)).toBe(70.00);
 
-    // B. Soft-Toggle (Exclude product from Branch 1)
-    const excludeRes = await fetch(`${SUPABASE_URL}/rest/v1/branch_inventory?id=eq.${inv.id}`, {
+    // B. Update Branch Price Override
+    const updateRes = await fetch(`${SUPABASE_URL}/rest/v1/branch_inventory?id=eq.${inv.id}`, {
       method: 'PATCH',
       headers,
-      body: JSON.stringify({ is_active: false })
+      body: JSON.stringify({ price_override: 75.00 })
     });
-    expect(excludeRes.status).toBe(200);
-    const [excludedInv] = await excludeRes.json();
-    expect(excludedInv.is_active).toBe(false);
+    expect(updateRes.status).toBe(200);
+    const [updatedInv] = await updateRes.json();
+    expect(Number(updatedInv.price_override)).toBe(75.00);
 
     // Cleanup
     await fetch(`${SUPABASE_URL}/rest/v1/branch_inventory?id=eq.${inv.id}`, { method: 'DELETE', headers });

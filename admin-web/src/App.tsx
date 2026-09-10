@@ -414,11 +414,11 @@ export default function App() {
 
   const tabTitles: Record<TabKey, string> = {
     branches: "🏢 Store Branches Hub",
-    inventory: "📦 Centralized Master Product Catalog & Stocks",
-    sales: "📊 Real-Time Multi-Branch Sales & Revenue Overview",
-    payroll: "👥 Staff Timeclocks & Hourly Payroll Manager",
-    reports: "📥 Client Data Retrieval, 1-Click Exports & Prints",
-    settings: "⚙️ System Profile & Preferences"
+    inventory: "📦 Master Product",
+    sales: "📊 Centralized Sales",
+    payroll: "👥 Staff & Payroll",
+    reports: "📥 Exports & Reports",
+    settings: "⚙️ Profile & Settings"
   };
 
   const selectedBranchName = selectedBranchId === "all"

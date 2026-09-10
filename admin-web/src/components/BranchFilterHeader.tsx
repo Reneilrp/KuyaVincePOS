@@ -3,6 +3,7 @@ import { Building2, Calendar, RefreshCw, Printer, Sun, Moon } from "lucide-react
 import { Branch } from "../types";
 import { TabKey } from "./SidebarMenuBar";
 import { useTheme } from "../context/ThemeContext";
+import { useLanguage } from "../context/LanguageContext";
 
 interface Props {
   branches: Branch[];
@@ -32,21 +33,64 @@ export const BranchFilterHeader: React.FC<Props> = ({
   onOpenZReport
 }) => {
   const { theme, toggleTheme } = useTheme();
+  const { t } = useLanguage();
   const showBranchFilter = !activeBranchDetail && ["sales", "payroll", "reports"].includes(activeTab);
   const showDateFilter = !activeBranchDetail && ["sales", "payroll", "reports"].includes(activeTab);
+
+  const getPageTitle = () => {
+    if (activeBranchDetail) {
+      return `🏢 ${activeBranchDetail.name}`;
+    }
+    switch (activeTab) {
+      case "branches":
+        return `🏢 ${t("branchesHub")}`;
+      case "inventory":
+        return `📦 ${t("productCatalog")}`;
+      case "sales":
+        return `📊 ${t("centralizedSales")}`;
+      case "payroll":
+        return `👥 ${t("staffPayroll")}`;
+      case "reports":
+        return `📥 ${t("exportsReports")}`;
+      case "settings":
+        return `⚙️ ${t("profileSettings")}`;
+      default:
+        return pageTitle;
+    }
+  };
+
+  const getFeatureDetail = () => {
+    if (activeBranchDetail) {
+      return t("branchDashboardOps", { address: activeBranchDetail.address || "Zamboanga City" });
+    }
+    switch (activeTab) {
+      case "branches":
+        return t("branchesHubDesc");
+      case "inventory":
+        return t("productCatalogDesc");
+      case "sales":
+        return t("centralizedSalesDesc");
+      case "payroll":
+        return t("staffPayrollDesc");
+      case "reports":
+        return t("exportsReportsDesc");
+      case "settings":
+        return t("profileSettingsDesc");
+      default:
+        return "";
+    }
+  };
 
   return (
     <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 px-6 py-3.5 no-print transition-colors">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        {/* Left: Clean Page Title */}
+        {/* Left: Clean Dynamic Page Title & Feature Detail */}
         <div>
           <h1 className="text-base font-semibold text-slate-900 dark:text-white">
-            {activeBranchDetail ? `🏢 ${activeBranchDetail.name}` : pageTitle}
+            {getPageTitle()}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            {activeBranchDetail
-              ? `${activeBranchDetail.address || "Zamboanga City"} • Branch Dashboard`
-              : "Live Supabase PostgreSQL • Central Database"}
+            {getFeatureDetail()}
           </p>
         </div>
 
@@ -56,9 +100,9 @@ export const BranchFilterHeader: React.FC<Props> = ({
             <button
               onClick={onOpenZReport}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg transition-colors"
-              title="Print 58mm Daily Audit Slip"
+              title={t("print58mmZReport")}
             >
-              <Printer className="w-3.5 h-3.5" /> Print 58mm Daily Z-Report
+              <Printer className="w-3.5 h-3.5" /> {t("print58mmZReport")}
             </button>
           )}
 
@@ -71,7 +115,7 @@ export const BranchFilterHeader: React.FC<Props> = ({
                 onChange={(e) => onSelectBranch(e.target.value)}
                 className="bg-transparent text-xs font-medium text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer"
               >
-                <option value="all" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">All Active Branches</option>
+                <option value="all" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t("allActiveBranches")}</option>
                 {branches.filter((b) => b.is_active !== false).map((b) => (
                   <option key={b.id} value={String(b.id)} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                     {b.name} [{b.import_code || b.code}]
@@ -95,7 +139,7 @@ export const BranchFilterHeader: React.FC<Props> = ({
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                   }`}
                 >
-                  {r === "today" ? "Today" : r === "week" ? "Week" : "Month"}
+                  {r === "today" ? t("today") : r === "week" ? t("thisWeek") : t("thisMonth")}
                 </button>
               ))}
             </div>
@@ -105,7 +149,7 @@ export const BranchFilterHeader: React.FC<Props> = ({
           <button
             onClick={toggleTheme}
             className="p-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+            title={t("toggleTheme")}
           >
             {theme === 'dark' ? (
               <Sun className="w-3.5 h-3.5 text-amber-500" />
@@ -119,7 +163,7 @@ export const BranchFilterHeader: React.FC<Props> = ({
             onClick={onRefresh}
             disabled={isLoading}
             className="p-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            title="Sync Latest Data"
+            title={t("syncLatestData")}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-blue-500" : ""}`} />
           </button>

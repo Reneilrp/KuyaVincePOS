@@ -118,59 +118,48 @@ export const BranchSetupManager: React.FC<Props> = ({
 
   return (
     <div className="space-y-6">
-      {/* 1. Header with Add Branch button and Status Filter Tabs */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
-        <div>
-          <h2 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-slate-400" /> Store Branches Hub
-          </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Manage physical branches, active status, Sunmi terminal import codes, and branch audit logs
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap w-full sm:w-auto justify-between sm:justify-end">
-          {/* Status Filter Tabs */}
-          <div className="flex bg-slate-100 dark:bg-slate-950 p-0.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs">
-            <button
-              onClick={() => setStatusFilter("all")}
-              className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
-                statusFilter === "all"
-                  ? "bg-blue-600 text-white shadow-xs font-semibold"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              All ({branches.length})
-            </button>
-            <button
-              onClick={() => setStatusFilter("active")}
-              className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
-                statusFilter === "active"
-                  ? "bg-blue-600 text-white shadow-xs font-semibold"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              Active ({activeBranchesCount})
-            </button>
-            <button
-              onClick={() => setStatusFilter("inactive")}
-              className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
-                statusFilter === "inactive"
-                  ? "bg-blue-600 text-white shadow-xs font-semibold"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              Inactive / Temp ({inactiveBranchesCount})
-            </button>
-          </div>
-
+      {/* 1. Status Filter Tabs and Add Branch Button */}
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+        {/* Status Filter Tabs */}
+        <div className="flex bg-slate-100 dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs self-start sm:self-auto">
           <button
-            onClick={handleOpenNew}
-            className="flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors shadow-xs"
+            onClick={() => setStatusFilter("all")}
+            className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
+              statusFilter === "all"
+                ? "bg-blue-600 text-white shadow-xs font-semibold"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            }`}
           >
-            <Plus className="w-4 h-4" /> Add New Branch
+            All ({branches.length})
+          </button>
+          <button
+            onClick={() => setStatusFilter("active")}
+            className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
+              statusFilter === "active"
+                ? "bg-blue-600 text-white shadow-xs font-semibold"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            Active ({activeBranchesCount})
+          </button>
+          <button
+            onClick={() => setStatusFilter("inactive")}
+            className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
+              statusFilter === "inactive"
+                ? "bg-blue-600 text-white shadow-xs font-semibold"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            Inactive / Temp ({inactiveBranchesCount})
           </button>
         </div>
+
+        <button
+          onClick={handleOpenNew}
+          className="flex items-center justify-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors shadow-xs flex-shrink-0"
+        >
+          <Plus className="w-4 h-4" /> Add New Branch
+        </button>
       </div>
 
       {/* 2. Interactive Branch Cards Grid */}

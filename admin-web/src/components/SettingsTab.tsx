@@ -24,16 +24,6 @@ export const SettingsTab: React.FC<Props> = ({ currentUser, onLogout }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-blue-400">
-          <Settings className="w-5 h-5" />
-        </div>
-        <div>
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white">{t('systemSettings')}</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{t('settingsSubtitle')}</p>
-        </div>
-      </div>
-
       <div className="flex flex-col md:flex-row gap-6">
         {/* Settings Navigation */}
         <div className="w-full md:w-60 flex-shrink-0 space-y-1.5">

@@ -12,8 +12,8 @@ export const translations = {
     consolidated: "CONSOLIDATED",
     audit: "AUDIT",
     system: "SYSTEM",
-    branchesHub: "Branches Hub",
-    productCatalog: "Master Product Catalog",
+    branchesHub: "Store Branches Hub",
+    productCatalog: "Master Product",
     centralizedSales: "Centralized Sales",
     staffPayroll: "Staff & Payroll",
     exportsReports: "Exports & Reports",
@@ -22,6 +22,25 @@ export const translations = {
     role: "Role",
     fullAccess: "Full access",
     readEditAccess: "Read + Edit access",
+
+    // Feature Descriptions
+    branchesHubDesc: "Configure physical store locations, Sunmi terminal sync pairing, and branch operations",
+    productCatalogDesc: "Central master catalog, base pricing, and cross-branch stock distribution",
+    centralizedSalesDesc: "Consolidated multi-branch revenue analytics, transaction metrics, and payment summaries",
+    staffPayrollDesc: "Company staff directory, terminal PIN credentials, and automated wage calculations",
+    exportsReportsDesc: "Daily 58mm/A4 financial audit prints, structured CSV downloads, and offline batch sync",
+    profileSettingsDesc: "Admin profile, visual appearance themes, language preferences, and security settings",
+
+    // Navigation & Common UI
+    allActiveBranches: "All Active Branches",
+    allBranches: "All Branches",
+    print58mmZReport: "Print 58mm Daily Z-Report",
+    syncLatestData: "Sync Latest Data",
+    branchDashboardOps: "{address} • Branch Dashboard & Operations",
+    staffDirectory: "Staff Directory",
+    wageCalculations: "Wage Calculations & Slips",
+    printCenter: "Daily Print Center",
+    dataExports: "Data Exports & Backups",
 
     // Common Actions
     save: "Save",
@@ -73,7 +92,7 @@ export const translations = {
     batchHistory: "Daily Batch Upload History (Sunmi 1-Tap Logs)",
 
     // Settings
-    systemSettings: "System Settings",
+    systemSettings: "Profile & Settings",
     settingsSubtitle: "Manage your admin profile, language, and system preferences",
     myProfile: "My Profile",
     security: "Security",
@@ -104,16 +123,35 @@ export const translations = {
     consolidated: "KABUUANG ULAT",
     audit: "PAGSUSURI AT AUDIT",
     system: "SISTEMA",
-    branchesHub: "Mga Sangay (Branches)",
-    productCatalog: "Katalogo ng mga Produkto",
-    centralizedSales: "Kabuuang Benta (Sales)",
-    staffPayroll: "Empleyado at Pasahod",
-    exportsReports: "Mga Ulat at Pag-print",
+    branchesHub: "Sentro ng mga Sangay",
+    productCatalog: "Pangunahing Produkto",
+    centralizedSales: "Sentralisadong Benta",
+    staffPayroll: "Kawani at Pasahod",
+    exportsReports: "Mga Ulat at Pag-export",
     profileSettings: "Profile at Mga Setting",
     signOut: "Mag-Log Out",
     role: "Katungkulan",
     fullAccess: "Lahat Puwedeng Baguhin",
     readEditAccess: "Puwede Basahin at Baguhin",
+
+    // Feature Descriptions
+    branchesHubDesc: "Pamahalaan ang mga sangay, Sunmi terminal import code, at operasyon ng tindahan",
+    productCatalogDesc: "Pangunahing katalogo ng produkto, presyo, at pamamahagi ng stock sa mga sangay",
+    centralizedSalesDesc: "Pangkalahatang benta ng lahat ng sangay, ulat ng transaksyon, at buod ng bayad",
+    staffPayrollDesc: "Talaan ng kawani, seguridad ng PIN sa terminal, at awtomatikong kompyutasyon ng sweldo",
+    exportsReportsDesc: "Pag-print ng 58mm/A4 audit report, pag-download ng CSV data, at offline batch sync",
+    profileSettingsDesc: "Admin profile, tema ng interface, wika, at mga setting ng seguridad",
+
+    // Navigation & Common UI
+    allActiveBranches: "Lahat ng Aktibong Sangay",
+    allBranches: "Lahat ng Sangay",
+    print58mmZReport: "I-print ang 58mm Daily Z-Report",
+    syncLatestData: "I-sync ang Pinakabagong Data",
+    branchDashboardOps: "{address} • Dashboard at Operasyon ng Sangay",
+    staffDirectory: "Direktoryo ng Kawani",
+    wageCalculations: "Kalkulasyon ng Sweldo at Slips",
+    printCenter: "Sentro ng Pag-print ng Ulat",
+    dataExports: "Pag-export ng Data at Backup",
 
     // Common Actions
     save: "I-save",
@@ -165,7 +203,7 @@ export const translations = {
     batchHistory: "Kasaysayan ng mga Na-upload na Benta (Sunmi Logs)",
 
     // Settings
-    systemSettings: "Mga Setting ng Sistema",
+    systemSettings: "Profile & Settings",
     settingsSubtitle: "Pamahalaan ang iyong admin profile, wika, at mga kagustuhan",
     myProfile: "Aking Profile",
     security: "Seguridad",
