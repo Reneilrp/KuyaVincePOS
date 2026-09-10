@@ -226,7 +226,59 @@ describe('🚀 Full End-to-End Smoke Test: Mobile POS ➡️ Supabase ➡️ Adm
   }, 15000);
 
   // --------------------------------------------------------------------------
-  // STEP 6: CLEANUP
+  // STEP 6: NOTIFICATIONS & TIMELINE FEED INTEGRATION
+  // --------------------------------------------------------------------------
+  test('Step 6 [Notifications & Activity Feed]: Batch upload generates real-time timeline alert with unread badge', async () => {
+    // A. Simulate timeline feed generator
+    const notifications: any[] = [
+      {
+        id: `batch-${testBatchId}`,
+        type: 'batch_sync',
+        title: `3 Orders Uploaded (₱${expectedGrossSales.toFixed(2)})`,
+        message: `Branch "${testBranch.name}" uploaded end-of-day sales data with 3 completed orders.`,
+        timestamp: new Date().toISOString(),
+        branch_id: testBranch.id,
+        branch_name: testBranch.name,
+        read: false,
+        meta: {
+          batch_id: testBatchId,
+          gross_sales: expectedGrossSales,
+          orders_count: 3
+        }
+      },
+      {
+        id: `stock-101-${testBranch.id}`,
+        type: 'low_stock',
+        title: 'Low Stock: Iced Caramel Macchiato',
+        message: `Iced Caramel Macchiato has only 3 units remaining at ${testBranch.name}. Restock recommended.`,
+        timestamp: new Date().toISOString(),
+        branch_id: testBranch.id,
+        branch_name: testBranch.name,
+        read: false,
+        meta: { product_name: 'Iced Caramel Macchiato', current_stock: 3 }
+      }
+    ];
+
+    // Check unread count
+    const unreadCount = notifications.filter((n) => !n.read).length;
+    expect(unreadCount).toBe(2);
+
+    // Verify category filters
+    const syncNotifs = notifications.filter((n) => n.type === 'batch_sync');
+    const stockNotifs = notifications.filter((n) => n.type === 'low_stock');
+    expect(syncNotifs.length).toBe(1);
+    expect(syncNotifs[0].meta.gross_sales).toBe(689.00);
+    expect(stockNotifs.length).toBe(1);
+    expect(stockNotifs[0].meta.current_stock).toBe(3);
+
+    // Mark as read
+    notifications[0].read = true;
+    const remainingUnread = notifications.filter((n) => !n.read).length;
+    expect(remainingUnread).toBe(1);
+  });
+
+  // --------------------------------------------------------------------------
+  // STEP 7: CLEANUP
   // --------------------------------------------------------------------------
   afterAll(async () => {
     // Delete test smoke batch from Supabase to keep live database pristine

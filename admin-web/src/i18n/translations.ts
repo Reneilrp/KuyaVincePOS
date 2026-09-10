@@ -111,6 +111,25 @@ export const translations = {
     lightMode: "Light Mode",
     darkMode: "Dark Mode",
     toggleTheme: "Toggle Theme",
+
+    // Notification & Branch Activity Timeline
+    notificationsTimeline: "Notifications & Activity",
+    notificationsDesc: "Live branch syncs, batch uploads, and inventory alerts",
+    markAllAsRead: "Mark all as read",
+    clearAll: "Clear all",
+    noNotifications: "No notifications yet",
+    noNotificationsDesc: "All branches are running smoothly with no alerts",
+    allNotifications: "All",
+    syncAndSales: "Sync & Sales",
+    inventoryAlerts: "Stock Alerts",
+    staffEvents: "Staff & Shifts",
+    viewBranch: "View Branch",
+    viewItem: "View Item",
+    batchUploadReceived: "Batch Upload Received",
+    lowStockWarning: "Low Stock Alert",
+    newBatchNotification: "New Batch Synced from {branch}",
+    liveBranchFeed: "Live Branch Activity Feed",
+    unreadCount: "{count} unread",
   },
   tl: {
     // App & Branding
@@ -222,6 +241,25 @@ export const translations = {
     lightMode: "Maliwanag na Tema",
     darkMode: "Madilim na Tema",
     toggleTheme: "Palitan ang Tema",
+
+    // Notification & Branch Activity Timeline
+    notificationsTimeline: "Mga Abiso at Gawain",
+    notificationsDesc: "Mga live na sync, na-upload na benta, at abiso sa stock",
+    markAllAsRead: "Markahan lahat bilang nabasa",
+    clearAll: "Linisin lahat",
+    noNotifications: "Wala pang mga abiso",
+    noNotificationsDesc: "Maayos ang takbo ng lahat ng sangay at walang problema",
+    allNotifications: "Lahat",
+    syncAndSales: "Benta at Sync",
+    inventoryAlerts: "Abiso sa Stock",
+    staffEvents: "Kawani at Shift",
+    viewBranch: "Tingnan ang Sangay",
+    viewItem: "Tingnan ang Produkto",
+    batchUploadReceived: "Natanggap na Benta",
+    lowStockWarning: "Kulang sa Stock",
+    newBatchNotification: "Bagong Benta mula sa {branch}",
+    liveBranchFeed: "Live na Talaan ng mga Sangay",
+    unreadCount: "{count} hindi pa nababasa",
   }
 };
 

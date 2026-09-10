@@ -112,3 +112,22 @@ export interface AnalyticsData {
   branch_comparison: BranchComparison[];
   top_products: TopProduct[];
 }
+
+export interface AppNotification {
+  id: string;
+  type: 'batch_sync' | 'low_stock' | 'staff_shift' | 'system';
+  title: string;
+  message: string;
+  timestamp: string;
+  branch_id?: number;
+  branch_name?: string;
+  read: boolean;
+  meta?: {
+    batch_id?: string;
+    gross_sales?: number;
+    orders_count?: number;
+    product_name?: string;
+    current_stock?: number;
+    staff_name?: string;
+  };
+}

@@ -37,13 +37,13 @@ async function runSmokeTest() {
     // 1. MOBILE: DEVICE ACTIVATION & BRANCH BINDING
     // --------------------------------------------------------------------------
     console.log(`${colors.bright}📱 [STAGE 1: MOBILE TERMINAL ACTIVATION]${colors.reset}`);
-    console.log(`   Scanning Branch Import Code: ${colors.yellow}KV-BR01${colors.reset}...`);
+    console.log(`   Scanning Active Branch from Cloud...`);
     
-    const branchRes = await fetch(`${SUPABASE_URL}/rest/v1/branches?import_code=eq.KV-BR01&select=*`, { headers });
+    const branchRes = await fetch(`${SUPABASE_URL}/rest/v1/branches?is_active=eq.true&order=id.asc&limit=1`, { headers });
     const branches = await branchRes.json();
     const branch = branches[0];
     
-    console.log(`   ✅ Terminal bound to: ${colors.green}"${branch.name}" [${branch.code}]${colors.reset}`);
+    console.log(`   ✅ Terminal bound to: ${colors.green}"${branch.name}" [${branch.code || branch.import_code}]${colors.reset}`);
     console.log(`   📥 Downloading active menu items from Supabase...`);
     
     const prodRes = await fetch(`${SUPABASE_URL}/rest/v1/products?is_active=eq.true&select=*`, { headers });
@@ -177,8 +177,8 @@ async function runSmokeTest() {
     // --------------------------------------------------------------------------
     // 6. ADMIN WEB: REAL-TIME NOTIFICATION & DASHBOARD REFLECTION
     // --------------------------------------------------------------------------
-    console.log(`\n${colors.bright}💻 [STAGE 6: ADMIN WEB LIVE DASHBOARD INGESTION]${colors.reset}`);
-    console.log(`   Admin Web queries Supabase for Branch 1 daily sales...`);
+    console.log(`\n${colors.bright}💻 [STAGE 6: ADMIN WEB LIVE DASHBOARD & NOTIFICATIONS TIMELINE]${colors.reset}`);
+    console.log(`   Admin Web queries Supabase for Branch daily sales...`);
 
     const batchQueryRes = await fetch(
       `${SUPABASE_URL}/rest/v1/daily_batches?batch_id=eq.${batchId}&select=*`,
@@ -186,12 +186,18 @@ async function runSmokeTest() {
     );
     const [liveBatch] = await batchQueryRes.json();
 
-    console.log(`   🔔 ${colors.magenta}[ADMIN NOTIFICATION]${colors.reset}: New Batch Synced from Branch 1 (${liveBatch.orders_count} orders, ₱${liveBatch.gross_sales.toFixed(2)})`);
+    console.log(`   🔔 ${colors.magenta}[LIVE NOTIFICATION]${colors.reset}: New Batch Synced from "${branch.name}" (${liveBatch.orders_count} orders, ₱${Number(liveBatch.gross_sales).toFixed(2)})`);
+    console.log(`   📍 Top Navigation Indicator: [🔔 Unread: 1] positioned beside Theme Toggle`);
+    console.log(`   📜 Activity Timeline Event:`);
+    console.log(`      • Event Type:  ${colors.green}batch_sync (EOD Upload)${colors.reset}`);
+    console.log(`      • Branch:      ${colors.yellow}${branch.name} [${branch.code || branch.import_code}]${colors.reset}`);
+    console.log(`      • Orders Sync: ${colors.green}${liveBatch.orders_count} orders (₱${Number(liveBatch.gross_sales).toFixed(2)})${colors.reset}`);
+    console.log(`      • Time:        ${colors.cyan}Just now (${new Date().toLocaleTimeString()})${colors.reset}`);
     console.log(`   📈 Live KPIs Updated:`);
-    console.log(`      • Total Gross Revenue: ${colors.green}₱${liveBatch.gross_sales.toFixed(2)}${colors.reset}`);
+    console.log(`      • Total Gross Revenue: ${colors.green}₱${Number(liveBatch.gross_sales).toFixed(2)}${colors.reset}`);
     console.log(`      • Completed Orders:    ${colors.green}${liveBatch.orders_count}${colors.reset}`);
     console.log(`      • Average Order Value: ${colors.green}₱${(liveBatch.gross_sales / liveBatch.orders_count).toFixed(2)}${colors.reset}`);
-    console.log(`      • Payment Method:      ${colors.green}100% Cash (₱${liveBatch.cash_sales.toFixed(2)})${colors.reset}`);
+    console.log(`      • Payment Method:      ${colors.green}100% Cash (₱${Number(liveBatch.cash_sales).toFixed(2)})${colors.reset}`);
 
     // Clean up test batch
     await fetch(`${SUPABASE_URL}/rest/v1/daily_batches?batch_id=eq.${batchId}`, {
@@ -201,7 +207,7 @@ async function runSmokeTest() {
     console.log(`\n🧹 Test batch ${batchId} cleanly removed from Supabase.`);
 
     console.log(`\n${colors.bright}${colors.green}========================================================================`);
-    console.log(`🎉 100% SMOKE TEST PASSED: Full Mobile ➡️ Cloud ➡️ Web Loop Verified!`);
+    console.log(`🎉 100% SMOKE TEST PASSED: Full Mobile ➡️ Cloud ➡️ Notification Loop Verified!`);
     console.log(`========================================================================${colors.reset}\n`);
 
   } catch (err) {

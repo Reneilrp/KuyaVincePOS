@@ -1,9 +1,10 @@
-import React from "react";
-import { Building2, Calendar, RefreshCw, Printer, Sun, Moon } from "lucide-react";
-import { Branch } from "../types";
+import React, { useState } from "react";
+import { Building2, Calendar, RefreshCw, Printer, Sun, Moon, Bell } from "lucide-react";
+import { Branch, AppNotification } from "../types";
 import { TabKey } from "./SidebarMenuBar";
 import { useTheme } from "../context/ThemeContext";
 import { useLanguage } from "../context/LanguageContext";
+import { NotificationPanel } from "./NotificationPanel";
 
 interface Props {
   branches: Branch[];
@@ -17,6 +18,11 @@ interface Props {
   activeTab: TabKey;
   activeBranchDetail?: Branch | null;
   onOpenZReport?: () => void;
+  notifications?: AppNotification[];
+  onMarkNotificationAsRead?: (id: string) => void;
+  onMarkAllNotificationsAsRead?: () => void;
+  onClearAllNotifications?: () => void;
+  onNotificationAction?: (notification: AppNotification) => void;
 }
 
 export const BranchFilterHeader: React.FC<Props> = ({
@@ -30,10 +36,17 @@ export const BranchFilterHeader: React.FC<Props> = ({
   pageTitle,
   activeTab,
   activeBranchDetail,
-  onOpenZReport
+  onOpenZReport,
+  notifications = [],
+  onMarkNotificationAsRead = () => {},
+  onMarkAllNotificationsAsRead = () => {},
+  onClearAllNotifications = () => {},
+  onNotificationAction
 }) => {
   const { theme, toggleTheme } = useTheme();
   const { t } = useLanguage();
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const unreadCount = notifications.filter((n) => !n.read).length;
   const showBranchFilter = !activeBranchDetail && ["sales", "payroll", "reports"].includes(activeTab);
   const showDateFilter = !activeBranchDetail && ["sales", "payroll", "reports"].includes(activeTab);
 
@@ -144,6 +157,37 @@ export const BranchFilterHeader: React.FC<Props> = ({
               ))}
             </div>
           )}
+
+          {/* Notifications & Live Activity Feed Bell Button */}
+          <div className="relative">
+            <button
+              onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+              className="relative p-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title={t("notificationsTimeline")}
+              aria-label={t("notificationsTimeline")}
+            >
+              <Bell className="w-3.5 h-3.5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white shadow-xs animate-pulse">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {isNotificationOpen && (
+              <NotificationPanel
+                notifications={notifications}
+                onClose={() => setIsNotificationOpen(false)}
+                onMarkAsRead={onMarkNotificationAsRead}
+                onMarkAllAsRead={onMarkAllNotificationsAsRead}
+                onClearAll={onClearAllNotifications}
+                onAction={(notif) => {
+                  setIsNotificationOpen(false);
+                  if (onNotificationAction) onNotificationAction(notif);
+                }}
+              />
+            )}
+          </div>
 
           {/* Quick Theme Toggle Button */}
           <button

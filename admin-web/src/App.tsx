@@ -9,7 +9,7 @@ import { ReportsPrintTab } from "./components/ReportsPrintTab";
 import { SettingsTab } from "./components/SettingsTab";
 import { AdminLoginScreen } from "./components/AdminLoginScreen";
 import { supabase } from "./services/supabaseClient";
-import { AnalyticsData, Branch, InventoryItem, PayrollItem, Product, StaffRecord } from "./types";
+import { AnalyticsData, Branch, InventoryItem, PayrollItem, Product, StaffRecord, AppNotification } from "./types";
 
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8 hours
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000;    // 30 minutes
@@ -48,6 +48,17 @@ export default function App() {
   // Deep Branch View Drilldown & Z-Report modal state
   const [selectedBranchDetail, setSelectedBranchDetail] = useState<Branch | null>(null);
   const [isZReportOpen, setIsZReportOpen] = useState<boolean>(false);
+
+  // Notifications & Activity Timeline State
+  const [readNotificationIds, setReadNotificationIds] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem("kv_pos_read_notifications");
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
   const [analytics, setAnalytics] = useState<AnalyticsData>({
     filters: { branch_id: "all", range: "today", start_date: "", end_date: "" },
@@ -101,6 +112,138 @@ export default function App() {
     };
   }, [currentUser]);
 
+  // Realtime Supabase subscription for incoming branch uploads
+  useEffect(() => {
+    if (!currentUser) return;
+    const channel = supabase
+      .channel("public-daily-batches-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "daily_batches" },
+        (payload) => {
+          console.log("⚡ Realtime Batch Sync Received from Branch:", payload);
+          fetchLiveSupabaseData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUser]);
+
+  // Derive notifications from rawBatches, inventoryMatrix, and staffRecords
+  const updateNotificationsFromData = (
+    currentBatches: any[],
+    matrix: InventoryItem[],
+    currentBranches: Branch[],
+    readIds: Set<string>
+  ) => {
+    const list: AppNotification[] = [];
+
+    // 1. Batch Uploads Activity
+    if (Array.isArray(currentBatches)) {
+      currentBatches.forEach((b) => {
+        const br = currentBranches.find((x) => x.id === b.branch_id);
+        const branchName = br ? br.name : `Branch #${b.branch_id}`;
+        const notifId = `batch-${b.batch_id || b.id}`;
+        const gross = Number(b.gross_sales || 0);
+        const count = Number(b.orders_count || 0);
+
+        list.push({
+          id: notifId,
+          type: "batch_sync",
+          title: count > 0 ? `${count} Orders Uploaded (₱${gross.toFixed(2)})` : `Daily Batch Upload Received`,
+          message: `Branch "${branchName}" uploaded end-of-day sales data with ${count} completed orders.`,
+          timestamp: b.received_at || b.created_at || (b.sync_date ? `${b.sync_date}T12:00:00.000Z` : new Date().toISOString()),
+          branch_id: b.branch_id,
+          branch_name: branchName,
+          read: readIds.has(notifId),
+          meta: {
+            batch_id: b.batch_id,
+            gross_sales: gross,
+            orders_count: count
+          }
+        });
+      });
+    }
+
+    // 2. Low Stock Alerts (threshold <= 5 units)
+    if (Array.isArray(matrix) && Array.isArray(currentBranches)) {
+      matrix.forEach((item) => {
+        currentBranches.forEach((br) => {
+          if (br.is_active !== false) {
+            const stock = item.branch_stocks[br.id];
+            if (stock !== undefined && stock <= 5 && !item.excluded_branch_ids?.includes(br.id)) {
+              const notifId = `stock-${item.product_id}-${br.id}`;
+              list.push({
+                id: notifId,
+                type: "low_stock",
+                title: `Low Stock: ${item.name}`,
+                message: `${item.name} has only ${stock} units remaining at ${br.name}. Restock recommended.`,
+                timestamp: new Date().toISOString(),
+                branch_id: br.id,
+                branch_name: br.name,
+                read: readIds.has(notifId),
+                meta: {
+                  product_name: item.name,
+                  current_stock: stock
+                }
+              });
+            }
+          }
+        });
+      });
+    }
+
+    // Sort newest timestamp first
+    list.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    setNotifications(list);
+  };
+
+  const handleMarkNotificationAsRead = (id: string) => {
+    setReadNotificationIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      localStorage.setItem("kv_pos_read_notifications", JSON.stringify(Array.from(next)));
+      return next;
+    });
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  };
+
+  const handleMarkAllNotificationsAsRead = () => {
+    const allIds = notifications.map((n) => n.id);
+    const next = new Set([...Array.from(readNotificationIds), ...allIds]);
+    setReadNotificationIds(next);
+    localStorage.setItem("kv_pos_read_notifications", JSON.stringify(Array.from(next)));
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  const handleClearAllNotifications = () => {
+    const allIds = notifications.map((n) => n.id);
+    const next = new Set([...Array.from(readNotificationIds), ...allIds]);
+    setReadNotificationIds(next);
+    localStorage.setItem("kv_pos_read_notifications", JSON.stringify(Array.from(next)));
+    setNotifications([]);
+  };
+
+  const handleNotificationAction = (notification: AppNotification) => {
+    handleMarkNotificationAsRead(notification.id);
+    if (notification.type === "batch_sync" && notification.branch_id) {
+      const targetBranch = branches.find((b) => b.id === notification.branch_id);
+      if (targetBranch) {
+        setSelectedBranchDetail(targetBranch);
+        setActiveTab("branches");
+      }
+    } else if (notification.type === "low_stock") {
+      setActiveTab("inventory");
+    } else if (notification.type === "staff_shift") {
+      setActiveTab("payroll");
+    }
+  };
+
   const fetchLiveSupabaseData = async () => {
     setIsLoading(true);
     try {
@@ -122,9 +265,10 @@ export default function App() {
       // 2. Fetch Master Products & Branch Inventories
       const { data: prodData } = await supabase.from("products").select("*").order("id");
       const { data: invData } = await supabase.from("branch_inventory").select("*");
+      let loadedMatrix: InventoryItem[] = [];
 
       if (prodData) {
-        const matrix: InventoryItem[] = prodData.map((p) => {
+        loadedMatrix = prodData.map((p) => {
           const bStocks: Record<number, number> = {};
           const bPrices: Record<number, number | null> = {};
           const excludedBranchIds: number[] = [];
@@ -158,7 +302,7 @@ export default function App() {
             total_stock: total
           };
         });
-        setInventoryMatrix(matrix);
+        setInventoryMatrix(loadedMatrix);
       }
 
       // 3. Fetch Staff Records
@@ -266,6 +410,9 @@ export default function App() {
           top_products: []
         });
       }
+
+      // Update Notifications Activity Timeline Feed
+      updateNotificationsFromData(batches || [], loadedMatrix, liveBranches, readNotificationIds);
     } catch (e) {
       console.warn("Supabase fetch:", e);
     } finally {
@@ -466,6 +613,11 @@ export default function App() {
           activeTab={activeTab}
           activeBranchDetail={activeTab === 'branches' ? selectedBranchDetail : null}
           onOpenZReport={() => setIsZReportOpen(true)}
+          notifications={notifications}
+          onMarkNotificationAsRead={handleMarkNotificationAsRead}
+          onMarkAllNotificationsAsRead={handleMarkAllNotificationsAsRead}
+          onClearAllNotifications={handleClearAllNotifications}
+          onNotificationAction={handleNotificationAction}
         />
 
         {/* Dynamic Container Feature View */}
