@@ -67,10 +67,16 @@ CREATE TABLE IF NOT EXISTS staff_records (
     name TEXT NOT NULL,
     role TEXT DEFAULT 'cashier',
     pin_code TEXT,
+    pin_salt TEXT,
+    pin_hash TEXT,
     hourly_rate NUMERIC(10, 2) DEFAULT 85.00,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Ensure pin_salt and pin_hash exist if table was previously created
+ALTER TABLE staff_records ADD COLUMN IF NOT EXISTS pin_salt TEXT;
+ALTER TABLE staff_records ADD COLUMN IF NOT EXISTS pin_hash TEXT;
 
 -- 6. Row-Level Security (RLS) Configuration
 ALTER TABLE branches ENABLE ROW LEVEL SECURITY;
@@ -79,10 +85,19 @@ ALTER TABLE branch_inventory ENABLE ROW LEVEL SECURITY;
 ALTER TABLE daily_batches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE staff_records ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Allow public access on branches" ON branches;
 CREATE POLICY "Allow public access on branches" ON branches FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Allow public access on products" ON products;
 CREATE POLICY "Allow public access on products" ON products FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Allow public access on branch_inventory" ON branch_inventory;
 CREATE POLICY "Allow public access on branch_inventory" ON branch_inventory FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Allow public access on daily_batches" ON daily_batches;
 CREATE POLICY "Allow public access on daily_batches" ON daily_batches FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Allow public access on staff_records" ON staff_records;
 CREATE POLICY "Allow public access on staff_records" ON staff_records FOR ALL USING (true);
 
 -- =========================================================================
