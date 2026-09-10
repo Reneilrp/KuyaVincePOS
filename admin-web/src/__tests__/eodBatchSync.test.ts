@@ -81,5 +81,14 @@ describe('End-of-Day Cash Reconciliation & Cloud Ingestion', () => {
     expect(data[0].batch_id).toBe(testBatchId);
     expect(Number(data[0].gross_sales)).toBe(grossSales);
     expect(data[0].orders_count).toBe(2);
+
+    // 3. Clean up test batch so live database remains pristine
+    await fetch(`${SUPABASE_URL}/rest/v1/daily_batches?batch_id=eq.${testBatchId}`, {
+      method: 'DELETE',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`
+      }
+    });
   }, 15000);
 });

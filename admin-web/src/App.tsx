@@ -555,6 +555,23 @@ export default function App() {
     }
   };
 
+  // Remove product from branch action
+  const handleRemoveProductFromBranch = async (branchId: number, productId: number) => {
+    try {
+      const { error } = await supabase
+        .from("branch_inventory")
+        .delete()
+        .eq("branch_id", branchId)
+        .eq("product_id", productId);
+
+      if (error) throw error;
+
+      await fetchLiveSupabaseData();
+    } catch (e: any) {
+      alert("Failed to remove product from branch: " + e.message);
+    }
+  };
+
   if (!currentUser) {
     return <AdminLoginScreen onLoginSuccess={handleLoginSuccess} />;
   }
@@ -631,6 +648,7 @@ export default function App() {
               analytics={analytics}
               onAssignProduct={handleAssignProductToBranch}
               onRestock={handleRestock}
+              onRemoveProduct={handleRemoveProductFromBranch}
               batches={rawBatches}
               staffList={staffRecords}
               onRefreshStaff={fetchLiveSupabaseData}

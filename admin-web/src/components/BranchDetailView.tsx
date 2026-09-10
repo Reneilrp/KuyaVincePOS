@@ -18,7 +18,8 @@ import {
   Search,
   X,
   Eye,
-  Check
+  Check,
+  Trash2
 } from "lucide-react";
 import { BranchCashAuditCard } from "./BranchCashAuditCard";
 import { BranchStaffManager } from "./BranchStaffManager";
@@ -39,6 +40,7 @@ interface Props {
     priceOverride?: number | null
   ) => Promise<void>;
   onRestock: (branchId: number, productId: number, qty: number, notes: string) => Promise<void>;
+  onRemoveProduct?: (branchId: number, productId: number) => Promise<void>;
   batches: any[];
   staffList: StaffRecord[];
   onRefreshStaff: () => Promise<void>;
@@ -53,6 +55,7 @@ export const BranchDetailView: React.FC<Props> = ({
   branchInventory,
   onAssignProduct,
   onRestock,
+  onRemoveProduct,
   batches,
   staffList,
   onRefreshStaff,
@@ -83,6 +86,7 @@ export const BranchDetailView: React.FC<Props> = ({
   const [restockProduct, setRestockProduct] = useState<InventoryItem | null>(null);
   const [restockQty, setRestockQty] = useState("20");
   const [restockNotes, setRestockNotes] = useState("Store delivery");
+  const [productToRemove, setProductToRemove] = useState<InventoryItem | null>(null);
 
   // Cash audit counted cash
   const [countedCash, setCountedCash] = useState<number | undefined>(undefined);
@@ -237,7 +241,9 @@ export const BranchDetailView: React.FC<Props> = ({
     }
   }
 
-  const assignedItems = branchInventory.filter((item) => (item.branch_stocks[branch.id] ?? 0) >= 0);
+  const assignedItems = branchInventory.filter(
+    (item) => item.branch_stocks[branch.id] !== undefined && !item.excluded_branch_ids?.includes(branch.id)
+  );
   const totalStockOnFloor = assignedItems.reduce((sum, i) => sum + (i.branch_stocks[branch.id] || 0), 0);
 
   const handleRestockSubmit = async (e: React.FormEvent) => {
@@ -471,10 +477,10 @@ export const BranchDetailView: React.FC<Props> = ({
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
               <h2 className="text-base font-semibold text-slate-900 dark:text-white">
-                Products & Stock at {branch.name}
+                Products at {branch.name}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Select items from your centralized Master Catalog to stock this branch
+                Manage products available at this branch, set prices, and monitor stock
               </p>
             </div>
 
@@ -511,7 +517,7 @@ export const BranchDetailView: React.FC<Props> = ({
                       <th className="p-3">Item Name</th>
                       <th className="p-3">Category</th>
                       <th className="p-3">Branch Selling Price</th>
-                      <th className="p-3 text-center">Stock at Branch</th>
+                      <th className="p-3 text-center">Stock Quantity</th>
                       <th className="p-3 text-center">Status</th>
                       <th className="p-3 text-right">Actions</th>
                     </tr>
@@ -564,15 +570,28 @@ export const BranchDetailView: React.FC<Props> = ({
                             </span>
                           </td>
                           <td className="p-3 text-right">
-                            <button
-                              onClick={() => {
-                                setRestockProduct(item);
-                                setRestockQty("20");
-                              }}
-                              className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded text-xs transition-colors"
-                            >
-                              + Restock
-                            </button>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={() => {
+                                  setRestockProduct(item);
+                                  setRestockQty("20");
+                                }}
+                                className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg text-xs transition-colors shadow-2xs"
+                              >
+                                + Restock
+                              </button>
+                              {onRemoveProduct && (
+                                <button
+                                  type="button"
+                                  onClick={() => setProductToRemove(item)}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 bg-slate-100 hover:bg-rose-50 dark:bg-slate-800 dark:hover:bg-rose-950/40 rounded-lg text-xs font-medium transition-colors border border-slate-200/60 dark:border-slate-700/60"
+                                  title={`Remove ${item.name} from this branch`}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                                  <span>Remove</span>
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
@@ -1031,6 +1050,67 @@ export const BranchDetailView: React.FC<Props> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 9. Remove Product from Branch Confirmation Modal */}
+      {productToRemove && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 flex items-center justify-center">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Remove Product from Branch?</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">This item will no longer be sold at this branch</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 dark:bg-slate-950 rounded-xl p-3 border border-slate-200 dark:border-slate-800 flex items-center gap-3">
+              {productToRemove.image_url ? (
+                <img src={productToRemove.image_url} alt="" className="w-10 h-10 rounded-lg object-cover" />
+              ) : (
+                <div className="w-10 h-10 rounded-lg bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-sm">🍲</div>
+              )}
+              <div className="flex-1 min-w-0 text-xs">
+                <p className="font-semibold text-slate-900 dark:text-white truncate">{productToRemove.name}</p>
+                <p className="text-slate-500 dark:text-slate-400">{productToRemove.category} • Branch: {branch.name}</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Removing this product takes it off <strong>{branch.name}</strong>'s Sunmi POS terminal menu. You can re-add it anytime from the Master Catalog.
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setProductToRemove(null)}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={async () => {
+                  if (!onRemoveProduct) return;
+                  setIsSubmitting(true);
+                  try {
+                    await onRemoveProduct(branch.id, productToRemove.product_id);
+                    triggerNotice(`Removed ${productToRemove.name} from ${branch.name}`);
+                    setProductToRemove(null);
+                  } finally {
+                    setIsSubmitting(false);
+                  }
+                }}
+                className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 rounded-lg transition-colors shadow-sm disabled:opacity-50 flex items-center gap-1.5"
+              >
+                {isSubmitting ? "Removing..." : "Confirm Remove"}
+              </button>
+            </div>
           </div>
         </div>
       )}

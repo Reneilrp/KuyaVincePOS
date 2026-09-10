@@ -11,6 +11,7 @@ const headers = {
 };
 
 describe('Live Supabase Full-Stack Database Verification', () => {
+  jest.setTimeout(30000);
   const timestamp = Date.now();
 
   // 1. Test Branches CRUD

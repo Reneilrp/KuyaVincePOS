@@ -16,6 +16,7 @@ interface Props {
     priceOverride?: number | null
   ) => Promise<void>;
   onRestock: (branchId: number, productId: number, qty: number, notes: string) => Promise<void>;
+  onRemoveProduct?: (branchId: number, productId: number) => Promise<void>;
   batches: any[];
   staffList: StaffRecord[];
   onRefreshStaff: () => Promise<void>;
@@ -33,6 +34,7 @@ export const BranchSetupManager: React.FC<Props> = ({
   analytics,
   onAssignProduct,
   onRestock,
+  onRemoveProduct,
   batches,
   staffList,
   onRefreshStaff,
@@ -107,6 +109,7 @@ export const BranchSetupManager: React.FC<Props> = ({
         branchInventory={branchInventory}
         onAssignProduct={onAssignProduct}
         onRestock={onRestock}
+        onRemoveProduct={onRemoveProduct}
         batches={batches}
         staffList={staffList}
         onRefreshStaff={onRefreshStaff}
