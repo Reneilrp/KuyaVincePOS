@@ -69,6 +69,12 @@ export const BranchDetailView: React.FC<Props> = ({
   // Cash audit counted cash
   const [countedCash, setCountedCash] = useState<number | undefined>(undefined);
   const [isAdminOverride, setIsAdminOverride] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const triggerNotice = (msg: string) => {
+    setNotice(msg);
+    setTimeout(() => setNotice(null), 4000);
+  };
 
   // Filter batches for this specific branch
   const branchBatches = batches.filter((b) => Number(b.branch_id) === Number(branch.id));
@@ -136,6 +142,16 @@ export const BranchDetailView: React.FC<Props> = ({
 
   return (
     <div className="space-y-6">
+      {/* Dynamic Action Notification Banner */}
+      {notice && (
+        <div className="p-3.5 bg-blue-600 text-white text-xs font-semibold rounded-xl shadow-lg flex items-center justify-between animate-fade-in">
+          <span>{notice}</span>
+          <button onClick={() => setNotice(null)} className="text-white/80 hover:text-white text-sm font-bold ml-2">
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* 1. Header: Back Button & Sub-Tabs Navigation */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
         <button
@@ -432,7 +448,7 @@ export const BranchDetailView: React.FC<Props> = ({
           branchName={branch.name}
           staffList={staffList}
           onRefreshStaff={onRefreshStaff}
-          triggerNotice={(msg) => alert(msg)}
+          triggerNotice={triggerNotice}
         />
       )}
 
