@@ -56,9 +56,6 @@ class CheckoutService
                 }
 
                 $product = Product::findOrFail($productId);
-                $unitPrice = floatval($product->base_price);
-                $itemTotal = round($unitPrice * $quantity, 2);
-                $subtotal += $itemTotal;
 
                 // Pessimistic lock on Branch Inventory
                 $inventory = Inventory::where('branch_id', $branchId)
@@ -75,6 +72,12 @@ class CheckoutService
                         'alert_threshold' => 5
                     ]);
                 }
+
+                $unitPrice = ($inventory->price_override !== null)
+                    ? floatval($inventory->price_override)
+                    : floatval($product->base_price);
+                $itemTotal = round($unitPrice * $quantity, 2);
+                $subtotal += $itemTotal;
 
                 // Check stock availability
                 if ($inventory->stock_quantity < $quantity) {

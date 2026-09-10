@@ -42,6 +42,7 @@ export interface InventoryItem {
   base_price: number;
   cost_price: number;
   branch_stocks: Record<number, number>;     // ALL branches (active + inactive), last known qty
+  branch_prices?: Record<number, number | null>; // Branch price overrides (null = default base_price)
   excluded_branch_ids: number[];              // Branches where is_active = false
   total_stock: number;                        // Sum of ACTIVE branch stocks only
 }

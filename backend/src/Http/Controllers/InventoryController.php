@@ -23,6 +23,7 @@ class InventoryController
 
         $matrix = $products->map(function ($product) use ($branches) {
             $branchStocks = [];
+            $branchPrices = [];
             $totalStock = 0;
 
             foreach ($branches as $branch) {
@@ -30,7 +31,9 @@ class InventoryController
                     ->where('product_id', $product->id)
                     ->first();
                 $qty = $inv ? floatval($inv->stock_quantity) : 0.00;
+                $price = ($inv && $inv->price_override !== null) ? floatval($inv->price_override) : floatval($product->base_price);
                 $branchStocks[$branch->id] = $qty;
+                $branchPrices[$branch->id] = $price;
                 $totalStock += $qty;
             }
 
@@ -41,6 +44,7 @@ class InventoryController
                 'base_price' => floatval($product->base_price),
                 'cost_price' => floatval($product->cost_price),
                 'branch_stocks' => $branchStocks,
+                'branch_prices' => $branchPrices,
                 'total_stock' => $totalStock
             ];
         });

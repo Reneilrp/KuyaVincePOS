@@ -126,7 +126,7 @@ export const DeviceProvisioningTab: React.FC<Props> = ({ branches, devices, onPa
                   onChange={(e) => setSelectedBranchId(Number(e.target.value))}
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                 >
-                  {branches.map((b) => (
+                  {branches.filter((b) => b.is_active !== false).map((b) => (
                     <option key={b.id} value={b.id}>
                       {b.name} ({b.code})
                     </option>

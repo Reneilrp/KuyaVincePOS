@@ -10,6 +10,9 @@ interface Props {
 
 export const SalesOverviewTab: React.FC<Props> = ({ data, branches, lastSyncAt }) => {
   const kpis = data.kpis;
+  const activeBranches = branches.filter((b) => b.is_active !== false);
+  const activeBranchIds = new Set(activeBranches.map((b) => b.id));
+  const visibleComparison = data.branch_comparison.filter((b) => activeBranchIds.has(b.branch_id));
 
   const formatSyncAge = (isoStr?: string | null): string => {
     if (!isoStr) return 'No syncs yet';
@@ -21,7 +24,7 @@ export const SalesOverviewTab: React.FC<Props> = ({ data, branches, lastSyncAt }
     if (diffHr < 24) return `${diffHr}h ago`;
     return `${Math.floor(diffHr / 24)}d ago`;
   };
-  const maxBranchSales = Math.max(...data.branch_comparison.map((b) => b.total_sales), 1);
+  const maxBranchSales = Math.max(...visibleComparison.map((b) => b.total_sales), 1);
 
   return (
     <div className="space-y-6">
@@ -70,9 +73,9 @@ export const SalesOverviewTab: React.FC<Props> = ({ data, branches, lastSyncAt }
             <Smartphone className="w-4 h-4 text-slate-400" />
           </div>
           <p className="text-xl font-semibold font-mono text-slate-900 dark:text-white mt-2">
-            {branches.length} Terminals
+            {activeBranches.length} Terminals
           </p>
-          <p className="text-xs text-slate-500 mt-1">Across {branches.length} branches</p>
+          <p className="text-xs text-slate-500 mt-1">Across {activeBranches.length} active branches</p>
         </div>
       </div>
 
@@ -87,40 +90,46 @@ export const SalesOverviewTab: React.FC<Props> = ({ data, branches, lastSyncAt }
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {data.branch_comparison.map((branch) => {
-            const pct = Math.round((branch.total_sales / maxBranchSales) * 100);
-            return (
-              <div key={branch.branch_id} className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-2">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="text-xs font-medium font-mono text-slate-500 dark:text-slate-400">
-                      {branch.code}
-                    </span>
-                    <h3 className="text-sm font-medium text-slate-900 dark:text-white">{branch.name}</h3>
+        {visibleComparison.length === 0 ? (
+          <div className="py-8 text-center text-xs text-slate-500 dark:text-slate-400">
+            No active branches to display. Activate a branch in Store Branches Hub.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {visibleComparison.map((branch) => {
+              const pct = Math.round((branch.total_sales / maxBranchSales) * 100);
+              return (
+                <div key={branch.branch_id} className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="text-xs font-medium font-mono text-slate-500 dark:text-slate-400">
+                        {branch.code}
+                      </span>
+                      <h3 className="text-sm font-medium text-slate-900 dark:text-white">{branch.name}</h3>
+                    </div>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">{branch.order_count} orders</span>
                   </div>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">{branch.order_count} orders</span>
-                </div>
 
-                <p className="text-base font-semibold font-mono text-slate-900 dark:text-white">
-                  ₱{branch.total_sales.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </p>
+                  <p className="text-base font-semibold font-mono text-slate-900 dark:text-white">
+                    ₱{branch.total_sales.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </p>
 
-                {/* Progress bar */}
-                <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.max(6, pct)}%` }}
-                  />
+                  {/* Progress bar */}
+                  <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
+                      style={{ width: `${Math.max(6, pct)}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>{branch.active_devices || 1} Device</span>
+                    <span>{pct}%</span>
+                  </div>
                 </div>
-                <div className="flex justify-between text-xs text-slate-500">
-                  <span>{branch.active_devices || 1} Device</span>
-                  <span>{pct}%</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* 3. Top Selling Products */}

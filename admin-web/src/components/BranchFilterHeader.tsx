@@ -71,8 +71,8 @@ export const BranchFilterHeader: React.FC<Props> = ({
                 onChange={(e) => onSelectBranch(e.target.value)}
                 className="bg-transparent text-xs font-medium text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer"
               >
-                <option value="all" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">All Branches</option>
-                {branches.map((b) => (
+                <option value="all" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">All Active Branches</option>
+                {branches.filter((b) => b.is_active !== false).map((b) => (
                   <option key={b.id} value={String(b.id)} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                     {b.name} [{b.import_code || b.code}]
                   </option>

@@ -16,10 +16,10 @@ class MultiBranchPosTest extends TestCase
     {
         $response = $this->getJson('/api/v1/branches');
         $response->assertStatus(200);
-        $response->assertJsonCount(3, 'branches');
+        $response->assertJsonCount(2, 'branches');
 
         // Pair a new device to Branch 2
-        $branch2 = Branch::where('code', 'BR-02')->first();
+        $branch2 = Branch::where('code', 'BR-GW02')->first();
         $pairResponse = $this->postJson('/api/v1/devices/pair', [
             'device_serial' => 'SUNMI-TEST-SERIAL-999',
             'branch_id' => $branch2->id,
@@ -43,7 +43,7 @@ class MultiBranchPosTest extends TestCase
             'pin_code' => '1234'
         ]);
         $authResponse->assertStatus(200);
-        $authResponse->assertJsonPath('user.name', 'Maria Santos');
+        $authResponse->assertJsonPath('user.name', 'Maria Santos (Main Gateway 1)');
 
         // Load catalog for Branch 1
         $catalogResponse = $this->getJson('/api/v1/catalog?branch_id=1');
@@ -54,6 +54,23 @@ class MultiBranchPosTest extends TestCase
                 '*' => ['id', 'name', 'base_price', 'stock', 'is_low_stock']
             ]
         ]);
+    }
+
+    /** @test */
+    public function it_applies_branch_price_override_when_configured()
+    {
+        $branch2 = Branch::where('code', 'BR-GW02')->first();
+        $chickenMeal = Product::where('name', 'Fried Chicken Meal')->first();
+
+        // Branch 1 (Main Gateway 1) uses default base price ₱120.00
+        $catalogB1 = $this->getJson('/api/v1/catalog?branch_id=1');
+        $itemB1 = collect($catalogB1->json('products'))->firstWhere('id', $chickenMeal->id);
+        $this->assertEquals(120.00, $itemB1['base_price']);
+
+        // Branch 2 (Gateway Branch) has price override ₱89.00
+        $catalogB2 = $this->getJson("/api/v1/catalog?branch_id={$branch2->id}");
+        $itemB2 = collect($catalogB2->json('products'))->firstWhere('id', $chickenMeal->id);
+        $this->assertEquals(89.00, $itemB2['base_price']);
     }
 
     /** @test */

@@ -34,6 +34,7 @@ return new class extends Migration
             $table->foreignId('branch_id')->constrained('branches')->cascadeOnDelete();
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
             $table->decimal('stock_quantity', 12, 2)->default(0.00);
+            $table->decimal('price_override', 10, 2)->nullable();
             $table->decimal('alert_threshold', 12, 2)->default(5.00);
             $table->timestamps();
 

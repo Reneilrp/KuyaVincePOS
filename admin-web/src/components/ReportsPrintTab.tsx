@@ -31,13 +31,15 @@ export const ReportsPrintTab: React.FC<Props> = ({
     setTimeout(() => setDownloadSuccess(null), 4000);
   };
 
+  const activeBranches = branches.filter((b) => b.is_active !== false);
+
   const handleExportSales = () => {
     ExportService.exportSalesToCSV(analytics, selectedBranchName);
     triggerNotification('Sales ledger exported to CSV');
   };
 
   const handleExportInventory = () => {
-    ExportService.exportInventoryToCSV(inventory, branches);
+    ExportService.exportInventoryToCSV(inventory, activeBranches);
     triggerNotification('Inventory balances exported to CSV');
   };
 
@@ -63,7 +65,7 @@ export const ReportsPrintTab: React.FC<Props> = ({
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Download full offline copies in CSV or raw JSON format</p>
           </div>
           {downloadSuccess && (
-            <span className="text-xs font-medium text-emerald-400 flex items-center gap-1.5">
+            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5" /> {downloadSuccess}
             </span>
           )}
@@ -73,33 +75,33 @@ export const ReportsPrintTab: React.FC<Props> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
           <button
             onClick={handleExportSales}
-            className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors"
+            className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors shadow-xs"
           >
-            <FileSpreadsheet className="w-4 h-4 text-blue-400" />
+            <FileSpreadsheet className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             Export Sales (CSV)
           </button>
 
           <button
             onClick={handleExportInventory}
-            className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors"
+            className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors shadow-xs"
           >
-            <FileSpreadsheet className="w-4 h-4 text-blue-400" />
+            <FileSpreadsheet className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             Export Stock Balances (CSV)
           </button>
 
           <button
             onClick={handleExportPayroll}
-            className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors"
+            className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors shadow-xs"
           >
-            <FileSpreadsheet className="w-4 h-4 text-blue-400" />
+            <FileSpreadsheet className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             Export Payroll (CSV)
           </button>
 
           <button
             onClick={handleExportBackup}
-            className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors"
+            className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors shadow-xs"
           >
-            <Database className="w-4 h-4 text-blue-400" />
+            <Database className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             Download JSON Backup
           </button>
         </div>
@@ -109,7 +111,7 @@ export const ReportsPrintTab: React.FC<Props> = ({
       <OfflineJsonDropzone onImportBatch={onImportOfflineBatch} />
 
       {/* 3. Physical Print Center (Z-Reading & A4) */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-sm">
         <div>
           <h2 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
             🖨️ Daily Z-Reports & Executive Print Center
@@ -118,19 +120,19 @@ export const ReportsPrintTab: React.FC<Props> = ({
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex bg-slate-950 border border-slate-800 rounded-lg p-0.5">
+          <div className="flex bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-0.5">
             <button
               onClick={() => setReportType('z_read')}
-              className={`px-3 py-1 text-xs font-semibold rounded transition-colors ${
-                reportType === 'z_read' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+                reportType === 'z_read' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               58mm Thermal Z-Read
             </button>
             <button
               onClick={() => setReportType('a4_summary')}
-              className={`px-3 py-1 text-xs font-semibold rounded transition-colors ${
-                reportType === 'a4_summary' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+                reportType === 'a4_summary' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               A4 Financial Audit
@@ -139,7 +141,7 @@ export const ReportsPrintTab: React.FC<Props> = ({
 
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors shadow-xs"
           >
             <Printer className="w-4 h-4" /> Print Document
           </button>
@@ -147,10 +149,10 @@ export const ReportsPrintTab: React.FC<Props> = ({
       </div>
 
       {/* 4. Document Preview Area */}
-      <div className="flex justify-center p-6 bg-slate-950 border border-slate-800 rounded-xl">
+      <div className="flex justify-center p-6 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl shadow-inner">
         {reportType === 'z_read' ? (
           /* 58mm Sunmi Thermal Z-Reading Simulation */
-          <div className="bg-white text-black font-mono text-xs w-[320px] p-6 rounded-lg border border-slate-300">
+          <div className="bg-white text-black font-mono text-xs w-[320px] p-6 rounded-xl border border-slate-300 shadow-md">
             <div className="text-center mb-4">
               <p className="font-semibold text-sm">*** DAILY Z-READING REPORT ***</p>
               <p className="font-semibold">{selectedBranchName}</p>
@@ -197,7 +199,7 @@ export const ReportsPrintTab: React.FC<Props> = ({
           </div>
         ) : (
           /* Full A4 Financial Audit Report */
-          <div className="bg-white text-slate-900 w-full max-w-3xl p-8 rounded-xl border border-slate-200">
+          <div className="bg-white text-slate-900 w-full max-w-3xl p-8 rounded-xl border border-slate-300 shadow-md">
             <div className="flex justify-between items-start border-b border-slate-300 pb-4 mb-6">
               <div>
                 <h2 className="text-xl font-semibold uppercase tracking-tight text-slate-900">Multi-Branch Financial Audit</h2>

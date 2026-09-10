@@ -13,11 +13,13 @@ class Inventory extends Model
         'branch_id',
         'product_id',
         'stock_quantity',
+        'price_override',
         'alert_threshold'
     ];
 
     protected $casts = [
         'stock_quantity' => 'decimal:2',
+        'price_override' => 'decimal:2',
         'alert_threshold' => 'decimal:2'
     ];
 

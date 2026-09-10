@@ -28,6 +28,9 @@ class ProductCatalogController
 
                 $stock = $inv ? floatval($inv->stock_quantity) : 0.00;
                 $threshold = $inv ? floatval($inv->alert_threshold) : 5.00;
+                $effectivePrice = ($inv && $inv->price_override !== null)
+                    ? floatval($inv->price_override)
+                    : floatval($product->base_price);
 
                 return [
                     'id' => $product->id,
@@ -35,7 +38,9 @@ class ProductCatalogController
                     'category_name' => $product->category ? $product->category->name : 'Uncategorized',
                     'name' => $product->name,
                     'barcode' => $product->barcode,
-                    'base_price' => floatval($product->base_price),
+                    'base_price' => $effectivePrice,
+                    'default_base_price' => floatval($product->base_price),
+                    'price_override' => ($inv && $inv->price_override !== null) ? floatval($inv->price_override) : null,
                     'cost_price' => floatval($product->cost_price),
                     'image_url' => $product->image_url,
                     'stock' => $stock,

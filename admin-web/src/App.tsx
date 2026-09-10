@@ -126,6 +126,7 @@ export default function App() {
       if (prodData) {
         const matrix: InventoryItem[] = prodData.map((p) => {
           const bStocks: Record<number, number> = {};
+          const bPrices: Record<number, number | null> = {};
           const excludedBranchIds: number[] = [];
           let total = 0;
           if (invData) {
@@ -133,6 +134,9 @@ export default function App() {
               if (inv.product_id === p.id) {
                 const qty = Number(inv.stock_quantity || 0);
                 bStocks[inv.branch_id] = qty;
+                if (inv.price_override !== null && inv.price_override !== undefined) {
+                  bPrices[inv.branch_id] = Number(inv.price_override);
+                }
                 if (inv.is_active === false) {
                   excludedBranchIds.push(inv.branch_id);
                 } else {
@@ -149,6 +153,7 @@ export default function App() {
             base_price: Number(p.base_price),
             cost_price: Number(p.cost_price),
             branch_stocks: bStocks,
+            branch_prices: bPrices,
             excluded_branch_ids: excludedBranchIds,
             total_stock: total
           };
@@ -212,7 +217,8 @@ export default function App() {
           .sort((a, b) => b.total_revenue - a.total_revenue)
           .slice(0, 5);
 
-        const comparison = liveBranches.map((br) => ({
+        const activeBranches = liveBranches.filter((br) => br.is_active !== false);
+        const comparison = activeBranches.map((br) => ({
           branch_id: br.id,
           name: br.name,
           code: br.code,
@@ -237,7 +243,8 @@ export default function App() {
           top_products: topProds
         });
       } else {
-        const comparison = liveBranches.map((br) => ({
+        const activeBranches = liveBranches.filter((br) => br.is_active !== false);
+        const comparison = activeBranches.map((br) => ({
           branch_id: br.id,
           name: br.name,
           code: br.code,
@@ -270,7 +277,11 @@ export default function App() {
   const handleSaveBranch = async (branchData: Partial<Branch>) => {
     try {
       const branchId = branchData.id || (Math.max(...branches.map((b) => Number(b.id)), 0) + 1);
-      const payload = { ...branchData, id: branchId };
+      const payload = { 
+        ...branchData, 
+        id: branchId,
+        is_active: branchData.is_active !== undefined ? branchData.is_active : true 
+      };
       const { error } = await supabase.from("branches").upsert(payload);
       if (error) throw error;
       await fetchLiveSupabaseData();
@@ -280,7 +291,7 @@ export default function App() {
   };
 
   // Master Product Save / Create
-  const handleSaveProduct = async (data: { product: Partial<Product>; branchStocks: Record<number, number | null> }) => {
+  const handleSaveProduct = async (data: { product: Partial<Product>; branchStocks?: Record<number, number | null> }) => {
     try {
       const { data: savedProd, error: prodErr } = await supabase
         .from("products")
@@ -290,7 +301,7 @@ export default function App() {
           category: data.product.category,
           image_url: data.product.image_url,
           base_price: data.product.base_price,
-          cost_price: data.product.cost_price,
+          cost_price: data.product.cost_price || 0,
           is_active: true
         })
         .select()
@@ -298,56 +309,72 @@ export default function App() {
 
       if (prodErr) throw prodErr;
 
-      // Upsert or delete stock per branch
-      for (const [branchId, stockQty] of Object.entries(data.branchStocks)) {
-        if (stockQty === null || stockQty === undefined) {
-          // Excluded — mark row as inactive (preserves last known stock count)
-          await supabase.from("branch_inventory").upsert(
-            {
-              branch_id: Number(branchId),
-              product_id: savedProd.id,
-              is_active: false,
-              updated_at: new Date().toISOString()
-            },
-            { onConflict: "branch_id,product_id" }
-          );
-        } else {
-          // Included — upsert stock quantity and mark active
-          await supabase.from("branch_inventory").upsert(
-            {
-              branch_id: Number(branchId),
-              product_id: savedProd.id,
-              stock_quantity: Number(stockQty || 0),
-              is_active: true,
-              updated_at: new Date().toISOString()
-            },
-            { onConflict: "branch_id,product_id" }
-          );
+      // Upsert or delete stock per branch (if branchStocks provided)
+      if (data.branchStocks && Object.keys(data.branchStocks).length > 0) {
+        for (const [branchId, stockQty] of Object.entries(data.branchStocks)) {
+          if (stockQty === null || stockQty === undefined) {
+            // Excluded — mark row as inactive (preserves last known stock count)
+            await supabase.from("branch_inventory").upsert(
+              {
+                branch_id: Number(branchId),
+                product_id: savedProd.id,
+                is_active: false,
+                updated_at: new Date().toISOString()
+              },
+              { onConflict: "branch_id,product_id" }
+            );
+          } else {
+            // Included — upsert stock quantity and mark active
+            await supabase.from("branch_inventory").upsert(
+              {
+                branch_id: Number(branchId),
+                product_id: savedProd.id,
+                stock_quantity: Number(stockQty || 0),
+                is_active: true,
+                updated_at: new Date().toISOString()
+              },
+              { onConflict: "branch_id,product_id" }
+            );
+          }
         }
       }
 
       await fetchLiveSupabaseData();
-      alert("Product saved and branch allocation updated successfully!");
+      alert("Product saved successfully!");
     } catch (e: any) {
       alert("Failed to save product: " + e.message);
     }
   };
 
-  // Assign product from master catalog directly into a specific branch
-  const handleAssignProductToBranch = async (branchId: number, productId: number, stockQty: number) => {
+  // Assign product(s) from master catalog directly into a specific branch
+  const handleAssignProductToBranch = async (
+    branchId: number,
+    assignments: Array<{ productId: number; stockQty: number; priceOverride?: number | null }> | number,
+    stockQty?: number,
+    priceOverride?: number | null
+  ) => {
     try {
-      await supabase.from("branch_inventory").upsert(
-        {
-          branch_id: branchId,
-          product_id: productId,
-          stock_quantity: stockQty,
-          updated_at: new Date().toISOString()
-        },
-        { onConflict: "branch_id,product_id" }
-      );
+      const itemsToUpsert = Array.isArray(assignments)
+        ? assignments
+        : [{ productId: assignments, stockQty: stockQty ?? 50, priceOverride: priceOverride ?? null }];
+
+      const payload = itemsToUpsert.map((it) => ({
+        branch_id: branchId,
+        product_id: it.productId,
+        stock_quantity: Number(it.stockQty || 0),
+        price_override: it.priceOverride !== undefined ? it.priceOverride : null,
+        is_active: true,
+        updated_at: new Date().toISOString()
+      }));
+
+      const { error } = await supabase.from("branch_inventory").upsert(payload, {
+        onConflict: "branch_id,product_id"
+      });
+
+      if (error) throw error;
 
       await fetchLiveSupabaseData();
-      alert("Product successfully assigned to branch with stock!");
+      alert(`Successfully assigned ${itemsToUpsert.length} product(s) to branch!`);
     } catch (e: any) {
       alert("Assignment failed: " + e.message);
     }

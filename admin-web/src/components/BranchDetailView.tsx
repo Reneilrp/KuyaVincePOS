@@ -14,7 +14,11 @@ import {
   Users,
   Smartphone,
   MapPin,
-  Phone
+  Phone,
+  Search,
+  X,
+  Eye,
+  Check
 } from "lucide-react";
 import { BranchCashAuditCard } from "./BranchCashAuditCard";
 import { BranchStaffManager } from "./BranchStaffManager";
@@ -27,7 +31,12 @@ interface Props {
   onBack: () => void;
   masterProducts: Product[];
   branchInventory: InventoryItem[];
-  onAssignProduct: (branchId: number, productId: number, stockQty: number) => Promise<void>;
+  onAssignProduct: (
+    branchId: number,
+    assignments: Array<{ productId: number; stockQty: number; priceOverride?: number | null }> | number,
+    stockQty?: number,
+    priceOverride?: number | null
+  ) => Promise<void>;
   onRestock: (branchId: number, productId: number, qty: number, notes: string) => Promise<void>;
   batches: any[];
   staffList: StaffRecord[];
@@ -55,10 +64,14 @@ export const BranchDetailView: React.FC<Props> = ({
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
 
-  // Assign product modal
+  // Assign product modal state (Multi-Select & Bulk Assignment)
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-  const [selectedProductId, setSelectedProductId] = useState<number>(masterProducts[0]?.id || 1);
-  const [assignStockQty, setAssignStockQty] = useState("50");
+  const [selectedProductIds, setSelectedProductIds] = useState<Set<number>>(new Set());
+  const [customPrices, setCustomPrices] = useState<Record<number, string>>({});
+  const [customStocks, setCustomStocks] = useState<Record<number, string>>({});
+  const [assignSearchQuery, setAssignSearchQuery] = useState("");
+  const [assignSelectedCategory, setAssignSelectedCategory] = useState("ALL");
+  const [showOnlySelected, setShowOnlySelected] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Restock modal
@@ -74,6 +87,114 @@ export const BranchDetailView: React.FC<Props> = ({
   const triggerNotice = (msg: string) => {
     setNotice(msg);
     setTimeout(() => setNotice(null), 4000);
+  };
+
+  // Open Assign Modal with pre-populated stock and prices
+  const handleOpenAssignModal = () => {
+    const initialSelected = new Set<number>();
+    const initialPrices: Record<number, string> = {};
+    const initialStocks: Record<number, string> = {};
+
+    masterProducts.forEach((p) => {
+      const invItem = branchInventory.find((i) => i.product_id === p.id);
+      const isAssigned = invItem
+        ? invItem.branch_stocks[branch.id] !== undefined && !invItem.excluded_branch_ids?.includes(branch.id)
+        : false;
+      const stock = invItem ? (invItem.branch_stocks[branch.id] ?? 50) : 50;
+      const price =
+        invItem?.branch_prices && invItem.branch_prices[branch.id] !== undefined && invItem.branch_prices[branch.id] !== null
+          ? invItem.branch_prices[branch.id]
+          : p.base_price;
+
+      initialPrices[p.id] = String(price ?? p.base_price ?? 0);
+      initialStocks[p.id] = String(isAssigned ? stock : 50);
+
+      if (isAssigned) {
+        initialSelected.add(p.id);
+      }
+    });
+
+    setSelectedProductIds(initialSelected);
+    setCustomPrices(initialPrices);
+    setCustomStocks(initialStocks);
+    setAssignSearchQuery("");
+    setAssignSelectedCategory("ALL");
+    setShowOnlySelected(false);
+    setIsAssignModalOpen(true);
+  };
+
+  const toggleProductSelection = (productId: number) => {
+    setSelectedProductIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(productId)) {
+        next.delete(productId);
+      } else {
+        next.add(productId);
+      }
+      return next;
+    });
+  };
+
+  const categories = ["ALL", ...Array.from(new Set(masterProducts.map((p) => p.category || "Uncategorized")))];
+
+  const filteredAssignProducts = masterProducts.filter((p) => {
+    const q = assignSearchQuery.trim().toLowerCase();
+    const matchesSearch =
+      q === "" ||
+      p.name.toLowerCase().includes(q) ||
+      (p.category && p.category.toLowerCase().includes(q)) ||
+      (p.barcode && p.barcode.toLowerCase().includes(q));
+
+    const matchesCategory =
+      assignSelectedCategory === "ALL" || p.category === assignSelectedCategory;
+
+    const matchesSelected = !showOnlySelected || selectedProductIds.has(p.id);
+
+    return matchesSearch && matchesCategory && matchesSelected;
+  });
+
+  const handleSelectAllVisible = () => {
+    setSelectedProductIds((prev) => {
+      const next = new Set(prev);
+      filteredAssignProducts.forEach((p) => next.add(p.id));
+      return next;
+    });
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedProductIds(new Set());
+  };
+
+  const handleBulkAssignSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedProductIds.size === 0) {
+      alert("Please select at least one product to assign to this branch.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const assignments = Array.from(selectedProductIds).map((pId) => {
+        const stock = Number(customStocks[pId] ?? 50);
+        const priceStr = customPrices[pId];
+        const prod = masterProducts.find((p) => p.id === pId);
+        const priceVal = priceStr !== undefined && priceStr !== "" ? Number(priceStr) : (prod?.base_price ?? null);
+
+        return {
+          productId: pId,
+          stockQty: isNaN(stock) ? 50 : stock,
+          priceOverride: isNaN(Number(priceVal)) ? null : Number(priceVal)
+        };
+      });
+
+      await onAssignProduct(branch.id, assignments);
+      setIsAssignModalOpen(false);
+      triggerNotice(`Successfully assigned ${assignments.length} product(s) to ${branch.name}`);
+    } catch (err: any) {
+      alert("Assignment failed: " + (err?.message || err));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Filter batches for this specific branch
@@ -113,19 +234,6 @@ export const BranchDetailView: React.FC<Props> = ({
 
   const assignedItems = branchInventory.filter((item) => (item.branch_stocks[branch.id] ?? 0) >= 0);
   const totalStockOnFloor = assignedItems.reduce((sum, i) => sum + (i.branch_stocks[branch.id] || 0), 0);
-
-  const handleAssignSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedProductId || !assignStockQty) return;
-
-    setIsSubmitting(true);
-    try {
-      await onAssignProduct(branch.id, selectedProductId, Number(assignStockQty));
-      setIsAssignModalOpen(false);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleRestockSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -355,10 +463,10 @@ export const BranchDetailView: React.FC<Props> = ({
             </div>
 
             <button
-              onClick={() => setIsAssignModalOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors"
+              onClick={handleOpenAssignModal}
+              className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm"
             >
-              <Plus className="w-4 h-4" /> Assign Product from Master Catalog
+              <Plus className="w-4 h-4" /> Assign Products from Master Catalog
             </button>
           </div>
 
@@ -369,13 +477,13 @@ export const BranchDetailView: React.FC<Props> = ({
               </div>
               <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">No Products Assigned to this Branch</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-                Select an item from the centralized Master Catalog to allocate inventory to this location.
+                Select items from the centralized Master Catalog to allocate inventory and set custom branch prices.
               </p>
               <button
-                onClick={() => setIsAssignModalOpen(true)}
-                className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors"
+                onClick={handleOpenAssignModal}
+                className="inline-flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm"
               >
-                <Plus className="w-4 h-4" /> Select First Item
+                <Plus className="w-4 h-4" /> Select Products from Catalog
               </button>
             </div>
           ) : (
@@ -385,7 +493,7 @@ export const BranchDetailView: React.FC<Props> = ({
                   <tr>
                     <th className="p-3">Item Name</th>
                     <th className="p-3">Category</th>
-                    <th className="p-3">Selling Price</th>
+                    <th className="p-3">Branch Selling Price</th>
                     <th className="p-3 text-center">Stock at Branch</th>
                     <th className="p-3 text-center">Status</th>
                     <th className="p-3 text-right">Actions</th>
@@ -395,23 +503,41 @@ export const BranchDetailView: React.FC<Props> = ({
                   {assignedItems.map((item) => {
                     const stock = item.branch_stocks[branch.id] || 0;
                     const isLow = stock <= 10;
+                    const branchPrice =
+                      item.branch_prices && item.branch_prices[branch.id] !== undefined && item.branch_prices[branch.id] !== null
+                        ? item.branch_prices[branch.id]
+                        : item.base_price;
+                    const hasOverride =
+                      item.branch_prices &&
+                      item.branch_prices[branch.id] !== undefined &&
+                      item.branch_prices[branch.id] !== null &&
+                      item.branch_prices[branch.id] !== item.base_price;
 
                     return (
                       <tr key={item.product_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                         <td className="p-3">
                           <div className="flex items-center gap-2.5">
                             {item.image_url ? (
-                              <img src={item.image_url} alt="" className="w-7 h-7 rounded object-cover bg-slate-100 dark:bg-slate-800" />
+                              <img src={item.image_url} alt="" className="w-8 h-8 rounded-lg object-cover bg-slate-100 dark:bg-slate-800" />
                             ) : (
-                              <div className="w-7 h-7 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-xs">
-                                ☕
+                              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-sm">
+                                🍲
                               </div>
                             )}
                             <span className="font-semibold text-slate-900 dark:text-white text-sm">{item.name}</span>
                           </div>
                         </td>
                         <td className="p-3 text-slate-600 dark:text-slate-400">{item.category}</td>
-                        <td className="p-3 font-mono font-medium text-slate-900 dark:text-white">₱{item.base_price.toFixed(2)}</td>
+                        <td className="p-3 font-mono font-medium text-slate-900 dark:text-white">
+                          <div className="flex items-center gap-1.5">
+                            <span>₱{Number(branchPrice).toFixed(2)}</span>
+                            {hasOverride && (
+                              <span className="text-[10px] font-sans font-medium px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+                                Custom
+                              </span>
+                            )}
+                          </div>
+                        </td>
                         <td className="p-3 text-center font-mono font-semibold text-sm text-slate-900 dark:text-white">
                           {stock}
                         </td>
@@ -546,63 +672,283 @@ export const BranchDetailView: React.FC<Props> = ({
         countedCash={countedCash}
       />
 
-      {/* 7. Assign Product Modal */}
+      {/* 7. Assign Product Modal (Wide Multi-Select & Bulk Assignment) */}
       {isAssignModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-md w-full p-6 shadow-xl">
-            <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-              Select Product from Master Catalog
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Choose an existing item and set the stock units for <span className="text-slate-800 dark:text-slate-200 font-semibold">{branch.name}</span>
-            </p>
-
-            <form onSubmit={handleAssignSubmit} className="mt-4 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-3 sm:p-6 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-4xl sm:max-w-5xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-fade-in">
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4 bg-slate-50/75 dark:bg-slate-950/75">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Select Master Product</label>
-                <select
-                  value={selectedProductId}
-                  onChange={(e) => setSelectedProductId(Number(e.target.value))}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                >
-                  {masterProducts.map((p) => (
-                    <option key={p.id} value={p.id} className="bg-white dark:bg-slate-900">
-                      {p.name} — ₱{p.base_price.toFixed(2)} ({p.category})
-                    </option>
-                  ))}
-                </select>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <Package className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                    Assign Products from Master Catalog
+                  </h3>
+                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                    {branch.name}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Select products, customize branch selling prices, and allocate initial stock quantities for this location.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAssignModalOpen(false)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Search & Filter Toolbar */}
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                {/* Search input */}
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={assignSearchQuery}
+                    onChange={(e) => setAssignSearchQuery(e.target.value)}
+                    placeholder="Search master products by name, category, or barcode..."
+                    className="w-full pl-9 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  />
+                  {assignSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setAssignSearchQuery("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                {/* View All Selected Filter Toggle & Bulk Check buttons */}
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                  <button
+                    type="button"
+                    onClick={() => setShowOnlySelected(!showOnlySelected)}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors border ${
+                      showOnlySelected
+                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                        : "bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    }`}
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>View Selected ({selectedProductIds.size})</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSelectAllVisible}
+                    className="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    Select All Visible
+                  </button>
+
+                  {selectedProductIds.size > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleDeselectAll}
+                      className="px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 hover:bg-rose-100 transition-colors"
+                    >
+                      Clear All
+                    </button>
+                  )}
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Stock Quantity to Assign</label>
-                <input
-                  type="number"
-                  min="1"
-                  required
-                  value={assignStockQty}
-                  onChange={(e) => setAssignStockQty(e.target.value)}
-                  placeholder="e.g. 50"
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
-                />
+              {/* Category Filter Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setAssignSelectedCategory(cat)}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+                      assignSelectedCategory === cat
+                        ? "bg-blue-600 text-white font-semibold"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                    }`}
+                  >
+                    {cat === "ALL" ? "All Categories" : cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Scrollable Product List */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-2.5 bg-slate-50/50 dark:bg-slate-950/50 min-h-[260px] max-h-[50vh] sm:max-h-[55vh]">
+              {filteredAssignProducts.length === 0 ? (
+                <div className="p-12 text-center text-slate-500 dark:text-slate-400 space-y-2">
+                  <Package className="w-8 h-8 mx-auto text-slate-400 opacity-60" />
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    {showOnlySelected ? "No products currently selected" : "No matching master products found"}
+                  </p>
+                  <p className="text-xs">
+                    {showOnlySelected
+                      ? "Turn off 'View Selected' filter to browse all catalog items."
+                      : "Try adjusting your search terms or category filter."}
+                  </p>
+                </div>
+              ) : (
+                filteredAssignProducts.map((p) => {
+                  const isSelected = selectedProductIds.has(p.id);
+                  const currentPrice = customPrices[p.id] !== undefined ? customPrices[p.id] : String(p.base_price);
+                  const currentStock = customStocks[p.id] !== undefined ? customStocks[p.id] : "50";
+                  const isPriceOverridden =
+                    currentPrice !== "" && Number(currentPrice) !== p.base_price && !isNaN(Number(currentPrice));
+
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={(e) => {
+                        if ((e.target as HTMLElement).tagName === "INPUT") return;
+                        toggleProductSelection(p.id);
+                      }}
+                      className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border transition-all cursor-pointer ${
+                        isSelected
+                          ? "bg-blue-50/80 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700 shadow-xs"
+                          : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                      }`}
+                    >
+                      {/* Left: Checkbox + 20x20 picture + Product Info */}
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleProductSelection(p.id)}
+                          className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer flex-shrink-0"
+                        />
+
+                        {/* 20x20 picture / thumbnail container */}
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                          {p.image_url ? (
+                            <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-lg select-none">
+                              {p.category?.toLowerCase().includes("beef") ? "🥩" :
+                               p.category?.toLowerCase().includes("chicken") ? "🍗" :
+                               p.category?.toLowerCase().includes("fish") ? "🐟" :
+                               p.category?.toLowerCase().includes("drink") ? "🥤" :
+                               p.category?.toLowerCase().includes("noodle") ? "🍜" :
+                               p.category?.toLowerCase().includes("sausage") ? "🌭" :
+                               p.category?.toLowerCase().includes("meal") ? "🍱" : "🍲"}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Product Name & Category */}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-slate-900 dark:text-white text-sm truncate">
+                              {p.name}
+                            </span>
+                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                              {p.category}
+                            </span>
+                          </div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-2 flex-wrap">
+                            <span>
+                              Master Base: <span className="font-mono font-medium text-slate-700 dark:text-slate-300">₱{p.base_price.toFixed(2)}</span>
+                            </span>
+                            {isSelected && isPriceOverridden && (
+                              <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800">
+                                Custom Price Override
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right: Editable Price & Editable Stock Quantity in one row */}
+                      <div
+                        className="flex items-center gap-3 self-end sm:self-center flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800 w-full sm:w-auto justify-end"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {/* Branch Selling Price */}
+                        <div className="w-32 sm:w-36">
+                          <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1">
+                            Branch Selling Price (₱)
+                          </label>
+                          <div className="relative">
+                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-mono">₱</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={currentPrice}
+                              onChange={(e) => {
+                                setCustomPrices((prev) => ({ ...prev, [p.id]: e.target.value }));
+                                if (!selectedProductIds.has(p.id)) {
+                                  setSelectedProductIds((prev) => new Set(prev).add(p.id));
+                                }
+                              }}
+                              className="w-full pl-6 pr-2.5 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Stock Quantity */}
+                        <div className="w-24 sm:w-28">
+                          <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1 text-center">
+                            Stock Units
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={currentStock}
+                            onChange={(e) => {
+                              setCustomStocks((prev) => ({ ...prev, [p.id]: e.target.value }));
+                              if (!selectedProductIds.has(p.id)) {
+                                setSelectedProductIds((prev) => new Set(prev).add(p.id));
+                              }
+                            }}
+                            className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-center"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-xs text-slate-500 dark:text-slate-400">
+                <span className="font-semibold text-slate-900 dark:text-white">{selectedProductIds.size}</span> of{" "}
+                <span className="font-semibold text-slate-900 dark:text-white">{masterProducts.length}</span> catalog items selected for{" "}
+                <span className="font-semibold text-blue-600 dark:text-blue-400">{branch.name}</span>
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex items-center gap-2.5 w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => setIsAssignModalOpen(false)}
-                  className="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg transition-colors"
+                  className="flex-1 sm:flex-none px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl transition-colors"
                 >
                   Cancel
                 </button>
                 <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50"
+                  type="button"
+                  onClick={handleBulkAssignSubmit}
+                  disabled={isSubmitting || selectedProductIds.size === 0}
+                  className="flex-1 sm:flex-none px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
                 >
-                  {isSubmitting ? "Assigning..." : "Assign to Branch"}
+                  {isSubmitting ? (
+                    "Assigning..."
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Assign {selectedProductIds.size} Product{selectedProductIds.size === 1 ? "" : "s"} to Branch</span>
+                    </>
+                  )}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
