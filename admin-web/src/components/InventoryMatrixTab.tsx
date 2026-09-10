@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Plus, Edit2, Search, Filter } from 'lucide-react';
+import { Package, Plus, Eye, Search, Filter } from 'lucide-react';
 import { ProductFormModal } from './ProductFormModal';
 import { PaginationControls } from './PaginationControls';
 import { Branch, InventoryItem, Product } from '../types';
@@ -39,7 +39,7 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches = [], items, onSa
     setIsProductModalOpen(true);
   };
 
-  const handleOpenEditProduct = (item: InventoryItem) => {
+  const handleOpenViewProduct = (item: InventoryItem) => {
     setEditingProduct(item);
     setIsProductModalOpen(true);
   };
@@ -141,35 +141,51 @@ export const InventoryMatrixTab: React.FC<Props> = ({ branches = [], items, onSa
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                   {paginatedItems.map((item) => (
-                    <tr key={item.product_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                    <tr
+                      key={item.product_id}
+                      onClick={() => handleOpenViewProduct(item)}
+                      className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group"
+                    >
                       <td className="p-3.5">
                         <div className="flex items-center gap-3">
                           {item.image_url ? (
-                            <img src={item.image_url} alt="" className="w-8 h-8 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700" />
+                            <img
+                              src={item.image_url}
+                              alt=""
+                              className="w-9 h-9 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xs group-hover:scale-105 transition-transform"
+                            />
                           ) : (
-                            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-sm">
+                            <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-sm">
                               🍲
                             </div>
                           )}
-                          <span className="text-sm font-medium text-slate-900 dark:text-white">{item.name}</span>
+                          <div>
+                            <span className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                              {item.name}
+                            </span>
+                          </div>
                         </div>
                       </td>
                       <td className="p-3.5">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                           {item.category}
                         </span>
                       </td>
-                      <td className="p-3.5 font-mono font-medium text-slate-900 dark:text-slate-200 text-sm">
+                      <td className="p-3.5 font-mono font-semibold text-slate-900 dark:text-slate-100 text-sm">
                         ₱{item.base_price.toFixed(2)}
                       </td>
                       <td className="p-3.5 text-right">
                         <button
-                          onClick={() => handleOpenEditProduct(item)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white bg-slate-100 hover:bg-blue-50 dark:bg-slate-800 dark:hover:bg-slate-700 font-medium transition-colors"
-                          title="Edit Master Product"
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenViewProduct(item);
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-white bg-slate-100 hover:bg-blue-50 dark:bg-slate-800 dark:hover:bg-slate-700 font-medium transition-colors border border-slate-200/60 dark:border-slate-700/60 shadow-2xs"
+                          title="View Product Details"
                         >
-                          <Edit2 className="w-3.5 h-3.5 text-blue-500" />
-                          <span>Edit</span>
+                          <Eye className="w-3.5 h-3.5 text-blue-500" />
+                          <span>View</span>
                         </button>
                       </td>
                     </tr>
